@@ -1,0 +1,36 @@
+language: python
+python:
+  - "3.6"
+# command to install dependencies
+install:
+  # commands to get Miniconda3 setup
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+#  - conda create -q -n eztrack python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pytest scikit-learn pandas seaborn ipykernel openpyxl
+  - conda env create -f environment.yaml
+  - source activate eztrack
+# run conda /pip installation of packages
+  - conda install -c conda-forge mne airflow
+  - conda install -c anaconda natsort pylint flake8 xlrd Deprecated
+  - conda install -c numba numba
+  - conda install -c bioconda snakemake
+# dev
+#  - conda install -c anaconda sphinx
+#  - conda install -c conda-forge nibabel
+#jobs:
+#  include:
+#    - stage: test
+#      script: ./test 1
+#    - # stage name not required, will continue to use `test`
+#      script: ./test 2
+#    - stage: deploy
+#      script: ./deploy
+# command to run tests
+script:
+  - pylint ./eztrack/
+  - pytest ./tests

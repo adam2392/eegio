@@ -1,0 +1,2 @@
+[run]
+omit=[eztrack/edv/*,eztrack/edp/utils/*,eztrack/edp/writers/*,eztrack/edp/dev/*,eztrack/pipeline/*,eztrack/edm/classifiers/*,eztrack/edm/network/*,eztrack/edm/eznet/*,eztrack/edm/network/*]
