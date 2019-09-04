@@ -1,6 +1,6 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
 # command to install dependencies
 install:
   # commands to get Miniconda3 setup
@@ -12,25 +12,12 @@ install:
   - conda update -q conda
   - conda info -a
 #  - conda create -q -n eztrack python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pytest scikit-learn pandas seaborn ipykernel openpyxl
-  - conda env create -f environment.yaml
-  - source activate eztrack
+  - conda create -q -n eegio
+  - source activate eegio
 # run conda /pip installation of packages
-  - conda install -c conda-forge mne airflow
-  - conda install -c anaconda natsort pylint flake8 xlrd Deprecated
-  - conda install -c numba numba
-  - conda install -c bioconda snakemake
-# dev
-#  - conda install -c anaconda sphinx
-#  - conda install -c conda-forge nibabel
-#jobs:
-#  include:
-#    - stage: test
-#      script: ./test 1
-#    - # stage name not required, will continue to use `test`
-#      script: ./test 2
-#    - stage: deploy
-#      script: ./deploy
+  - conda config --add channels conda-forge
+  - conda install numpy pandas scikit-learn scipy mne pyedflib
 # command to run tests
 script:
-  - pylint ./eztrack/
+  - pylint ./eegio/
   - pytest ./tests

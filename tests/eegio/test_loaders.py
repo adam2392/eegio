@@ -1,6 +1,6 @@
 import pytest
 
-from eztrack.base.config.dataconfig import IEEG_REFERENCES, SCALP_REFERENCES
+from base.config.dataconfig import IEEG_REFERENCES, SCALP_REFERENCES
 from eegio.loaders.dataset.result.resultloader import ResultLoader
 from eegio.loaders.dataset.timeseries.ieegrecording import iEEGRecording
 from eegio.loaders.dataset.timeseries.scalprecording import ScalpRecording
@@ -110,7 +110,7 @@ class TestResultLoader():
         assert isinstance(resultmodel.clinicalmatching, int)
         assert isinstance(resultmodel.outcome, str)
 
-# test for using multiple raw dataset loading at a time - using patient wrapper, or center wrapper
+# test for using multiple raw timeseries loading at a time - using patient wrapper, or center wrapper
 @pytest.mark.usefixture('ieeg_data_fif', 'scalp_data_fif')
 class TestRawMultipleLoader():
     def test_subj_rawloader(self, ieeg_data_fif):

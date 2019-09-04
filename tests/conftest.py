@@ -9,6 +9,18 @@ RAWDATADIR = "/home/WIN/ali39/toshibaHDD/data/rawdata/"
 RAWDATADIR = "/Users/adam2392/Downloads/tngpipeline/"
 DATACENTERS = ['cleveland', 'jhu', 'nih', 'ummc']
 
+def contacts():
+    import numpy as np
+    from eegio.base.objects.elecs import Contacts
+    contactlist = np.vstack([f"A{i}" for i in range(len(16))],
+                            [f"L{i}" for i in range(len(16))],
+                            [f"B'{i}" for i in range(len(16))],
+                            [f"D'{i}" for i in range(len(16))],
+                            ["C'1", "C'2", "C'4", "C'8"],
+                            ["C1", "C2", "C3", "C4", "C5", "C6"],
+                            )
+    contacts = Contacts(contactlist)
+    return contacts
 
 @pytest.fixture(scope='class')
 def edffilepath():

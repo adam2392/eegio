@@ -4,10 +4,10 @@ import tempfile
 import pytest
 import numpy as np
 
-from eztrack.base.config.dataconfig import IEEG_REFERENCES
-from eztrack.eegio.format.dataset_tester import DatasetTester
-from eztrack.eegio.format.formatter_raw import ConvertEDFiEEG
-from eztrack.eegio.loaders.dataset.timeseries.ieegrecording import iEEGRecording
+from base.config.dataconfig import IEEG_REFERENCES
+from eegio.format.dataset_tester import DatasetTester
+from eegio.format.formatter_raw import ConvertEDFiEEG
+from eegio.loaders.dataset.timeseries.ieegrecording import iEEGRecording
 
 centers = [
     'nih',
@@ -29,7 +29,7 @@ class Test_RawComputation_Endpoints():
     Testing class for testing all the raw data that was generated through preprocessing.
     - fif + json datasets
 
-    Runs the eztrack.eegio.format.dataset_tester
+    Runs the eegio.format.dataset_tester
 
     TODO:
     1. Figure out why raw_fif and the original data is slightly different numerically.
