@@ -1,9 +1,9 @@
 import collections
 import re
 import warnings
+from typing import List
 
 import numpy as np
-import deprecated
 from natsort import natsorted, order_by_index, index_natsorted
 
 
@@ -28,6 +28,7 @@ def reinitialize_datastructure(f):
     f()
     f._initialize_datastructs()
     return f
+
 
 class Contacts(object):
     """
@@ -60,7 +61,7 @@ class Contacts(object):
 
     Examples
     --------
-    >>> from eegio.base.objects.timeseries.elecs import Contacts
+    >>> from eegio.base.objects.elecs import Contacts
     >>> contacts_list = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3']
     >>> chan_xyz = [[0,0,0], [0,0,1], [0,0,2], [0,1,0], [0,2,0], [0,3, 0]]
     >>> contacts = Contacts(contacts_list, chan_xyz)
@@ -73,8 +74,9 @@ class Contacts(object):
     contact_pair_regex_2 = re.compile(
         "^([A-Za-z]+[']?)([0-9]+)-([A-Za-z]+[']?)([0-9]+)$")
 
-    def __init__(self, contacts_list: list = [], contacts_xyz=[], referencespace=None, scale=None,
-                 require_matching=True):
+    def __init__(self, contacts_list: List = [], contacts_xyz: List = [],
+                 referencespace: str = None, scale: str = None,
+                 require_matching: bool = True):
         self.require_matching = require_matching
         self.chanlabels = list(contacts_list)
 
@@ -95,8 +97,7 @@ class Contacts(object):
         self.scale = scale
         self.natinds = None
 
-        if contacts_xyz and contacts_list:
-            self.name_to_xyz = dict(zip(self.chanlabels, self.xyz))
+        self._initialize_contacts_xyz_dict()
 
         # initialize data structures
         self._initialize_datastructs()
@@ -133,6 +134,9 @@ class Contacts(object):
                 self.electrodes[elec_name] = []
             self.electrodes[elec_name].append(i)
 
+    def _initialize_contacts_xyz_dict(self):
+        self.name_to_xyz = dict(zip(self.chanlabels, self.xyz))
+
     def load_contacts_xyz(self, contacts_xyz, referencespace=None, scale="mm"):
         """
         Function to help load in contact coordinates.
@@ -140,9 +144,14 @@ class Contacts(object):
         :param contacts_xyz:
         :return:
         """
+        if referencespace == None:
+            warnings.warn("No referencespace passed in. It is set as None. This is ideally passed in "
+                          "to allow user to determine where the contacts were localized.")
+
         self.xyz = contacts_xyz
         self.referencespace = referencespace
         self.scale = scale
+        self._initialize_contacts_xyz_dict()
 
     def get_contacts_xyz(self):
         """
@@ -153,6 +162,9 @@ class Contacts(object):
         """
         if self.xyz and (len(self.xyz) == len(self.chanlabels)):
             return {chanlabel: xyz for chanlabel, xyz in zip(self.chanlabels, self.xyz)}
+
+        warnings.warn("Contacts xyz coordinates are not yet loaded. See documentation "
+                      "for more details on how to load in the coordinates. This will return None.")
         return None
 
     def natsort_contacts(self):
@@ -163,7 +175,8 @@ class Contacts(object):
         """
         if self.natinds == None:
             self.natinds = index_natsorted(self.chanlabels)
-            self.chanlabels = np.array(order_by_index(self.chanlabels, self.natinds))
+            self.chanlabels = np.array(
+                order_by_index(self.chanlabels, self.natinds))
         else:
             warnings.warn("Already naturally sorted contacts! Extract channel labels naturally sorted by calling "
                           "chanlabels, and apply ordering to other channel level data with natinds.")
@@ -179,21 +192,25 @@ class Contacts(object):
             warnings.warn("You passed in masking indices not in the length of the channel labels. "
                           "Length of channel labels is: {}".format(len(self.chanlabels)))
 
-        keepinds = [i for i in range(len(self.chanlabels)) if i not in mask_inds]
+        keepinds = [i for i in range(
+            len(self.chanlabels)) if i not in mask_inds]
         self.chanlabels = np.array(self.chanlabels)[keepinds]
         if self.xyz:
-            self.xyz = self.xyz[keepinds]
+            self.xyz = [self.xyz[i] for i in keepinds]
 
     def mask_contacts(self, contacts):
         pass
 
-    def get_seeg_ngbhrs(self, contact):
+    def get_seeg_ngbhrs(self, contact: str):
         """
         Helper function to get neighboring contacts for SEEG contacts.
         :param contact:
         :param chanlist:
         :return:
         """
+        # initialize empty data structures to return
+        nghbrcontacts, nghbrinds = [], []
+
         # get the electrode, and the number for each channel
         elecname, num = re.match("^([A-Za-z]+[']?)([0-9]+)$", contact).groups()
 
@@ -201,25 +218,32 @@ class Contacts(object):
         elecmaxnum = 0
         elec_numstoinds = dict()
         for jdx in range(len(self.chanlabels)):
-            _elecname, _num = re.match("^([A-Za-z]+[']?)([0-9]+)$", self.chanlabels[jdx]).groups()
+            _elecname, _num = re.match(
+                "^([A-Za-z]+[']?)([0-9]+)$", self.chanlabels[jdx]).groups()
             if elecname == _elecname:
                 elecmaxnum = max(elecmaxnum, int(_num))
                 elec_numstoinds[_num] = jdx
 
         # find keys with number above and below number
         elecnumkeys = natsorted(elec_numstoinds.keys())
-
         elecnumkeys = np.arange(1, elecmaxnum).astype(str).tolist()
-        # if num not in elecnumkeys:
-            # continue
 
-        currnumind = elecnumkeys.index(num)
-        lowerind = max(0, currnumind - 2)
-        upperind = min(int(elecnumkeys[-1]), currnumind + 2)
+        print(elecnumkeys)
 
-        nghbrinds = np.vstack((np.arange(lowerind, currnumind),
-                               np.arange(currnumind+1, upperind)))
-        nghbrcontacts = self.chanlabels[nghbrinds]
+        if num in elecnumkeys:
+            currnumind = elecnumkeys.index(num)
+            lowerind = max(0, currnumind - 2)
+            upperind = min(int(elecnumkeys[-1]), currnumind + 2)
+
+            print(num, currnumind, lowerind, upperind)
+
+            lower_ngbhrs = np.arange(lowerind, currnumind)
+            upper_ngbhrs = np.arange(currnumind + 1, upperind)
+
+            print(lower_ngbhrs, upper_ngbhrs)
+            nghbrinds = np.vstack((lower_ngbhrs, upper_ngbhrs))
+            nghbrcontacts = self.chanlabels[nghbrinds]
+
         return nghbrcontacts, nghbrinds
 
     def get_contact_ngbhrs(self, contact_name):
@@ -230,20 +254,26 @@ class Contacts(object):
         :return: (list of str) contact neighbors (e.g. A1, A3), and
                 (list of int) contact neighbor indices
         """
+        # initialize empty data structures to return
+        nghbrcontacts, nghbrinds = [], []
+
         match = self.contact_single_regex.match(contact_name)
         if match is None:
             return None
         electrode = match.groups()[0]
         electrodecontacts = self.electrodes[electrode]
-        contact_index = electrodecontacts.index(contact_name)
 
-        # get the corresponding neighbor indices
-        _lowerind = max(contact_index - 1, 0)
-        _upperind = min(contact_index + 1, 0)
-        nghbrinds = np.vstack((np.arange(_lowerind, contact_index), np.arange(contact_index + 1, _upperind + 1)))
+        if contact_name in electrodecontacts:
+            contact_index = electrodecontacts.index(contact_name)
 
-        return electrodecontacts[nghbrinds], nghbrinds
+            # get the corresponding neighbor indices
+            _lowerind = max(contact_index - 1, 0)
+            _upperind = min(contact_index + 1, 0)
+            nghbrinds = np.vstack((np.arange(_lowerind, contact_index), np.arange(
+                contact_index + 1, _upperind + 1)))
+            nghbrcontacts = electrodecontacts[nghbrinds]
 
+        return nghbrcontacts, nghbrinds
 
     def set_bipolar(self):
         """
@@ -280,7 +310,7 @@ class Contacts(object):
         self.bipolar_inds = np.array(self.bipolar_inds, dtype=int)
 
         if remaining_labels.size == 0:
-            return self.bipolar_inds
+            return self.bipolar_inds, remaining_labels
         else:
             return self.bipolar_inds, remaining_labels
 

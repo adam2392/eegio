@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import re
-
+from enum import Enum
 import numpy as np
 
-from eegio.base.objects import BaseDataset
-from eegio.base.objects import Contacts
-from eegio.utils.utils import compute_timepoints, load_szinds
+from eegio.base.objects.dataset.basedataobject import BaseDataset
+from eegio.base.objects.elecs import Contacts
+from eegio.base.utils.data_structures_utils import compute_timepoints, load_szinds
 
 
 class Result(BaseDataset):
     """
-    The class object for our ECOG time series data.
+    The class object for our EEG time series data that is transformed from our raw EEG
 
     All time series are assumed to be in [C x T] shape and use the Contacts
     data structure to handle all contact level functionality.
@@ -28,281 +28,59 @@ class Result(BaseDataset):
 
     Examples
     --------
-    >>> from eegio.objects.dataset.result_object import Result
+    >>> from eegio.base.objects.dataset.result_object import Result
     >>> simulated_result = np.random.rand((80,100))
     >>> metadata = dict()
     >>> resultobj = Result(simulated_result, metadata)
     """
 
-    def __init__(self, mat, metadata):
+    def __init__(self, mat, times, contacts,
+                 patientid=None, datasetid=None,
+                 model_attributes=None, metadata=dict()):
+        if mat.ndim > 2:
+            raise ValueError("Time series can not have > 2 dimensions right now."
+                             "We assume [C x T] shape, channels x time. ")
+        if mat.shape[0] != len(contacts):
+            matshape = mat.shape
+            ncontacts = len(contacts)
+            raise AttributeError(f"Matrix data should be shaped: Num Contacts X Time. You "
+                                 f"passed in {matshape} and {ncontacts} contacts.")
+
+        super(Result, self).__init__(mat, times, contacts,
+                                     patientid, datasetid, model_attributes)
+
         self.metadata = metadata
 
         # extract metadata for this time series
         self.extract_metadata()
 
-        super(Result, self).__init__(mat=mat, times=self.timepoints[:, 1])
+    def __str__(self):
+        return "{} {} EEG result mat ({}) " \
+               "{} seconds".format(
+                   self.patientid, self.datasetid, self.mat.shape, self.len_secs)
 
-    @property
+    def __repr__(self):
+        return "{} {} EEG result mat ({}) " \
+               "{} seconds".format(
+                   self.patientid, self.datasetid, self.mat.shape, self.len_secs)
+
     def summary(self):
-        return self.patient_id, self.dataset_id, self.outcome, self.engel_score, self.clinicaldifficulty
+        pass
+
+    def pickle_results(self):
+        pass
 
     @property
-    def samplerate(self):
-        return self.metadata['samplerate']
+    def n_contacts(self):
+        return len(self.contacts.chanlabels)
 
     @property
-    def cezcontacts(self):
-        if 'ez_hypo_contacts' in self.metadata.keys():
-            return self.metadata['ez_hypo_contacts']
-
-        elif 'clinezelecs' in self.metadata.keys():
-            return self.metadata['clinezelecs']
-        # if 'ablated_contacts' in self.metadata.keys() and self.metadata['ablated_contacts'] != []:
-        #     return self.metadata['ablated_contacts']
-        #
-        # if 'resected_contacts' in self.metadata.keys() and self.metadata['resected_contacts'] != []:
-        #     return self.metadata['resected_contacts']
-        else:
-            return []
-
-    @property
-    def cezinds(self):
-        clinonsetinds = [i for i, ch in enumerate(self.chanlabels) if
-                         ch in self.cezcontacts]
-        return clinonsetinds
-
-    @property
-    def oezinds(self):
-        oezinds = [i for i, ch in enumerate(self.chanlabels) if
-                   ch not in self.cezcontacts]
-        return oezinds
-
-    @property
-    def surgicalinds(self):
-        if self.resectedcontacts != []:
-            # print(self.resectedcontacts, len(self.resectedcontacts))
-            # print("getting resected contacts")
-            inds = [i for i, ch in enumerate(self.chanlabels) if
-                    ch in self.resectedcontacts]
-        elif self.ablatedcontacts != []:
-            # print("getting ablated contacts")
-            inds = [i for i, ch in enumerate(self.chanlabels) if
-                    ch in self.ablatedcontacts]
-        else:
-            print(self.resectedcontacts == [])
-            print(self.ablatedcontacts == [])
-            inds = []
-        return inds
-
-    @property
-    def nonsurgicalinds(self):
-        if self.resectedcontacts != []:
-            inds = [i for i, ch in enumerate(self.chanlabels) if
-                    ch not in self.resectedcontacts]
-        elif self.ablatedcontacts != []:
-            inds = [i for i, ch in enumerate(self.chanlabels) if
-                    ch not in self.ablatedcontacts]
-        else:
-            inds = [i for i, ch in enumerate(self.chanlabels)]
-        return inds
-
-    @property
-    def ablatedcontacts(self):
-        if 'ablated_contacts' in self.metadata.keys():
-            return self.metadata['ablated_contacts']
-        else:
-            return []
-
-    @property
-    def resectedcontacts(self):
-        if 'resected_contacts' in self.metadata.keys():
-            return self.metadata['resected_contacts']
-        else:
-            return []
-
-    @property
-    def channel_semiology(self):
-        return self.metadata['semiology']
-
-    @property
-    def cezlobe(self):
-        return self.metadata['cezlobe']
+    def length_of_result(self):
+        return len(self.times)
 
     @property
     def record_filename(self):
         return self.metadata['filename']
-
-    @property
-    def bad_channels(self):
-        return self.metadata['bad_channels']
-
-    @property
-    def non_eeg_channels(self):
-        return self.metadata['non_eeg_channels']
-
-    @property
-    def patient_id(self):
-        if 'patient_id' in self.metadata.keys():
-            return self.metadata['patient_id']
-        else:
-            return None
-
-    @property
-    def dataset_id(self):
-        if 'dataset_id' in self.metadata.keys():
-            return self.metadata['dataset_id']
-        else:
-            return None
-
-    @property
-    def meas_data(self):
-        return self.metadata['date_of_recording']
-
-    @property
-    def length_of_recording(self):
-        return self.metadata['length_of_recording']
-
-    @property
-    def numberchans(self):
-        return self.metadata['number_chans']
-
-    @property
-    def clinical_center(self):
-        return self.metadata['clinical_center']
-
-    @property
-    def dataset_events(self):
-        return self.metadata['events']
-
-    @property
-    def onsetind(self):
-        if self.metadata['onsetsec'] == []:
-            return None
-        return self.metadata['onsetsec'] * self.samplerate
-
-    @property
-    def offsetind(self):
-        if self.metadata['offsetsec'] == []:
-            return None
-        return self.metadata['offsetsec'] * self.samplerate
-
-    @property
-    def onsetsec(self):
-        return self.metadata['onsetsec']
-
-    @property
-    def offsetsec(self):
-        return self.metadata['offsetsec']
-
-    @property
-    def resultfilename(self):
-        return self.metadata['resultfilename']
-
-    @property
-    def chanlabels(self):
-        return np.array(self.metadata['chanlabels'])
-        # return self.contacts.chanlabels
-
-    @property
-    def ncontacts(self):
-        return len(self.chanlabels)
-
-    @property
-    def numwins(self):
-        return len(self.samplepoints)
-
-    @property
-    def samplepoints(self):
-        return np.array(self.metadata['samplepoints'])
-
-    @property
-    def timepoints(self):
-        # compute time points
-        # return self.samplepoints.astype(int) / self.samplerate
-        # return self.metadata['timepoints']
-        # compute time points
-        return compute_timepoints(self.samplepoints.ravel()[-1],
-                                  self.winsize,
-                                  self.stepsize,
-                                  self.samplerate)
-
-    @property
-    def montage(self):
-        if self.metadata['modality'] == 'scalp':
-            return self.metadata['montage']
-        else:
-            return None
-
-    @property
-    def clinicaldifficulty(self):
-        if 'clinical_difficulty' in self.metadata.keys():
-            return int(self.metadata['clinical_difficulty'])
-        else:
-            return None
-
-    @property
-    def clinicalmatching(self):
-        return int(self.metadata['clinical_match'])
-
-    @property
-    def outcome(self):
-        if 'outcome' in self.metadata.keys():
-            return self.metadata['outcome']
-        else:
-            return None
-
-    @property
-    def engel_score(self):
-        if 'engel_score' in self.metadata.keys():
-            return int(self.metadata['engel_score'])
-        else:
-            return None
-
-    @property
-    def winsize(self):
-        return self.metadata['winsize']
-
-    @property
-    def stepsize(self):
-        return self.metadata['stepsize']
-
-    @property
-    def reference(self):
-        return self.metadata['reference']
-
-    @property
-    def onsetwin(self):
-        # if self.metadata['onsetwin'] == []:
-        #     return None
-
-        if self.metadata['onsetwin'] is not None and not np.isnan(self.metadata['onsetwin']):
-            return int(self.metadata['onsetwin'])
-        # else:
-        try:
-            print("Onset index and offsetindex",
-                  self.onsetind, self.samplepoints[-1, :])
-            onsetwin, _ = load_szinds(
-                self.onsetind, None, self.samplepoints)
-            return int(onsetwin[0])
-        except:
-            return None
-
-    @property
-    def offsetwin(self):
-        # if self.metadata['offsetwin'] == []:
-        #     return None
-
-        if self.metadata['offsetwin'] is not None and not np.isnan(self.metadata['offsetwin']):
-            return int(self.metadata['offsetwin'])
-        # else:
-        try:
-            print(self.offsetind, self.samplepoints[-1, :])
-            _, offsetwin = load_szinds(
-                self.onsetind, self.offsetind, self.samplepoints)
-            print("Found offsetwin: ", offsetwin)
-            return int(offsetwin[0])
-        except:
-            return None
 
     def get_metadata(self):
         """
@@ -312,27 +90,13 @@ class Result(BaseDataset):
         """
         return self.metadata
 
-    def extract_metadata(self):
+    def get_model_attributes(self):
         """
-        Function to extract metadata from the object's dictionary data structure.
-        Extracts the
+        Getter method for returning the model attributes applied to get this resulting data.
 
-        :return: None
+        :return:
         """
-        self.contacts_list = self.metadata['chanlabels']
-        try:
-            # comment out
-            self.modality = self.metadata['modality']
-        except Exception as e:
-            self.metadata['modality'] = 'ieeg'
-            self.modality = self.metadata['modality']
-            print("Loading result object. Error in extracting metadata: ", e)
-
-        # convert channel labels into a Contacts data struct
-        if self.reference == 'bipolar' or self.modality == 'scalp':
-            self.contacts = Contacts(self.contacts_list, require_matching=False)
-        else:
-            self.contacts = Contacts(self.contacts_list)
+        return self.model_attributes
 
     def mask_channels(self):
         """
@@ -411,3 +175,196 @@ class Result(BaseDataset):
         clinonsetlabels.extend(added_ch_names)
         clinonsetlabels = list(set(clinonsetlabels))
         return clinonsetlabels
+
+    @property
+    def timepoints(self):
+        # compute time points
+        # return self.samplepoints.astype(int) / self.samplerate
+        # return self.metadata['timepoints']
+        # compute time points
+        return compute_timepoints(self.samplepoints.ravel()[-1],
+                                  self.winsize,
+                                  self.stepsize,
+                                  self.samplerate)
+
+    @property
+    def onsetwin(self):
+        # if self.metadata['onsetwin'] == []:
+        #     return None
+
+        if self.metadata['onsetwin'] is not None and not np.isnan(self.metadata['onsetwin']):
+            return int(self.metadata['onsetwin'])
+        # else:
+        try:
+            print("Onset index and offsetindex",
+                  self.onsetind, self.samplepoints[-1, :])
+            onsetwin, _ = load_szinds(
+                self.onsetind, None, self.samplepoints)
+            return int(onsetwin[0])
+        except:
+            return None
+
+    @property
+    def offsetwin(self):
+        # if self.metadata['offsetwin'] == []:
+        #     return None
+
+        if self.metadata['offsetwin'] is not None and not np.isnan(self.metadata['offsetwin']):
+            return int(self.metadata['offsetwin'])
+        # else:
+        try:
+            print(self.offsetind, self.samplepoints[-1, :])
+            _, offsetwin = load_szinds(
+                self.onsetind, self.offsetind, self.samplepoints)
+            print("Found offsetwin: ", offsetwin)
+            return int(offsetwin[0])
+        except:
+            return None
+
+    def extract_metadata(self):
+        """
+        Function to extract metadata from the object's dictionary data structure.
+        Extracts the
+
+        :return: None
+        """
+        self.contacts_list = self.metadata['chanlabels']
+        try:
+            # comment out
+            self.modality = self.metadata['modality']
+        except Exception as e:
+            self.metadata['modality'] = 'ieeg'
+            self.modality = self.metadata['modality']
+            print("Loading result object. Error in extracting metadata: ", e)
+
+        # convert channel labels into a Contacts data struct
+        if self.reference == 'bipolar' or self.modality == 'scalp':
+            self.contacts = Contacts(self.contacts_list, require_matching=False)
+        else:
+            self.contacts = Contacts(self.contacts_list)
+
+
+deltaband = [0, 4]
+thetaband = [4, 8]
+alphaband = [8, 13]
+betaband = [13, 30]
+gammaband = [30, 90]
+highgammaband = [90, 500]
+
+
+class Freqbands(Enum):
+    DELTA = deltaband
+    THETA = thetaband
+    ALPHA = alphaband
+    BETA = betaband
+    GAMMA = gammaband
+    HIGH = highgammaband
+
+
+class FreqModelResult(Result):
+
+    def __init__(self, mat, freqs, metadata,
+                 phasemat=[],
+                 freqbands=Freqbands):
+        super(FreqModelResult, self).__init__(mat, metadata)
+        self.phasemat = phasemat
+
+        self.freqs = freqs
+        # initialize the frequency bands
+        self.freqbands = freqbands
+        # set the frequency index
+        self.freqindex = 1
+
+        # create a copy of the matrix
+        self.buffmat = self.mat.copy()
+
+    def get_phase(self):
+        return self.phasemat
+
+    def get_freqs(self):
+        return self.freqs
+
+    def __str__(self):
+        return "{} {} Frequency Power Model {}".format(self.patient_id,
+                                                       self.dataset_id,
+                                                       self.shape)
+
+    def _computefreqindices(self, freqs, freqband):
+        """
+        Compute the frequency indices for this frequency band [lower, upper].
+
+        freqs = list of frequencies
+        freqband = [lowerbound, upperbound] frequencies of the
+                frequency band
+        """
+        lowerband = freqband[0]
+        upperband = freqband[1]
+
+        # get indices where the freq bands are put in
+        freqbandindices = np.where(
+            (freqs >= lowerband) & (freqs < upperband))
+        freqbandindices = [freqbandindices[0][0], freqbandindices[0][-1]]
+        return freqbandindices
+
+    def compress_freqbands(self, freqbands=Freqbands):
+        # ensure power is absolute valued
+        power = np.abs(self.mat)
+
+        # create empty binned power
+        power_binned = np.zeros(shape=(power.shape[0],
+                                       len(freqbands),
+                                       power.shape[2]))
+        print(power.shape, power_binned.shape)
+        for idx, freqband in enumerate(freqbands):
+            # compute the freq indices for each band
+            freqbandindices = self._computefreqindices(
+                self.freqs, freqband.value)
+
+            # Create an empty array = C x T (frequency axis is compresssed into 1 band)
+            # average between these two indices
+            power_binned[:, idx, :] = np.nanmean(
+                power[:, freqbandindices[0]:freqbandindices[1] + 1, :], axis=1)
+
+        self.mat = power_binned
+        self.freqbands = freqbands
+        self.freqbandslist = list(freqbands)
+
+    def format_dataset(self, result, freqindex=None, apply_trim=True, is_scalp=False):
+        # number of seconds to offset trim timeseries by
+        offset_sec = 10
+        # threshold level
+        threshlevel = 0.7
+
+        # get channels separated data by cez and others
+        if is_scalp:
+            # compute montage group
+            result.compute_montage_groups()
+
+            print(result.get_data().shape)
+            # print(result.chanlabels)
+            # print(result.cezlobe)
+            # print(len(result.cezlobeinds), len(result.oezlobeinds))
+
+            # partition into cir and oir
+            clinonset_map = result.get_data()[result.cezlobeinds, ...]
+            others_map = result.get_data()[result.oezlobeinds, ...]
+        else:
+            clinonset_map = result.get_data()[result.cezinds]
+            others_map = result.get_data()[result.oezinds]
+
+        if freqindex is not None:
+            clinonset_map = clinonset_map[:, freqindex, :]
+            others_map = others_map[:, freqindex, :]
+            # print(clinonset_map.shape, others_map.shape)
+
+        if apply_trim:
+            # trim timeseries in time
+            clinonset_map = result.trim_aroundseizure(
+                offset_sec=offset_sec, mat=clinonset_map)
+            others_map = result.trim_aroundseizure(
+                offset_sec=offset_sec, mat=others_map)
+
+        clinonset_map = np.mean(clinonset_map, axis=0)
+        others_map = np.mean(others_map, axis=0)
+
+        return clinonset_map, others_map

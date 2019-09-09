@@ -1,160 +1,13 @@
-import warnings
-from abc import ABC
 import collections
+from abc import ABC, abstractmethod
 
 import mne
 import numpy as np
-import scipy
 from deprecated import deprecated
 from natsort import order_by_index
 
 from eegio.base.objects.elecs import Contacts
-from eegio.utils.scalprecording import create_mne_topostruct_from_numpy
 
-
-@deprecated(version="0.1", reason="Applying outside now.")
-def apply_gaussian_kernel_smoothing(self, window_size):
-    from eegio.utils.post_process import PostProcess
-
-    mat = self.mat.copy()
-
-    # apply moving average filter to smooth out stuff
-    smoothed_mat = np.array([PostProcess.smooth_kernel(
-        x, window_len=window_size) for x in mat])
-
-    # realize that moving average messes up the ends of the window
-    # smoothed_mat = smoothed_mat[:, window_size // 2:-window_size // 2]
-
-    self.mat = smoothed_mat
-    return smoothed_mat
-
-
-@deprecated(version="0.1", reason="Applying outside now.")
-def timewarp_data(self, mat, desired_len):
-    def resample(seq, desired_len):
-        """
-        Function to resample an individual signal signal.
-
-        :param seq:
-        :param desired_len:
-        :return:
-        """
-        # downsample or upsample using Fourier method
-        newseq = scipy.signal.resample(seq, desired_len)
-        # or apply downsampling / upsampling based
-        return np.array(newseq)
-
-    if mat.ndim == 2:
-        newmat = np.zeros((mat.shape[0], desired_len))
-    elif mat.ndim == 3:
-        newmat = np.zeros((mat.shape[0], mat.shape[1], desired_len))
-    else:
-        raise ValueError(
-            "Matrix passed in can't have dimensions other then 2, or 3. Yours has: {}".format(mat.ndim))
-
-    for idx in range(mat.shape[0]):
-        seq = mat[idx, ...].squeeze()
-        newmat[idx, :] = resample(seq, desired_len)
-    return newmat
-
-    def get_cez_hemisphere(self):
-        hemisphere = []
-        if any('right' in x for x in self.cezlobe):
-            hemisphere.append('right')
-        if any('left' in x for x in self.cezlobe):
-            hemisphere.append('left')
-
-        if len(hemisphere) == 2:
-            warnings.warn(
-                "Probably can't analyze patients with onsets in both hemisphere in lobes!")
-            print(self)
-
-        inds = []
-        for hemi in hemisphere:
-            for lobe in self.ch_groups.keys():
-                if hemi in lobe:
-                    inds.extend(self.ch_groups[lobe])
-
-        return hemisphere, inds
-
-    def get_cez_quadrant(self):
-        quadrant_map = {
-            'right-front': ['right-temporal', 'right-frontal'],
-            'right-back': ['right-parietal', 'right-occipital'],
-            'left-front': ['left-temporal', 'left-frontal'],
-            'left-back': ['left-parietal', 'left-occipital']
-        }
-        quad1 = ['frontal', 'temporal']
-        quad2 = ['parietal', 'occipital']
-
-        print(self.cezlobe)
-        quadrant = []
-        for lobe in self.cezlobe:
-            if 'right' in lobe:
-                if any(x in lobe for x in quad1):
-                    quadrant.extend(quadrant_map['right-front'])
-                if any(x in lobe for x in quad2):
-                    quadrant.extend(quadrant_map['right-back'])
-            if 'left' in lobe:
-                if any(x in lobe for x in quad1):
-                    quadrant.extend(quadrant_map['left-front'])
-                if any(x in lobe for x in quad2):
-                    quadrant.extend(quadrant_map['left-back'])
-
-        if len(quadrant) == 2:
-            warnings.warn(
-                "Probably can't analyze patients with onsets in all quadrants!")
-            print(self)
-
-        print(quadrant)
-
-        inds = []
-        for lobe in quadrant:
-            inds.extend(self.ch_groups[lobe])
-        return quadrant, inds
-
-
-    @deprecated(version="0.1", reason="Applying outside now.")
-    def apply_moving_avg_smoothing(self, window_size):
-        def movingaverage(interval, window_size):
-            window = np.ones(int(window_size)) / float(window_size)
-            return np.convolve(interval, window, 'same')
-
-        mat = self.mat.copy()
-
-        # apply moving average filter to smooth out stuff
-        smoothed_mat = np.array(
-            [movingaverage(x, window_size=window_size) for x in mat])
-
-        # realize that moving average messes up the ends of the window
-        smoothed_mat = smoothed_mat[:, window_size // 2:-window_size // 2]
-
-        self.mat = smoothed_mat
-        return smoothed_mat
-
-
-
-    # def load_contacts_regs(self, contact_regs, atlas=''):
-    #     self.contacts.load_contacts_regions(contact_regs)
-    #     self.atlas = atlas
-    #
-    # def load_chanxyz(self, chanxyz, referenx="T1MRI"):
-    #     """
-    #      Load in the channel's xyz coordinates.
-    #
-    #     :param chanxyz:
-    #     :param coordsystem:
-    #     :return:
-    #     """
-    #     if len(chanxyz) != self.ncontacts:
-    #         raise RuntimeError("In loading channels xyz, chanxyz needs to be"
-    #                            "of equal length as the number of contacts in dataset! "
-    #                            "There is a mismatch chanxyz={} vs "
-    #                            "dataset.ncontacts={}".format(
-    #             len(chanxyz), self.ncontacts
-    #         ))
-    #     self.contacts.load_contacts_xyz(chanxyz)
-    #     self.coordsystem = coordsystem
 
 class BaseDataset(ABC):
     """
@@ -195,7 +48,9 @@ class BaseDataset(ABC):
 
     """
 
-    def __init__(self, mat: np.ndarray, times: list, contacts: Contacts, patientid: str, datasetid: str = None, model_attributes: dict = None):
+    def __init__(self, mat: np.ndarray, times: list,
+                 contacts: Contacts, patientid: str, datasetid: str = None,
+                 model_attributes: dict = None):
         self.mat = mat
         self.times = times
         self.contacts = contacts
@@ -208,6 +63,10 @@ class BaseDataset(ABC):
 
     def __len__(self):
         return self.mat.shape[1]
+
+    @abstractmethod
+    def create_fake_example(self):
+        pass
 
     def get_best_matching_montage(self, chanlabels):
         """
@@ -235,31 +94,6 @@ class BaseDataset(ABC):
                 best_montage_score = montage_score
 
         return best_montage
-
-    def create_raw_struct(self, usebestmontage=False):
-        eegts = self.get_data()
-        chanlabels = self.chanlabels
-        samplerate = self.samplerate
-
-        # gets the best montage
-        best_montage = self.get_best_matching_montage(chanlabels)
-
-        # gets channel indices to keep
-        montage_chs = chanlabels
-        montage_data = eegts
-        if usebestmontage:
-            montage_inds = self.get_montage_channel_indices(
-                best_montage, chanlabels)
-            montage_chs = chanlabels[montage_inds]
-            other_inds = [idx for idx, ch in enumerate(
-                chanlabels) if ch not in montage_chs]
-            montage_data = eegts[montage_inds, :]
-
-            print("Removed these channels: ", chanlabels[other_inds])
-
-        mne_rawstruct = create_mne_topostruct_from_numpy(montage_data, montage_chs,
-                                                         samplerate, montage=best_montage)
-        return mne_rawstruct
 
     def get_montage_channel_indices(self, montage_name, chanlabels):
         # read in montage and strip channel labels not in montage
@@ -301,7 +135,6 @@ class BaseDataset(ABC):
     @property
     def ncontacts(self):
         return len(self.chanlabels)
-
 
     def natsort_contacts(self):
         """
@@ -391,6 +224,15 @@ class BaseDataset(ABC):
         self.oezlobeinds = [ind for ind in range(
             len(self.chanlabels)) if ind not in self.cezlobeinds]
 
+    @abstractmethod
+    def pickle_results(self):
+        pass
+
+    @abstractmethod
+    def summary(self):
+        pass
+
+    @deprecated(version="0.1", reason="Not working function.")
     def set_localreference(self, chanlabels=[], chantypes=[]):
         """
         Only applies for SEEG and Strip channels.

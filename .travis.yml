@@ -17,7 +17,8 @@ install:
 # run conda /pip installation of packages
   - conda config --add channels conda-forge
   - conda install numpy pandas scikit-learn scipy mne pyedflib
+  - pip install -r requirements.txt
 # command to run tests
 script:
-  - pylint ./eegio/
-  - pytest ./tests
+#  - pylint ./eegio/
+  - pytest ./tests/

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 
 from eegio.base.objects.clinical.baseclinical import PatientClinical, DatasetClinical
 
@@ -45,7 +46,8 @@ class MasterClinicalSheet():
             self.centerids = []
 
         if all(isinstance(dataset, DatasetClinical) for dataset in self.datasets):
-            self.datasetids = ["-".join(dataset.id, dataset.datasetid) for dataset in self.datasets]
+            self.datasetids = ["-".join(dataset.id, dataset.datasetid)
+                               for dataset in self.datasets]
         else:
             self.datasetids = []
 
@@ -171,8 +173,6 @@ class MasterClinicalSheet():
 
 
 if __name__ == '__main__':
-    import numpy as np
-
     patid = "pat01"
     datasetid = "sz_2"
 

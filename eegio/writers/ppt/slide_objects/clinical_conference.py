@@ -1,6 +1,8 @@
-from pptx import Presentation
 import datetime
 import tempfile
+
+from pptx import Presentation
+
 
 class ClinicalPatientPPT():
     def __init__(self, patientid, clinical_center, username):
@@ -59,4 +61,3 @@ class ClinicalPatientPPT():
             p = tf.add_paragraph()
             p.text = 'Use _TextFrame.add_paragraph() for subsequent bullets'
             p.level = 2
-

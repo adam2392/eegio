@@ -14,7 +14,7 @@ This module stores the code for IO of EEG data for human patients, and pipelinin
 
 ## Dev Process - TODO
 
-- [ ] Add documentation badge: 
+- [ ] Add documentation
 - [ ] Create fully-functional tests
 - [ ] Support for edf, fif, mat files
 - [ ] Preprocessed pipeline first
@@ -85,6 +85,20 @@ I define preformat pipeline, neuroimaging pipeline, TBD.
 
 4. util/
 Stores utility and helper functions.
+
+# Documentation
+
+    sphinx-quickstart
+    
+
+# Testing
+
+    autopep8 --in-place --recursive --max-line-length=80 ./eegio/
+    autopep8 --in-place --recursive --max-line-length=80 ./tests/
+    pylint ./eegio/
+    pytest --cov-config=.coveragerc --cov=./eegio/ tests/
+    coverage-badge -f -o coverage.svg
+
 
 # License
 

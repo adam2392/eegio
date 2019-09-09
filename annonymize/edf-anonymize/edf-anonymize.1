@@ -1,0 +1,66 @@
+.TH EDF-ANONYMIZE 1 "17 May 2010" "edf-anonymize 1.0" "WFDB Applications Guide"
+.SH NAME
+edf-anonymize \- anonymize (de-identify) an EDF or EDF+ file
+.SH SYNOPSIS
+\fBedf-anonymize\fR \fIinput output\fR [ \fIsname\fR \fIsid\fR \fIsdate\fR ]
+.SH DESCRIPTION
+.PP
+\fIedf-anonymize\fR reads an EDF or EDF+ file (\fIinput\fR), writing an
+anonymized copy of it as \fIoutput\fR.
+.PP
+Anonymization of an EDF or EDF+ file requires removal of the patient name and
+id, and all elements of the recording date other than the year.  These can
+be replaced with surrogate data, and this is recommended since some software
+intended to read EDF or EDF+ files may reject inputs in which the fields for
+name, id, and recording date are empty.
+.PP
+By default, however, if \fIsname\fR, \fIsid\fR, and \fIsdate\fR are
+omitted, edf-anonymize replaces the name and id with space (blank)
+characters, and it replaces the recording day and month with '01.01'
+(1 January) without altering the recording year.
+.PP
+Run the program from the command line without any arguments to obtain a brief
+synopsis of its use.
+
+.SS Examples
+.TP
+edf-anonymize foo.edf anonymous.edf
+This copies the contents of foo.edf to a new file called anonymous.edf,
+emptying the patient name and id fields and setting the date to 01.01
+without altering the recording year.
+
+.TP
+edf-anonymize foo.edf anonymous.edf "Arthur Dent"
+As above, but the patient's name is replaced by Arthur Dent.  The
+quotation marks are needed if the name contains any spaces, as in this
+example. Names longer than 80 characters are truncated. 
+
+.TP
+edf-anonymize foo.edf anonymous.edf "Arthur Dent" 42
+As above, but the patient id is replaced by 42. Ids longer than 80
+characters are truncated.
+
+.TP
+edf-anonymize foo.edf anonymous.edf "Arthur Dent" 42 03.04.05 
+As above, but the date is replaced by 03.04.05 (i.e, 3 April 2005).
+
+.TP
+edf-anonymize foo.edf anonymous.edf "Arthur Dent" 42 30.11
+As above, but the day and month are replaced by 30.11 (30 November),
+without altering the recording year.
+
+.TP
+edf-anonymize foo.edf anonymous.edf "Arthur Dent" 42 +12345
+As above, but the recording date is shifted 12345 days into the future.
+
+.TP
+edf-anonymize foo.edf anonymous.edf "Arthur Dent" 42 +-5678
+As above, but the recording date is shifted -5678 days into the past.
+
+.SH AUTHOR
+George B. Moody (george@mit.edu)
+
+.SH SOURCE
+http://www.physionet.org/physiotools/edf-anonymize/edf-anonymize.c
+
+

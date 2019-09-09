@@ -3,10 +3,10 @@ import os
 import warnings
 from abc import ABC, abstractmethod
 from ast import literal_eval
+from pprint import pprint
 from sys import getsizeof
 
 import pandas as pd
-from pprint import pprint
 
 
 def format_list_str_channels(chanlist):
@@ -57,7 +57,8 @@ class AbstractClinical(ABC):
 
     @abstractmethod
     def summary(self):
-        raise NotImplementedError("Needs to have a summary function that pretty prints.")
+        raise NotImplementedError(
+            "Needs to have a summary function that pretty prints.")
 
     def load_from_df(self, df: pd.DataFrame):
         # get dictionary from dataframe
@@ -99,6 +100,7 @@ class PatientClinical(AbstractClinical):
         summary_str = f"{self.id} with {len(self.datasetlist)} datasets from center: {self.centerid}. " \
                       f""
         pprint(summary_str)
+
 
 if __name__ == '__main__':
     import numpy as np
