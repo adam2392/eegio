@@ -1,7 +1,7 @@
 # EEG IO
 [![Build Status](https://travis-ci.com/adam2392/eegio.svg?token=6sshyCajdyLy6EhT8YAq&branch=master)](https://travis-ci.com/adam2392/eegio)
 [![Coverage Status](./coverage.svg)](./coverage.svg)
-[![PEP8](https://img.shields.io/badge/code%20style-pep8-orange.svg)](https://www.python.org/dev/peps/pep-0008/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 ![GitHub](https://img.shields.io/github/license/adam2392/eegio)
 ![PyPI](https://img.shields.io/pypi/v/eegio)
 ![GitHub last commit](https://img.shields.io/github/last-commit/adam2392/eegio)
@@ -16,7 +16,6 @@ This module stores the code for IO of EEG data for human patients, and pipelinin
 
 - [ ] Add documentation
 - [ ] Create fully-functional tests
-- [ ] Support for edf, fif, mat files
 - [ ] Preprocessed pipeline first
 - [ ] Separate excel reading into metadata
 
@@ -95,6 +94,7 @@ Stores utility and helper functions.
 
     autopep8 --in-place --recursive --max-line-length=80 ./eegio/
     autopep8 --in-place --recursive --max-line-length=80 ./tests/
+    black eegio/*
     pylint ./eegio/
     pytest --cov-config=.coveragerc --cov=./eegio/ tests/
     coverage-badge -f -o coverage.svg

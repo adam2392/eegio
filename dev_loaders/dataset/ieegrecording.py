@@ -51,7 +51,7 @@ class iEEGRecording(Recording):
     Examples
     --------
     >>> import numpy as np
-    >>> from eegio.dev.timeseries.timeseries.ieegrecording import iEEGRecording
+    >>> from eegio.dev_loaders.timeseries.timeseries.ieegrecording import iEEGRecording
     >>> jsonfilepath = ""
     >>> root_dir = ""
     >>> recording = iEEGRecording(jsonfilepath=jsonfilepath,
@@ -63,22 +63,28 @@ class iEEGRecording(Recording):
     >>> recording.loadpipeline(jsonfilepaths[0])
     """
 
-    def __init__(self, root_dir,
-                 jsonfilepath=None,
-                 preload=False,
-                 apply_mask=True,
-                 remove_wm_contacts=True,
-                 reference='monopolar'):
+    def __init__(
+        self,
+        root_dir,
+        jsonfilepath=None,
+        preload=False,
+        apply_mask=True,
+        remove_wm_contacts=True,
+        reference="monopolar",
+    ):
         if not IEEG_REFERENCES.has_value(reference):
-            raise ValueError("Reference has to be one of {}".format(
-                list(map(str, IEEG_REFERENCES))))
+            raise ValueError(
+                "Reference has to be one of {}".format(list(map(str, IEEG_REFERENCES)))
+            )
 
-        super(iEEGRecording, self).__init__(root_dir=root_dir,
-                                            jsonfilepath=jsonfilepath,
-                                            apply_mask=apply_mask,
-                                            preload=preload,
-                                            reference=reference,
-                                            datatype='ieeg')
+        super(iEEGRecording, self).__init__(
+            root_dir=root_dir,
+            jsonfilepath=jsonfilepath,
+            apply_mask=apply_mask,
+            preload=preload,
+            reference=reference,
+            datatype="ieeg",
+        )
 
         self.remove_wm_contacts = remove_wm_contacts
 
@@ -117,8 +123,9 @@ class iEEGRecording(Recording):
 
                 # add indices for channels with at least a number
                 rawmask = []
-                rawmask.extend([idx for idx, ch in enumerate(
-                    self.chanlabels) if num_there(ch)])
+                rawmask.extend(
+                    [idx for idx, ch in enumerate(self.chanlabels) if num_there(ch)]
+                )
                 self.rawmask_inds = rawmask
                 rawdata = rawdata[self.rawmask_inds, :]
                 self.chanlabels = self.chanlabels[self.rawmask_inds]
@@ -126,7 +133,7 @@ class iEEGRecording(Recording):
             # filter data
             rawdata = self.filter_data(rawdata, self.samplerate, self.linefreq)
 
-            self.metadata['modality'] = 'ieeg'
+            self.metadata["modality"] = "ieeg"
             # set metadata now that all rawdata is processed
             self.setbasemetadata()
 
@@ -141,20 +148,23 @@ class iEEGRecording(Recording):
                 eeg_object.remove_wmcontacts()
 
                 # debug printing
-                print("These contacts are identified wm contacts: ",
-                      eeg_object.wm_contacts)
+                print(
+                    "These contacts are identified wm contacts: ",
+                    eeg_object.wm_contacts,
+                )
                 print(len(eeg_object.chanlabels))
                 print("Removed white matter contacts: ", eeg_object.shape)
                 assert len(eeg_object.chanlabels) == eeg_object.shape[0]
 
-            if self.reference == 'bipolar':
+            if self.reference == "bipolar":
                 eeg_object.set_bipolar(eeg_object.chanlabels)
-            elif self.reference == 'common_avg':
+            elif self.reference == "common_avg":
                 eeg_object.set_common_avg_ref()
             return eeg_object
         else:
             raise RuntimeError(
-                "You already loaded the data! Run .reset() to reset data")
+                "You already loaded the data! Run .reset() to reset data"
+            )
 
     def mask_meta_data(self, masks):
         chanxyzlabels = self.chanxyzlabels
@@ -162,8 +172,13 @@ class iEEGRecording(Recording):
         chanxyz = self.chanxyz
 
         metamask = []
-        metamask.extend([idx for idx, ch in enumerate(chanxyzlabels)
-                         if all(ch not in mask for mask in masks)])
+        metamask.extend(
+            [
+                idx
+                for idx, ch in enumerate(chanxyzlabels)
+                if all(ch not in mask for mask in masks)
+            ]
+        )
         chanxyzlabels = chanxyzlabels[metamask]
         contact_regs = contact_regs[metamask]
         chanxyz = chanxyz[metamask, :]

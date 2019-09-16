@@ -38,7 +38,8 @@ class BaseLoader(ABC):
         :return: None
         """
         raise NotImplementedError(
-            "Implement function for loading in file for starting conversion!")
+            "Implement function for loading in file for starting conversion!"
+        )
 
     def updatemetadata(self, update_kws: dict = {}):
         if self.metadata != None:

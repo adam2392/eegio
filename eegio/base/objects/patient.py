@@ -48,16 +48,24 @@ class Patient(object):
     --------
     """
 
-    def __init__(self, patientid: str, datadir: os.PathLike,
-                 managing_user: str = None,
-                 datasetids: List[str] = [],
-                 modality: str = "ieeg",
-                 samplerate: float = None,
-                 wm_channels: List = [],
-                 bad_channels: List = [],
-                 metadata: Dict = dict(),
-                 rz_contacts: List[str] = [], soz_contacts: List[str] = [], spread_contacts: List[str] = [],
-                 brain_region_hypo: str = None, resected_region: str = None, lesion_present: bool = False):
+    def __init__(
+        self,
+        patientid: str,
+        datadir: os.PathLike,
+        managing_user: str = None,
+        datasetids: List[str] = [],
+        modality: str = "ieeg",
+        samplerate: float = None,
+        wm_channels: List = [],
+        bad_channels: List = [],
+        metadata: Dict = dict(),
+        rz_contacts: List[str] = [],
+        soz_contacts: List[str] = [],
+        spread_contacts: List[str] = [],
+        brain_region_hypo: str = None,
+        resected_region: str = None,
+        lesion_present: bool = False,
+    ):
         self.datadir = datadir
 
         # set recording metadata
@@ -83,14 +91,15 @@ class Patient(object):
         self.metadata = metadata
 
     def __str__(self):
-        return "{} Patient with {} Dataset Recordings " \
-               "totaling {} seconds".format(
-            self.patientid, self.numdatasets, self.total_length_seconds)
+        return "{} Patient with {} Dataset Recordings " "totaling {} seconds".format(
+            self.patientid, self.numdatasets, self.total_length_seconds
+        )
 
     @classmethod
     def create_fake_example(self):
         import tempfile
         from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+
         eegts = EEGTimeSeries.create_fake_example()
         patientid = "testid"
         with tempfile.TemporaryDirectory() as datadir:
@@ -151,11 +160,15 @@ class Patient(object):
         :rtype:
         """
         fpaths = []
-        for full_id in [self._get_full_datasetid(self.patientid, s) for s in self.datasetids]:
+        for full_id in [
+            self._get_full_datasetid(self.patientid, s) for s in self.datasetids
+        ]:
             fpath = os.path.join(self.datadir, full_id)
             if not os.path.exists(fpath):
-                warnings.warn(f"This dataset seemed to not be available for {self.patientid}: {fpath}.",
-                              RuntimeWarning)
+                warnings.warn(
+                    f"This dataset seemed to not be available for {self.patientid}: {fpath}.",
+                    RuntimeWarning,
+                )
             fpaths.append(fpath)
         return fpaths
 

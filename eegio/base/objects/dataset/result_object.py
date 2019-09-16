@@ -34,20 +34,32 @@ class Result(BaseDataset):
     >>> resultobj = Result(simulated_result, metadata)
     """
 
-    def __init__(self, mat, times, contacts,
-                 patientid=None, datasetid=None,
-                 model_attributes=None, metadata=dict()):
+    def __init__(
+        self,
+        mat,
+        times,
+        contacts,
+        patientid=None,
+        datasetid=None,
+        model_attributes=None,
+        metadata=dict(),
+    ):
         if mat.ndim > 2:
-            raise ValueError("Time series can not have > 2 dimensions right now."
-                             "We assume [C x T] shape, channels x time. ")
+            raise ValueError(
+                "Time series can not have > 2 dimensions right now."
+                "We assume [C x T] shape, channels x time. "
+            )
         if mat.shape[0] != len(contacts):
             matshape = mat.shape
             ncontacts = len(contacts)
-            raise AttributeError(f"Matrix data should be shaped: Num Contacts X Time. You "
-                                 f"passed in {matshape} and {ncontacts} contacts.")
+            raise AttributeError(
+                f"Matrix data should be shaped: Num Contacts X Time. You "
+                f"passed in {matshape} and {ncontacts} contacts."
+            )
 
-        super(Result, self).__init__(mat, times, contacts,
-                                     patientid, datasetid, model_attributes)
+        super(Result, self).__init__(
+            mat, times, contacts, patientid, datasetid, model_attributes
+        )
 
         self.metadata = metadata
 
@@ -55,14 +67,14 @@ class Result(BaseDataset):
         self.extract_metadata()
 
     def __str__(self):
-        return "{} {} EEG result mat ({}) " \
-               "{} seconds".format(
-                   self.patientid, self.datasetid, self.mat.shape, self.len_secs)
+        return "{} {} EEG result mat ({}) " "{} seconds".format(
+            self.patientid, self.datasetid, self.mat.shape, self.len_secs
+        )
 
     def __repr__(self):
-        return "{} {} EEG result mat ({}) " \
-               "{} seconds".format(
-                   self.patientid, self.datasetid, self.mat.shape, self.len_secs)
+        return "{} {} EEG result mat ({}) " "{} seconds".format(
+            self.patientid, self.datasetid, self.mat.shape, self.len_secs
+        )
 
     def summary(self):
         pass
@@ -80,7 +92,7 @@ class Result(BaseDataset):
 
     @property
     def record_filename(self):
-        return self.metadata['filename']
+        return self.metadata["filename"]
 
     def get_metadata(self):
         """
@@ -109,8 +121,8 @@ class Result(BaseDataset):
 
         :return: None
         """
-        badchannels = self.metadata['bad_channels']
-        noneegchannels = self.metadata['non_eeg_channels']
+        badchannels = self.metadata["bad_channels"]
+        noneegchannels = self.metadata["non_eeg_channels"]
 
         maskinds = []
         for chlist in [badchannels, noneegchannels]:
@@ -118,8 +130,9 @@ class Result(BaseDataset):
             maskinds.extend(removeinds)
 
         maskinds = list(set(maskinds))
-        nonmaskinds = [ind for ind in range(
-            len(self.chanlabels)) if ind not in maskinds]
+        nonmaskinds = [
+            ind for ind in range(len(self.chanlabels)) if ind not in maskinds
+        ]
 
         # apply to relevant data
         self.mat = self.mat[nonmaskinds, ...]
@@ -182,24 +195,25 @@ class Result(BaseDataset):
         # return self.samplepoints.astype(int) / self.samplerate
         # return self.metadata['timepoints']
         # compute time points
-        return compute_timepoints(self.samplepoints.ravel()[-1],
-                                  self.winsize,
-                                  self.stepsize,
-                                  self.samplerate)
+        return compute_timepoints(
+            self.samplepoints.ravel()[-1], self.winsize, self.stepsize, self.samplerate
+        )
 
     @property
     def onsetwin(self):
         # if self.metadata['onsetwin'] == []:
         #     return None
 
-        if self.metadata['onsetwin'] is not None and not np.isnan(self.metadata['onsetwin']):
-            return int(self.metadata['onsetwin'])
+        if self.metadata["onsetwin"] is not None and not np.isnan(
+            self.metadata["onsetwin"]
+        ):
+            return int(self.metadata["onsetwin"])
         # else:
         try:
-            print("Onset index and offsetindex",
-                  self.onsetind, self.samplepoints[-1, :])
-            onsetwin, _ = load_szinds(
-                self.onsetind, None, self.samplepoints)
+            print(
+                "Onset index and offsetindex", self.onsetind, self.samplepoints[-1, :]
+            )
+            onsetwin, _ = load_szinds(self.onsetind, None, self.samplepoints)
             return int(onsetwin[0])
         except:
             return None
@@ -209,13 +223,14 @@ class Result(BaseDataset):
         # if self.metadata['offsetwin'] == []:
         #     return None
 
-        if self.metadata['offsetwin'] is not None and not np.isnan(self.metadata['offsetwin']):
-            return int(self.metadata['offsetwin'])
+        if self.metadata["offsetwin"] is not None and not np.isnan(
+            self.metadata["offsetwin"]
+        ):
+            return int(self.metadata["offsetwin"])
         # else:
         try:
             print(self.offsetind, self.samplepoints[-1, :])
-            _, offsetwin = load_szinds(
-                self.onsetind, self.offsetind, self.samplepoints)
+            _, offsetwin = load_szinds(self.onsetind, self.offsetind, self.samplepoints)
             print("Found offsetwin: ", offsetwin)
             return int(offsetwin[0])
         except:
@@ -228,17 +243,17 @@ class Result(BaseDataset):
 
         :return: None
         """
-        self.contacts_list = self.metadata['chanlabels']
+        self.contacts_list = self.metadata["chanlabels"]
         try:
             # comment out
-            self.modality = self.metadata['modality']
+            self.modality = self.metadata["modality"]
         except Exception as e:
-            self.metadata['modality'] = 'ieeg'
-            self.modality = self.metadata['modality']
+            self.metadata["modality"] = "ieeg"
+            self.modality = self.metadata["modality"]
             print("Loading result object. Error in extracting metadata: ", e)
 
         # convert channel labels into a Contacts data struct
-        if self.reference == 'bipolar' or self.modality == 'scalp':
+        if self.reference == "bipolar" or self.modality == "scalp":
             self.contacts = Contacts(self.contacts_list, require_matching=False)
         else:
             self.contacts = Contacts(self.contacts_list)
@@ -262,10 +277,7 @@ class Freqbands(Enum):
 
 
 class FreqModelResult(Result):
-
-    def __init__(self, mat, freqs, metadata,
-                 phasemat=[],
-                 freqbands=Freqbands):
+    def __init__(self, mat, freqs, metadata, phasemat=[], freqbands=Freqbands):
         super(FreqModelResult, self).__init__(mat, metadata)
         self.phasemat = phasemat
 
@@ -285,9 +297,9 @@ class FreqModelResult(Result):
         return self.freqs
 
     def __str__(self):
-        return "{} {} Frequency Power Model {}".format(self.patient_id,
-                                                       self.dataset_id,
-                                                       self.shape)
+        return "{} {} Frequency Power Model {}".format(
+            self.patient_id, self.dataset_id, self.shape
+        )
 
     def _computefreqindices(self, freqs, freqband):
         """
@@ -301,8 +313,7 @@ class FreqModelResult(Result):
         upperband = freqband[1]
 
         # get indices where the freq bands are put in
-        freqbandindices = np.where(
-            (freqs >= lowerband) & (freqs < upperband))
+        freqbandindices = np.where((freqs >= lowerband) & (freqs < upperband))
         freqbandindices = [freqbandindices[0][0], freqbandindices[0][-1]]
         return freqbandindices
 
@@ -311,19 +322,17 @@ class FreqModelResult(Result):
         power = np.abs(self.mat)
 
         # create empty binned power
-        power_binned = np.zeros(shape=(power.shape[0],
-                                       len(freqbands),
-                                       power.shape[2]))
+        power_binned = np.zeros(shape=(power.shape[0], len(freqbands), power.shape[2]))
         print(power.shape, power_binned.shape)
         for idx, freqband in enumerate(freqbands):
             # compute the freq indices for each band
-            freqbandindices = self._computefreqindices(
-                self.freqs, freqband.value)
+            freqbandindices = self._computefreqindices(self.freqs, freqband.value)
 
             # Create an empty array = C x T (frequency axis is compresssed into 1 band)
             # average between these two indices
             power_binned[:, idx, :] = np.nanmean(
-                power[:, freqbandindices[0]:freqbandindices[1] + 1, :], axis=1)
+                power[:, freqbandindices[0] : freqbandindices[1] + 1, :], axis=1
+            )
 
         self.mat = power_binned
         self.freqbands = freqbands
@@ -360,9 +369,11 @@ class FreqModelResult(Result):
         if apply_trim:
             # trim timeseries in time
             clinonset_map = result.trim_aroundseizure(
-                offset_sec=offset_sec, mat=clinonset_map)
+                offset_sec=offset_sec, mat=clinonset_map
+            )
             others_map = result.trim_aroundseizure(
-                offset_sec=offset_sec, mat=others_map)
+                offset_sec=offset_sec, mat=others_map
+            )
 
         clinonset_map = np.mean(clinonset_map, axis=0)
         others_map = np.mean(others_map, axis=0)

@@ -29,10 +29,15 @@ class BaseIO(object):
         :param metafilename: (str) outputfilepath to write data to
         :return: None
         """
-        with io.open(metafilename, 'w', encoding='utf8') as outfile:
-            str_ = json.dumps(metadata,
-                              indent=4, sort_keys=True, cls=NumpyEncoder,
-                              separators=(',', ': '), ensure_ascii=False)
+        with io.open(metafilename, "w", encoding="utf8") as outfile:
+            str_ = json.dumps(
+                metadata,
+                indent=4,
+                sort_keys=True,
+                cls=NumpyEncoder,
+                separators=(",", ": "),
+                ensure_ascii=False,
+            )
             outfile.write(str_)
 
     def _loadjsonfile(self, metafilename):
@@ -44,15 +49,15 @@ class BaseIO(object):
         :param metafilename: (str) filepath to the metadata
         :return: metadata (dict) a dictionary-style metadata data structure
         """
-        if not metafilename.endswith('.json'):
-            metafilename += '.json'
+        if not metafilename.endswith(".json"):
+            metafilename += ".json"
 
         try:
-            with open(metafilename, mode='r', encoding='utf8') as f:
+            with open(metafilename, mode="r", encoding="utf8") as f:
                 metadata = json.load(f)
             metadata = json.loads(metadata)
         except:
-            with io.open(metafilename, encoding='utf-8', mode='r') as fp:
+            with io.open(metafilename, encoding="utf-8", mode="r") as fp:
                 json_str = fp.read()  # json.loads(
             metadata = json.loads(json_str)
 
@@ -65,11 +70,11 @@ class BaseIO(object):
         :param npzfilename: (str) filepath
         :return: (dict) a dictionary for the numpy arrays
         """
-        if npzfilename.endswith('.json'):
-            npzfilename = npzfilename.split('.json')[0]
-        if not npzfilename.endswith('.npz'):
-            npzfilename += '.npz'
-        result_struct = dict(np.load(npzfilename, encoding='latin1'))
+        if npzfilename.endswith(".json"):
+            npzfilename = npzfilename.split(".json")[0]
+        if not npzfilename.endswith(".npz"):
+            npzfilename += ".npz"
+        result_struct = dict(np.load(npzfilename, encoding="latin1"))
         return result_struct
 
     def _writenpzfile(self, npzfilename, kwargs):
@@ -80,8 +85,8 @@ class BaseIO(object):
         :param kwargs:
         :return:
         """
-        if not npzfilename.endswith('.npz'):
-            npzfilename += '.npz'
+        if not npzfilename.endswith(".npz"):
+            npzfilename += ".npz"
         np.savez_compressed(npzfilename, **kwargs)
 
     def _writematfile(self, matfilename, kwargs):
@@ -105,7 +110,6 @@ class BaseIO(object):
         :param kwargs:
         :return: None
         """
-        if not matfilename.endswith('.mat'):
-            matfilename += '.mat'
-        sio.savemat(matfilename, squeeze_me=True,
-                    struct_as_record=True, **kwargs)
+        if not matfilename.endswith(".mat"):
+            matfilename += ".mat"
+        sio.savemat(matfilename, squeeze_me=True, struct_as_record=True, **kwargs)

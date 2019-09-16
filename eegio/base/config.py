@@ -1,7 +1,1 @@
-ACCEPTED_EEG_MODALITIES = [
-    'scalp',
-    'ecog',
-    'seeg',
-    'ieeg',
-    'eeg'
-]
+ACCEPTED_EEG_MODALITIES = ["scalp", "ecog", "seeg", "ieeg", "eeg"]

@@ -1,10 +1,10 @@
 # import pytest
 #
 # from base.config.dataconfig import IEEG_REFERENCES, SCALP_REFERENCES
-# from eegio.dev.dataset.result.resultloader import ResultLoader
-# from eegio.dev.dataset.timeseries.ieegrecording import iEEGRecording
-# from eegio.dev.dataset.timeseries.scalprecording import ScalpRecording
-# from eegio.dev.patient.subjectrawloader import SubjectRawLoader
+# from eegio.dev_loaders.dataset.result.resultloader import ResultLoader
+# from eegio.dev_loaders.dataset.timeseries.ieegrecording import iEEGRecording
+# from eegio.dev_loaders.dataset.timeseries.scalprecording import ScalpRecording
+# from eegio.dev_loaders.patient.subjectrawloader import SubjectRawLoader
 #
 #
 # # @pytest.mark.skip(reason="Already tested! 12/14/18.")

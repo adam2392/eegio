@@ -51,7 +51,7 @@ class ScalpRecording(Recording):
     Examples
     --------
     >>> import numpy as np
-    >>> from eegio.dev.timeseries.timeseries.scalprecording import ScalpRecording
+    >>> from eegio.dev_loaders.timeseries.timeseries.scalprecording import ScalpRecording
     >>> jsonfilepath = ""
     >>> root_dir = ""
     >>> recording = ScalpRecording(jsonfilepath=jsonfilepath,
@@ -62,21 +62,27 @@ class ScalpRecording(Recording):
     >>> recording.loadpipeline(jsonfilepaths[0])
     """
 
-    def __init__(self, root_dir,
-                 jsonfilepath=None,
-                 preload=False,
-                 apply_mask=True,
-                 reference='monopolar'):
+    def __init__(
+        self,
+        root_dir,
+        jsonfilepath=None,
+        preload=False,
+        apply_mask=True,
+        reference="monopolar",
+    ):
         if not SCALP_REFERENCES.has_value(reference):
-            raise ValueError("Reference has to be one of {}".format(
-                list(map(str, SCALP_REFERENCES))))
+            raise ValueError(
+                "Reference has to be one of {}".format(list(map(str, SCALP_REFERENCES)))
+            )
 
-        super(ScalpRecording, self).__init__(root_dir=root_dir,
-                                             jsonfilepath=jsonfilepath,
-                                             preload=preload,
-                                             apply_mask=apply_mask,
-                                             reference=reference,
-                                             datatype='scalp')
+        super(ScalpRecording, self).__init__(
+            root_dir=root_dir,
+            jsonfilepath=jsonfilepath,
+            preload=preload,
+            apply_mask=apply_mask,
+            reference=reference,
+            datatype="scalp",
+        )
 
     def loadpipeline(self, jsonfilepath=None):
         """
@@ -111,11 +117,15 @@ class ScalpRecording(Recording):
                 # get rid of channels not in montage
                 best_montage = self.get_best_matching_montage(self.chanlabels)
                 montage_chan_inds = self.get_montage_channel_indices(
-                    best_montage, self.chanlabels)
+                    best_montage, self.chanlabels
+                )
                 self.montage = best_montage
 
-                other_inds = [idx for idx in range(
-                    len(self.chanlabels)) if idx not in montage_chan_inds]
+                other_inds = [
+                    idx
+                    for idx in range(len(self.chanlabels))
+                    if idx not in montage_chan_inds
+                ]
                 print("Removed these channels! ", self.chanlabels[other_inds])
 
                 # get rid of the montage channel indices
@@ -125,23 +135,24 @@ class ScalpRecording(Recording):
             # filter data
             rawdata = self.filter_data(rawdata, self.samplerate, self.linefreq)
 
-            self.metadata['montage'] = self.montage
-            self.metadata['modality'] = 'scalp'
-            self.metadata['cezlobe'] = self.cezlobe
+            self.metadata["montage"] = self.montage
+            self.metadata["modality"] = "scalp"
+            self.metadata["cezlobe"] = self.cezlobe
             # set metadata now that all rawdata is processed
             self.setbasemetadata()
 
             # create time series object
             eeg_object = EEGTs(rawdata, metadata=self.metadata)
 
-            if self.reference == 'common_avg':
+            if self.reference == "common_avg":
                 eeg_object.set_common_avg_ref()
 
             return eeg_object
 
         else:
             raise RuntimeError(
-                "You already loaded the data! Run .reset() to reset data")
+                "You already loaded the data! Run .reset() to reset data"
+            )
 
     def create_raw_with_montage(self, eegobject, remove=True):
         """
@@ -155,14 +166,16 @@ class ScalpRecording(Recording):
 
         # gets the best montage
         best_montage = self.get_best_matching_montage(mneraw.ch_names)
-        best_montage = 'standard_1020'
+        best_montage = "standard_1020"
 
         # remove channels not in montage
         if remove:
             montage_inds = self.get_montage_channel_indices(
-                best_montage, mneraw.ch_names)
-            other_inds = [idx for idx, ch in enumerate(
-                mneraw.ch_names) if idx not in montage_inds]
+                best_montage, mneraw.ch_names
+            )
+            other_inds = [
+                idx for idx, ch in enumerate(mneraw.ch_names) if idx not in montage_inds
+            ]
             other_chs = mneraw.ch_names[other_inds]
 
             # drop these channels
@@ -172,10 +185,11 @@ class ScalpRecording(Recording):
         # extract data from the channel
         rawdata = mneraw.get_data()
         montage_chs = mneraw.ch_names
-        samplerate = mneraw.info['sfreq']
+        samplerate = mneraw.info["sfreq"]
 
         mne_rawstruct = create_mne_topostruct_from_numpy(
-            rawdata, montage_chs, samplerate, montage=best_montage)
+            rawdata, montage_chs, samplerate, montage=best_montage
+        )
         return mne_rawstruct
 
     def get_montage_channel_indices(self, montage_name, chanlabels):
@@ -191,8 +205,7 @@ class ScalpRecording(Recording):
         montage_chs = [ch.lower() for ch in montage.ch_names]
 
         # get indices to keep
-        to_keep_inds = [idx for idx, ch in enumerate(
-            chanlabels) if ch in montage_chs]
+        to_keep_inds = [idx for idx, ch in enumerate(chanlabels) if ch in montage_chs]
 
         return to_keep_inds
 

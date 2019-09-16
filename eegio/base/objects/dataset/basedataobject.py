@@ -48,9 +48,15 @@ class BaseDataset(ABC):
 
     """
 
-    def __init__(self, mat: np.ndarray, times: list,
-                 contacts: Contacts, patientid: str, datasetid: str = None,
-                 model_attributes: dict = None):
+    def __init__(
+        self,
+        mat: np.ndarray,
+        times: list,
+        contacts: Contacts,
+        patientid: str,
+        datasetid: str = None,
+        model_attributes: dict = None,
+    ):
         self.mat = mat
         self.times = times
         self.contacts = contacts
@@ -101,8 +107,7 @@ class BaseDataset(ABC):
         montage_chs = [ch.lower() for ch in montage.ch_names]
 
         # get indices to keep
-        to_keep_inds = [idx for idx, ch in enumerate(
-            chanlabels) if ch in montage_chs]
+        to_keep_inds = [idx for idx, ch in enumerate(chanlabels) if ch in montage_chs]
 
         return to_keep_inds
 
@@ -151,8 +156,7 @@ class BaseDataset(ABC):
         # pass
         natinds = self.contacts.natsort_contacts()
         self.mat = np.array(order_by_index(self.mat, natinds))
-        self.metadata['chanlabels'] = np.array(
-            order_by_index(self.chanlabels, natinds))
+        self.metadata["chanlabels"] = np.array(order_by_index(self.chanlabels, natinds))
 
     def get_data(self):
         return self.mat
@@ -163,8 +167,9 @@ class BaseDataset(ABC):
         return self.mat[idx, tid1:tid2]
 
     def remove_channels(self, toremovechans):
-        removeinds = [ind for ind, ch in enumerate(
-            self.chanlabels) if ch in toremovechans]
+        removeinds = [
+            ind for ind, ch in enumerate(self.chanlabels) if ch in toremovechans
+        ]
         return removeinds
 
     def split_cez_oez(self, dataset, cez_inds, oez_inds):
@@ -204,10 +209,13 @@ class BaseDataset(ABC):
 
     def compute_montage_groups(self):
         from mne.selection import _divide_to_regions
-        rawinfo = mne.create_info(ch_names=list(self.chanlabels),
-                                  ch_types='eeg',
-                                  sfreq=self.samplerate,
-                                  montage=self.montage)
+
+        rawinfo = mne.create_info(
+            ch_names=list(self.chanlabels),
+            ch_types="eeg",
+            sfreq=self.samplerate,
+            montage=self.montage,
+        )
 
         # get channel groups - hashmap of channel indices
         ch_groups = _divide_to_regions(rawinfo, add_stim=False)
@@ -221,8 +229,9 @@ class BaseDataset(ABC):
         self.cezlobeinds = []
         for lobe in self.cezlobe:
             self.cezlobeinds.extend(self.ch_groups[lobe])
-        self.oezlobeinds = [ind for ind in range(
-            len(self.chanlabels)) if ind not in self.cezlobeinds]
+        self.oezlobeinds = [
+            ind for ind in range(len(self.chanlabels)) if ind not in self.cezlobeinds
+        ]
 
     @abstractmethod
     def pickle_results(self):
@@ -250,16 +259,21 @@ class BaseDataset(ABC):
         else:
             # get the remaining labels in the channels
             remaining_labels = np.array(
-                [ch for ch in self.chanlabels if ch not in chanlabels])
+                [ch for ch in self.chanlabels if ch not in chanlabels]
+            )
         n = len(chanlabels)
 
-        ''' ASSUME ALL SEEG OR STRIP FOR NOW '''
+        """ ASSUME ALL SEEG OR STRIP FOR NOW """
         if chantypes == []:
-            chantypes = ['seeg' for i in range(n)]
+            chantypes = ["seeg" for i in range(n)]
 
-        if any(chantype not in ['seeg', 'grid', 'strip'] for chantype in chantypes):
-            raise ValueError("Channel types can only be of seeg, grid, or strip. "
-                             "Make sure you pass in valid channel types! You passed in {}".format(chantypes))
+        if any(chantype not in ["seeg", "grid", "strip"] for chantype in chantypes):
+            raise ValueError(
+                "Channel types can only be of seeg, grid, or strip. "
+                "Make sure you pass in valid channel types! You passed in {}".format(
+                    chantypes
+                )
+            )
 
         # # first naturally sort contacts
         # natinds = index_natsorted(self.chanlabels)
@@ -281,20 +295,19 @@ class BaseDataset(ABC):
                 chantype = chantypes[ind]
                 chanlabel = self.chanlabels[ind]
 
-                if chantype == 'grid':
+                if chantype == "grid":
                     # get all grid channels
                     gridlayout = [self.chanlabels[g_ind] for g_ind in inds]
                     # run 2d neighbors
-                    nbrs_chans, nbrs_inds = self._get2d_neighbors(
-                        gridlayout, chanlabel)
+                    nbrs_chans, nbrs_inds = self._get2d_neighbors(gridlayout, chanlabel)
 
                 else:
                     # get all channels for this electrode
-                    electrodechans = [self.chanlabels[elec_ind]
-                                      for elec_ind in inds]
+                    electrodechans = [self.chanlabels[elec_ind] for elec_ind in inds]
                     # run 1d neighbors
                     nbrs_chans, nbrs_inds = self._get1d_neighbors(
-                        electrodechans, chanlabel)
+                        electrodechans, chanlabel
+                    )
 
                 # create dictionary of neighbor channels
                 localreferenceinds[chanlabel] = nbrs_chans
@@ -318,8 +331,11 @@ class BaseDataset(ABC):
         self.localreferencedict = localreferenceinds
 
         # compute leftover channels
-        leftoverinds = [ind for ind, ch in enumerate(
-            chanlabels) if ch not in localreferenceinds.keys()]
+        leftoverinds = [
+            ind
+            for ind, ch in enumerate(chanlabels)
+            if ch not in localreferenceinds.keys()
+        ]
         self.leftoverchanlabels = self.chanlabels[leftoverinds]
 
         if remaining_labels.size == 0:

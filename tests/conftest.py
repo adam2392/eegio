@@ -110,10 +110,6 @@ def clinical_sheet():
     import numpy as np
     from eegio.base.objects.clinical import MasterClinicalSheet, PatientClinical
 
-    # patientlist = ["test_patient_01", "test_patient_02"]
-    # datasetids = [f"test_sz{i}" for i in range(2)]
-    # clinical_sheet = MasterClinicalSheet(patientlist, datasetids)
-
     patid = "test_patient_01"
     datasetids = [f"test_sz{i}" for i in range(2)]
     centerid = "jhu"
@@ -124,9 +120,7 @@ def clinical_sheet():
 
     patclin = PatientClinical(patid, datasetids, centerid)
     patclin.load_from_dict(example_datadict)
-
     clinical_sheet = MasterClinicalSheet([patclin])
-
     return clinical_sheet
 
 

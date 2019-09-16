@@ -25,9 +25,11 @@ class BaseAdapter(ABC):
     @abstractmethod
     def convert_tsdata(self, filepath: os.PathLike):
         raise NotImplementedError(
-            "Implement function for loading in file for starting conversion!")
+            "Implement function for loading in file for starting conversion!"
+        )
 
     @abstractmethod
     def convert_metadata(self, filepath: os.PathLike):
         raise NotImplementedError(
-            "Implement function for loading in file for starting conversion!")
+            "Implement function for loading in file for starting conversion!"
+        )

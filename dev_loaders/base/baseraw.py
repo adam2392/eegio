@@ -36,14 +36,14 @@ class BaseRawLoader(BaseIO):
     def load_metadata(self, metadata):
         self.metadata = metadata
         # extract type information and other channel information
-        if 'type' in metadata.keys():
-            self.type = metadata['type']
+        if "type" in metadata.keys():
+            self.type = metadata["type"]
         else:
             self.type = None
 
         # extract patient notes
-        if 'note' in metadata.keys():
-            self.note = metadata['note']
+        if "note" in metadata.keys():
+            self.note = metadata["note"]
         else:
             self.note = None
 
@@ -56,91 +56,91 @@ class BaseRawLoader(BaseIO):
 
     @property
     def samplerate(self):
-        return self.metadata['samplerate']
+        return self.metadata["samplerate"]
 
     @property
     def cezcontacts(self):
-        return self.metadata['ez_hypo_contacts']
+        return self.metadata["ez_hypo_contacts"]
 
     @property
     def resectedcontacts(self):
-        return self.metadata['resected_contacts']
+        return self.metadata["resected_contacts"]
 
     @property
     def channel_semiology(self):
-        return self.metadata['semiology']
+        return self.metadata["semiology"]
 
     @property
     def cezlobe(self):
-        return self.metadata['cezlobe']
+        return self.metadata["cezlobe"]
 
     @property
     def record_filename(self):
-        return self.metadata['filename']
+        return self.metadata["filename"]
 
     @property
     def bad_channels(self):
-        return self.metadata['bad_channels']
+        return self.metadata["bad_channels"]
 
     @property
     def non_eeg_channels(self):
-        return self.metadata['non_eeg_channels']
+        return self.metadata["non_eeg_channels"]
 
     @property
     def patient_id(self):
-        if 'patient_id' in self.metadata.keys():
-            return self.metadata['patient_id']
+        if "patient_id" in self.metadata.keys():
+            return self.metadata["patient_id"]
         else:
             return None
 
     @property
     def dataset_id(self):
-        if 'dataset_id' in self.metadata.keys():
-            return self.metadata['dataset_id']
+        if "dataset_id" in self.metadata.keys():
+            return self.metadata["dataset_id"]
         else:
             return None
 
     @property
     def meas_data(self):
-        return self.metadata['date_of_recording']
+        return self.metadata["date_of_recording"]
 
     @property
     def length_of_recording(self):
-        return self.metadata['length_of_recording']
+        return self.metadata["length_of_recording"]
 
     @property
     def numberchans(self):
-        return self.metadata['number_chans']
+        return self.metadata["number_chans"]
 
     @property
     def clinical_center(self):
-        return self.metadata['clinical_center']
+        return self.metadata["clinical_center"]
 
     @property
     def dataset_events(self):
-        return self.metadata['events']
+        return self.metadata["events"]
 
     @property
     def onsetind(self):
-        if self.metadata['onset'] is not None:
-            return np.multiply(self.metadata['onset'], self.samplerate)
+        if self.metadata["onset"] is not None:
+            return np.multiply(self.metadata["onset"], self.samplerate)
         else:
             return None
 
     @property
     def offsetind(self):
-        if self.metadata['termination'] is not None:
-            return np.multiply(self.metadata['termination'], self.samplerate)
+        if self.metadata["termination"] is not None:
+            return np.multiply(self.metadata["termination"], self.samplerate)
         else:
             return None
 
     @property
     def onsetsec(self):
-        return self.metadata['onset']
+        return self.metadata["onset"]
 
     @property
     def offsetsec(self):
-        return self.metadata['termination']
+        return self.metadata["termination"]
 
     def loadraw_jsonfile(self, jsonfilepath):
         """
@@ -165,11 +165,12 @@ class BaseRawLoader(BaseIO):
         #     assert self.record_filename in rawfilepath
 
         # extract raw object
-        if rawfilepath.endswith('.fif'):
+        if rawfilepath.endswith(".fif"):
             raw = mne.io.read_raw_fif(rawfilepath, preload=False, verbose=False)
         else:
             raise ValueError(
-                "All files read in with eegio need to be preformatted into fif first!")
+                "All files read in with eegio need to be preformatted into fif first!"
+            )
         return raw
 
     def _getalljsonfilepaths(self, eegdir):
@@ -183,9 +184,12 @@ class BaseRawLoader(BaseIO):
 
         :return: None
         """
-        jsonfilepaths = [f for f in os.listdir(eegdir)
-                         if f.endswith('.json')
-                         if not f.startswith('.')]
+        jsonfilepaths = [
+            f
+            for f in os.listdir(eegdir)
+            if f.endswith(".json")
+            if not f.startswith(".")
+        ]
         self.jsonfilepaths = natsorted(jsonfilepaths)
 
     def _loadinfodata(self, rawstruct):
@@ -199,11 +203,11 @@ class BaseRawLoader(BaseIO):
         # set edge freqs that were used in recording
         # Note: the highpass_freq is the max frequency we should be able to see
         # then.
-        self.lowpass_freq = rawstruct.info['lowpass']
-        self.highpass_freq = rawstruct.info['highpass']
+        self.lowpass_freq = rawstruct.info["lowpass"]
+        self.highpass_freq = rawstruct.info["highpass"]
 
         # set line freq
-        self.linefreq = rawstruct.info['line_freq']
+        self.linefreq = rawstruct.info["line_freq"]
 
         if self.linefreq is None:
             self.linefreq = 60
@@ -260,8 +264,9 @@ class BaseRawLoader(BaseIO):
         :return: xyzdatamask (list) a list of indices that have xyz coordinates identified.
         """
         if len(chanlabels) > 0:
-            xyzdatamask = np.array([idx for idx, ch in enumerate(
-                chanxyzlabels) if ch not in chanlabels])
+            xyzdatamask = np.array(
+                [idx for idx, ch in enumerate(chanxyzlabels) if ch not in chanlabels]
+            )
         else:
             xyzdatamask = np.array([])
         return xyzdatamask
@@ -292,7 +297,8 @@ class BaseRawLoader(BaseIO):
         # except:
         #     self.cezlobe = []
         whitemattermask = np.array(
-            [idx for idx, ch in enumerate(chanxyzlabels) if idx not in contact_regs])
+            [idx for idx, ch in enumerate(chanxyzlabels) if idx not in contact_regs]
+        )
         return whitemattermask
 
     def filter_data(self, rawdata, samplerate, linefreq):
@@ -309,7 +315,10 @@ class BaseRawLoader(BaseIO):
         linefreq = int(linefreq)  # LINE NOISE OF HZ
         if linefreq != 50 and linefreq != 60:
             raise ValueError(
-                "Line frequency for noise should be either 50 or 60 Hz! You passed {}".format(linefreq))
+                "Line frequency for noise should be either 50 or 60 Hz! You passed {}".format(
+                    linefreq
+                )
+            )
 
         # the bandpass range to pass initial filtering
         freqrange = [0.5]
@@ -322,17 +331,15 @@ class BaseRawLoader(BaseIO):
         print("filtering at: ", freqs, " and ", freqrange)
 
         # run bandpass filter and notch filter
-        rawdata = mne.filter.notch_filter(rawdata,
-                                          notch_widths=1,
-                                          Fs=samplerate,
-                                          freqs=freqs,
-                                          verbose=False
-                                          )
-        rawdata = mne.filter.filter_data(rawdata,
-                                         sfreq=samplerate,
-                                         l_freq=freqrange[0],
-                                         h_freq=freqrange[1],
-                                         verbose=False
-                                         )
+        rawdata = mne.filter.notch_filter(
+            rawdata, notch_widths=1, Fs=samplerate, freqs=freqs, verbose=False
+        )
+        rawdata = mne.filter.filter_data(
+            rawdata,
+            sfreq=samplerate,
+            l_freq=freqrange[0],
+            h_freq=freqrange[1],
+            verbose=False,
+        )
 
         return rawdata

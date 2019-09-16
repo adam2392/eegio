@@ -41,104 +41,104 @@ class BaseResultsLoader(BaseIO):
 
     @property
     def samplerate(self):
-        return self.metadata['samplerate']
+        return self.metadata["samplerate"]
 
     @property
     def cezcontacts(self):
-        return self.metadata['ez_hypo_contacts']
+        return self.metadata["ez_hypo_contacts"]
 
     @property
     def resectedcontacts(self):
-        return self.metadata['resected_contacts']
+        return self.metadata["resected_contacts"]
 
     @property
     def channel_semiology(self):
-        return self.metadata['semiology']
+        return self.metadata["semiology"]
 
     @property
     def cezlobe(self):
-        return self.metadata['cezlobe']
+        return self.metadata["cezlobe"]
 
     @property
     def record_filename(self):
-        return self.metadata['filename']
+        return self.metadata["filename"]
 
     @property
     def bad_channels(self):
-        return self.metadata['bad_channels']
+        return self.metadata["bad_channels"]
 
     @property
     def non_eeg_channels(self):
-        return self.metadata['non_eeg_channels']
+        return self.metadata["non_eeg_channels"]
 
     @property
     def patient_id(self):
-        return self.metadata['patient_id']
+        return self.metadata["patient_id"]
 
     @property
     def dataset_id(self):
-        return self.metadata['dataset_id']
+        return self.metadata["dataset_id"]
 
     @property
     def meas_data(self):
-        return self.metadata['date_of_recording']
+        return self.metadata["date_of_recording"]
 
     @property
     def length_of_recording(self):
-        return self.metadata['length_of_recording']
+        return self.metadata["length_of_recording"]
 
     @property
     def numberchans(self):
-        return self.metadata['number_chans']
+        return self.metadata["number_chans"]
 
     @property
     def clinical_center(self):
-        return self.metadata['clinical_center']
+        return self.metadata["clinical_center"]
 
     @property
     def dataset_events(self):
-        return self.metadata['events']
+        return self.metadata["events"]
 
     @property
     def onsetind(self):
-        if 'onsetind' in self.metadata.keys():
-            return self.metadata['onsetind']
+        if "onsetind" in self.metadata.keys():
+            return self.metadata["onsetind"]
         else:
             return None
 
     @property
     def offsetind(self):
-        if 'offsetind' in self.metadata.keys():
-            return self.metadata['offsetind']
+        if "offsetind" in self.metadata.keys():
+            return self.metadata["offsetind"]
         else:
             return None
 
     @property
     def onsetsec(self):
-        return self.metadata['onset']
+        return self.metadata["onset"]
 
     @property
     def offsetsec(self):
-        return self.metadata['termination']
+        return self.metadata["termination"]
 
     @property
     def resultfilename(self):
-        return self.metadata['resultfilename']
+        return self.metadata["resultfilename"]
 
     @property
     def chanlabels(self):
-        if 'chanlabels' in self.metadata.keys():
-            return self.metadata['chanlabels']
+        if "chanlabels" in self.metadata.keys():
+            return self.metadata["chanlabels"]
         else:
             return None
 
     @property
     def samplepoints(self):
-        return self.metadata['samplepoints']
+        return self.metadata["samplepoints"]
 
     @property
     def timepoints(self):
-        return self.metadata['timepoints']
+        return self.metadata["timepoints"]
 
     def reset(self):
         """
@@ -160,19 +160,20 @@ class BaseResultsLoader(BaseIO):
         """
         self.metadata = metadata
         # extract type information and other channel information
-        if 'type' in metadata.keys():
-            self.type = metadata['type']
+        if "type" in metadata.keys():
+            self.type = metadata["type"]
         else:
             self.type = None
 
         # extract patient id
-        if 'note' in metadata.keys():
-            self.note = metadata['note']
+        if "note" in metadata.keys():
+            self.note = metadata["note"]
         else:
             self.note = None
 
         onsetwin, offsetwin = load_szinds(
-            self.onsetind, self.offsetind, self.samplepoints)
+            self.onsetind, self.offsetind, self.samplepoints
+        )
         try:
             self.onsetwin = ensure_list(onsetwin)[0]
         except:
@@ -183,8 +184,8 @@ class BaseResultsLoader(BaseIO):
         except:
             self.offsetwin = None
 
-        self.metadata['onsetwin'] = self.onsetwin
-        self.metadata['offsetwin'] = self.offsetwin
+        self.metadata["onsetwin"] = self.onsetwin
+        self.metadata["offsetwin"] = self.offsetwin
 
     def _getalljsonfilepaths(self, patid=None):
         """
@@ -197,11 +198,14 @@ class BaseResultsLoader(BaseIO):
         :param patid: (optional; str) a patient identifier to only get jsonfilepaths with the <patid>_ inside the filename.
         :return: None
         """
-        jsonfilepaths = [f for f in os.listdir(self.results_dir)
-                         if f.endswith('.json')
-                         if not f.startswith('.')]
+        jsonfilepaths = [
+            f
+            for f in os.listdir(self.results_dir)
+            if f.endswith(".json")
+            if not f.startswith(".")
+        ]
         if patid is not None:
-            jsonfilepaths = [f for f in jsonfilepaths if patid + '_' in f]
+            jsonfilepaths = [f for f in jsonfilepaths if patid + "_" in f]
         self.jsonfilepaths = natsorted(jsonfilepaths)
 
     def update_metadata(self, metadata):
@@ -216,8 +220,8 @@ class BaseResultsLoader(BaseIO):
         """
         # perform updates on metadata json object
         metadata = merge_metadata(metadata, self.metadata, overwrite=True)
-        metadata['onsetwin'] = self.onsetwin
-        metadata['offsetwin'] = self.offsetwin
-        metadata['resultfilename'] = self.resultfilename
+        metadata["onsetwin"] = self.onsetwin
+        metadata["offsetwin"] = self.offsetwin
+        metadata["resultfilename"] = self.resultfilename
         self.metadata = metadata
         return metadata

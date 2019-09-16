@@ -67,9 +67,9 @@ class DatasetTester(object):
         self.check_onset_offset()
 
         print("Checking cez labels!")
-        if self.modality == 'ieeg':
+        if self.modality == "ieeg":
             self.check_cez_labels_ieeg()
-        elif self.modality == 'scalp':
+        elif self.modality == "scalp":
             self.check_cez_labels_scalp()
 
     def check_dataset_type(self):
@@ -82,9 +82,7 @@ class DatasetTester(object):
 
         :return: None
         """
-        keys = {
-            "type": ['sz', 'ii']
-        }
+        keys = {"type": ["sz", "ii"]}
         for key, possibilities in keys.items():
             if key in self.data.keys():
                 if any(possibility in self.data[key] for possibility in possibilities):
@@ -107,9 +105,7 @@ class DatasetTester(object):
 
         :return: None
         """
-        keys = {
-            'modality': ['seeg', 'ecog', 'scalp', 'ieeg']
-        }
+        keys = {"modality": ["seeg", "ecog", "scalp", "ieeg"]}
         for key, possibilities in keys.items():
             if key in self.data.keys():
                 if self.data[key] in possibilities:
@@ -130,9 +126,9 @@ class DatasetTester(object):
         :return: None
         """
         keys = {
-            'outcome': ['s', 'f', 'nr'],
-            'engel_score': [-1, 1, 2, 3, 4],
-            'clinical_difficulty': [1, 2, 3, 4],
+            "outcome": ["s", "f", "nr"],
+            "engel_score": [-1, 1, 2, 3, 4],
+            "clinical_difficulty": [1, 2, 3, 4],
         }
 
         for key, possibilities in keys.items():
@@ -154,24 +150,21 @@ class DatasetTester(object):
 
         :return: None
         """
-        keys = {
-            'onset': [None],
-            'termination': [None],
-        }
+        keys = {"onset": [None], "termination": [None]}
 
-        if self.data['type'] == 'ii':
+        if self.data["type"] == "ii":
             return
 
-        if self.data['onset'] == []:
-            self.problems.append(('onset', []))
+        if self.data["onset"] == []:
+            self.problems.append(("onset", []))
 
-        if self.data['termination'] == []:
-            self.problems.append(('termination', []))
+        if self.data["termination"] == []:
+            self.problems.append(("termination", []))
 
         try:
-            if self.data['onset'] >= self.data['termination']:
-                self.problems.append(('onset', self.data['onset']))
-                self.problems.append(('termination', self.data['termination']))
+            if self.data["onset"] >= self.data["termination"]:
+                self.problems.append(("onset", self.data["onset"]))
+                self.problems.append(("termination", self.data["termination"]))
         except TypeError as e:
             print(e)
 
@@ -247,27 +240,30 @@ class DatasetTester(object):
 
         :return: None
         """
-        keys = {
-            "ez_hypo_contacts": [],
-            "resected_contacts": [],
-            "ablated_contacts": [],
-        }
-        chanlabels = self.data['chanlabels']
+        keys = {"ez_hypo_contacts": [], "resected_contacts": [], "ablated_contacts": []}
+        chanlabels = self.data["chanlabels"]
 
         for key in keys.keys():
             keyitems = self.data[key]
 
             for item in keyitems:
-                if item not in chanlabels and item not in self.data['bad_channels'] and item not in self.data[
-                    'non_eeg_channels']:
+                if (
+                    item not in chanlabels
+                    and item not in self.data["bad_channels"]
+                    and item not in self.data["non_eeg_channels"]
+                ):
                     self.problems.append((key, item))
 
-        keyitems = [item for sublist in self.data['seizure_semiology']
-                    for item in sublist]
+        keyitems = [
+            item for sublist in self.data["seizure_semiology"] for item in sublist
+        ]
         for item in keyitems:
-            if item not in chanlabels and item not in self.data['bad_channels'] and item not in self.data[
-                'non_eeg_channels']:
-                self.problems.append(('seizure_semiology', item))
+            if (
+                item not in chanlabels
+                and item not in self.data["bad_channels"]
+                and item not in self.data["non_eeg_channels"]
+            ):
+                self.problems.append(("seizure_semiology", item))
 
     def check_cez_brain_regionlabels(self):
         """

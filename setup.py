@@ -28,6 +28,31 @@ REQUIRED_PACKAGES = [
     "mne>=0.18.2",
     "pyEDFlib == 0.1.14",
 ]
+CLASSIFICATION_OF_PACKAGE = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    'Development Status :: 3 - Alpha',
+
+    # Indicate who your project is intended for
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'Topic :: Scientific/Engineering :: Medical Science Apps.',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Utilities',
+
+    # Pick your license as you wish (should match "license" above)
+    'License :: OSI Approved :: GNU General Public License (GPL)',
+
+    # Specify the Python versions you support here. In particular, ensure
+    # that you indicate whether you support Python 2, Python 3 or both.
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: Implementation',
+
+    'Natural Language :: English',
+]
 
 
 def check_python_version():
@@ -58,34 +83,7 @@ setup(
     dependency_links=[
         'git+https://github.com/adam2392/eegio#egg=eegio',
     ],
-    install_requires=[
-        'numpy',
-        'pandas',
-        'mne',
-    ],
-    classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
-
-        # Indicate who your project is intended for
-        'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: Medical Science Apps.',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Utilities',
-
-        # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: GNU General Public License (GPL)',
-
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: Implementation',
-
-        'Natural Language :: English',
-    ],
+    install_requires=REQUIRED_PACKAGES,
+    include_package_data=True,
+    classifiers=CLASSIFICATION_OF_PACKAGE,
 )

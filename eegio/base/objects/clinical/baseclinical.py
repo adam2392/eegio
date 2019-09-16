@@ -3,7 +3,6 @@ import os
 import warnings
 from abc import ABC, abstractmethod
 from ast import literal_eval
-from pprint import pprint
 from sys import getsizeof
 
 import pandas as pd
@@ -13,10 +12,7 @@ def format_list_str_channels(chanlist):
     return literal_eval(chanlist[0])
 
 
-numerical_attributes = [
-    'onset_age',
-    'age_surgery',
-]
+numerical_attributes = ["onset_age", "age_surgery"]
 
 MB = 1e6
 GB = 1e9
@@ -27,8 +23,7 @@ class AbstractClinical(ABC):
     Patient clinical metadata class for a single instance of a patient.
     """
 
-    def __init__(self, patid, **kwargs):
-        self.id = patid
+    def __init__(self, **kwargs):
         self._set_attr_from_kwargs(**kwargs)
 
     def __str__(self):
@@ -44,8 +39,10 @@ class AbstractClinical(ABC):
         """
         # do some checking of the dictionary
         if getsizeof(kwargs) > 50 * MB:
-            warnings.warn("Size of passed in dictionary is larger then 50MB. Possibly not a good idea."
-                          "You passed in key values: {keys}".format(keys=kwargs.keys()))
+            warnings.warn(
+                "Size of passed in dictionary is larger then 50MB. Possibly not a good idea."
+                "You passed in key values: {keys}".format(keys=kwargs.keys())
+            )
 
         for (field, value) in kwargs.items():
             setattr(self, field, value)
@@ -58,70 +55,70 @@ class AbstractClinical(ABC):
     @abstractmethod
     def summary(self):
         raise NotImplementedError(
-            "Needs to have a summary function that pretty prints.")
+            "Needs to have a summary function that pretty prints."
+        )
 
     def load_from_df(self, df: pd.DataFrame):
         # get dictionary from dataframe
-        df_dict = df.to_dict(orient="dict",
-                             instance="dict")
+        df_dict = df.to_dict(orient="dict", instance="dict")
 
         # call dynamic function to assign properties
         self._set_attr_from_kwargs(df_dict)
 
-    def load_from_excel(self, filepath: os.PathLike, **read_excel_kwargs):
+    def from_excel(self, filepath: os.PathLike, cache_vars=False, **read_excel_kwargs):
         # load in excel file
         df = pd.read_excel(filepath, **read_excel_kwargs)
 
         # convert to dictionary
-        self.load_from_df(df)
+        if cache_vars:
+            self.load_from_df(df)
+        return df
 
+    def from_csv(self, filepath: os.PathLike, cache_vars: bool = False, **read_csv_kwargs):
+        # load in csv file
+        df = pd.read_csv(filepath, **read_csv_kwargs)
 
-class DatasetClinical(AbstractClinical):
-    """
-    Dataset clinical metadata class for a single instance of a dataset.
+        if cache_vars:
+            self.load_from_df(df)
+        return df
 
-    """
+    def _filter_column_name(self, name):
+        # strip parentheses
+        name = name.split("(")[0]
 
-    def __init__(self, patid, datasetid=None, centerid=None):
-        super(DatasetClinical, self).__init__(patid)
+        # strip whitespace
+        name = name.strip()
 
-        self.datasetid = datasetid
-        self.centerid = centerid
+        return name
 
+    def clean_columns(self, df):
+        # lower-case column names
+        df.rename(str.lower, axis='columns', inplace=True)
 
-class PatientClinical(AbstractClinical):
-    def __init__(self, patid, datasetlist=[], centerid=None):
-        super(PatientClinical, self).__init__(patid)
+        column_names = df.columns
+        column_mapper = {name: self._filter_column_name(name) for name in column_names}
+        # remove any markers (extra on clinical excel sheet)
+        df.rename(columns=column_mapper, errors='raise', inplace=True)
+        return df
 
-        self.centerid = centerid
-        self.datasetlist = datasetlist
+class DataSheet(AbstractClinical):
+    def __init__(self, fpath: os.PathLike = None):
+        if fpath != None:
+            super(DataSheet, self).__init__(fpath=fpath)
+
+    def load(self, fpath: os.PathLike):
+        fext = os.path.splitext(fpath)[1]
+        if fext == ".csv":
+            df = self.from_csv(fpath)
+        elif fext == ".xlsx":
+            df = self.from_excel(fpath)
+        elif fext == ".txt":
+            df = self.from_csv(fpath)
+        else:
+            raise AttributeError(f"No loading functionality set for {fext} files. "
+                                 f"Currently supports: csv, xlsx, txt.")
+
+        return df
 
     def summary(self):
-        summary_str = f"{self.id} with {len(self.datasetlist)} datasets from center: {self.centerid}. " \
-                      f""
-        pprint(summary_str)
-
-
-if __name__ == '__main__':
-    import numpy as np
-
-    filepath = "../../../tests/organized_datasheet_formatted.xlsx"
-
-    patid = "pat01"
-    datasetid = "sz_2"
-
-    datasetids = ['sz_2', 'sz_3']
-    centerid = "jhu"
-    example_datadict = {
-        'length_of_recording': 400,
-        'timepoints': np.hstack((np.arange(0, 100), np.arange(5, 105))),
-    }
-
-    patclin = PatientClinical(patid, datasetids, centerid)
-    patclin.load_from_dict(example_datadict)
-
-    for key, val in example_datadict.items():
-        testval = getattr(patclin, key)
-        # assert testval == val
-
-    print(dir(patclin))
+        pass

@@ -4,11 +4,9 @@ import numpy as np
 
 from base.utils.math_utils import FragilityModel
 from eegio.loaders.base.baseresultloader import BaseResultsLoader
-from eegio.base.objects import CoherenceModelResult, FreqModelResult, \
-    NetworkMatrixModel
+from eegio.base.objects import CoherenceModelResult, FreqModelResult, NetworkMatrixModel
 from eegio.base.objects import LtvResult
-from eegio.base.objects import PerturbationResult, \
-    FragilityModelResult, ImpulseResult
+from eegio.base.objects import PerturbationResult, FragilityModelResult, ImpulseResult
 
 
 class ResultLoader(BaseResultsLoader):
@@ -40,7 +38,7 @@ class ResultLoader(BaseResultsLoader):
 
     Examples
     --------
-    >>> from eegio.dev.dataset.result.resultloader import ResultLoader
+    >>> from eegio.dev_loaders.dataset.result.resultloader import ResultLoader
     >>> jsonfilepath = ""
     >>> root_dir = ""
     >>> loader = ResultLoader(jsonfilepath=jsonfilepath,
@@ -52,13 +50,17 @@ class ResultLoader(BaseResultsLoader):
     >>> loader.loadpipeline(jsonfilepaths[0])
     """
 
-    def __init__(self, results_dir,
-                 datatype='frag',
-                 jsonfilepath=None,
-                 preload=False,
-                 storagetype='numpy'):
-        super(ResultLoader, self).__init__(jsonfilepath=jsonfilepath,
-                                           results_dir=results_dir)
+    def __init__(
+        self,
+        results_dir,
+        datatype="frag",
+        jsonfilepath=None,
+        preload=False,
+        storagetype="numpy",
+    ):
+        super(ResultLoader, self).__init__(
+            jsonfilepath=jsonfilepath, results_dir=results_dir
+        )
 
         self.datatype = datatype
         self.storagetype = storagetype
@@ -91,17 +93,20 @@ class ResultLoader(BaseResultsLoader):
 
             print("Loading results data from: ", resultfilepath)
             self.resultstruct = self.load_data(
-                resultfilepath, storagetype=self.storagetype)
+                resultfilepath, storagetype=self.storagetype
+            )
 
             # extract data from the model
             model = self.extract_data(datatype=self.datatype)
             self.result = model
             return model
         else:
-            raise RuntimeError("Result loader has already been used! Run .reset() to "
-                               "reset loader state.")
+            raise RuntimeError(
+                "Result loader has already been used! Run .reset() to "
+                "reset loader state."
+            )
 
-    def load_data(self, filepath, storagetype='numpy'):
+    def load_data(self, filepath, storagetype="numpy"):
         """
         Generalize loading function that loads in the data if it is .npz, .json, or .hdf.
 
@@ -109,71 +114,69 @@ class ResultLoader(BaseResultsLoader):
         :param storagetype: (str) the storage type that is used. Supports numpy, json and hdf.
         :return: resultstruct (ModelResult) the resulting model data structure.
         """
-        if storagetype == 'numpy':
+        if storagetype == "numpy":
             resultstruct = self._loadnpzfile(filepath)
-        elif storagetype == 'json':
+        elif storagetype == "json":
             resultstruct = self._loadjsonfile(filepath)
-        elif storagetype == 'hdf':
+        elif storagetype == "hdf":
             resultstruct = self._loadhd5file(filepath)
         return resultstruct
 
-    def extract_data(self, datatype='frag'):
+    def extract_data(self, datatype="frag"):
         """
         Generalized extraction of data function for the loaded in model dataset.
 
         :param datatype: (str)
         :return: model (ModelResult) the model that is loaded
         """
-        if datatype == 'freq':
+        if datatype == "freq":
             # load in result data
-            self.powermat = self.resultstruct['power']
-            self.phasemat = self.resultstruct['phase']
-            self.metadata['freqs'] = self.resultstruct['freqs']
+            self.powermat = self.resultstruct["power"]
+            self.phasemat = self.resultstruct["phase"]
+            self.metadata["freqs"] = self.resultstruct["freqs"]
 
             # initialize the frequency model
             model = FreqModelResult(mat=self.powermat, metadata=self.metadata)
-        elif datatype == 'coh':
-            self.coherencemat = self.resultstruct['coherence']
-            self.freqs = self.resultstruct['freqs']
+        elif datatype == "coh":
+            self.coherencemat = self.resultstruct["coherence"]
+            self.freqs = self.resultstruct["freqs"]
 
-            model = CoherenceModelResult(
-                mat=self.coherencemat, metadata=self.metadata)
-        elif datatype == 'corr':
+            model = CoherenceModelResult(mat=self.coherencemat, metadata=self.metadata)
+        elif datatype == "corr":
             print(self.resultstruct.keys())
-            self.corrmat = self.resultstruct['correlation']
+            self.corrmat = self.resultstruct["correlation"]
             model = LtvResult(adjmats=self.corrmat, metadata=self.metadata)
 
-        elif datatype == 'ltv':
-            self.ltvmat = self.resultstruct['adjmats']
+        elif datatype == "ltv":
+            self.ltvmat = self.resultstruct["adjmats"]
             model = LtvResult(adjmats=self.ltvmat, metadata=self.metadata)
 
-        elif datatype == 'frag':
+        elif datatype == "frag":
             # store the resulting structures
-            if 'adjmats' in self.resultstruct.keys():
-                self.ltvmat = self.resultstruct['adjmats']
-                ltvmodel = LtvResult(adjmats=self.ltvmat,
-                                     metadata=self.metadata)
+            if "adjmats" in self.resultstruct.keys():
+                self.ltvmat = self.resultstruct["adjmats"]
+                ltvmodel = LtvResult(adjmats=self.ltvmat, metadata=self.metadata)
             else:
                 self.ltvmat = None
                 ltvmodel = None
 
-            self.pertmat = self.resultstruct['pertmats']
-            self.delvecs = self.resultstruct['delvecs']
+            self.pertmat = self.resultstruct["pertmats"]
+            self.delvecs = self.resultstruct["delvecs"]
             self.fragmat = FragilityModel().compute_fragilitymetric(self.pertmat)
-            self.fragminmax = FragilityModel.compute_minmaxfragilitymetric(
-                self.pertmat)
+            self.fragminmax = FragilityModel.compute_minmaxfragilitymetric(self.pertmat)
 
-            pertmodel = PerturbationResult(
-                pertmat=self.pertmat, metadata=self.metadata)
+            pertmodel = PerturbationResult(pertmat=self.pertmat, metadata=self.metadata)
             model = FragilityModelResult(
-                ltvmodel=ltvmodel, pertmodel=pertmodel, metadata=self.metadata)
+                ltvmodel=ltvmodel, pertmodel=pertmodel, metadata=self.metadata
+            )
 
-        elif datatype == 'impulse':
-            self.impulse_l2norms = self.resultstruct['impulse_results']
+        elif datatype == "impulse":
+            self.impulse_l2norms = self.resultstruct["impulse_results"]
             model = ImpulseResult(
-                impulse_responses=self.impulse_l2norms, metadata=self.metadata)
+                impulse_responses=self.impulse_l2norms, metadata=self.metadata
+            )
 
-        elif datatype == 'svd':
+        elif datatype == "svd":
             print(self.resultstruct.keys())
             # self.leadingsvec = self.resultstruct['svecs'].item()
             #
@@ -186,10 +189,10 @@ class ResultLoader(BaseResultsLoader):
             # # print(self.leadingsvec.keys())
             # mat = np.array(mat)
 
-            mat = np.array(self.resultstruct['svecs'])
+            mat = np.array(self.resultstruct["svecs"])
             model = NetworkMatrixModel(mat=mat, metadata=self.metadata)
 
-        elif datatype == 'indegree' or datatype == 'outdegree':
+        elif datatype == "indegree" or datatype == "outdegree":
             print(self.resultstruct.keys())
 
             mat = self.resultstruct[datatype]
@@ -209,9 +212,11 @@ class ResultLoader(BaseResultsLoader):
 
         # trim dataset in time
         clinonset_map = self.result.trim_aroundseizure(
-            offset_sec=offset_sec, mat=clinonset_map)
+            offset_sec=offset_sec, mat=clinonset_map
+        )
         others_map = self.result.trim_aroundseizure(
-            offset_sec=offset_sec, mat=others_map)
+            offset_sec=offset_sec, mat=others_map
+        )
 
         # trim dataset around onset
         #         clinonset_map = result.trim_aroundonset(offset=5, mat=clinonset_map)

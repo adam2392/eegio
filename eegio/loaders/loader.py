@@ -29,14 +29,20 @@ class Loader(BaseLoader):
     def read_Natus(self, fname: os.PathLike):
         pass
 
-    def read_edf(self, fname, backend: str = "mne",
-                 montage=None,
-                 eog: Union[List, Tuple] = None,
-                 misc: Union[List, Tuple] = None,
-                 linefreq: float = 60):
+    def read_edf(
+        self,
+        fname,
+        backend: str = "mne",
+        montage=None,
+        eog: Union[List, Tuple] = None,
+        misc: Union[List, Tuple] = None,
+        linefreq: float = 60,
+    ):
         if linefreq not in [50, 60]:
-            raise ValueError("Line frequency should be set to a valid number! "
-                             f"USA is 60 Hz, and EU is 50 Hz. You passed: {linefreq}.")
+            raise ValueError(
+                "Line frequency should be set to a valid number! "
+                f"USA is 60 Hz, and EU is 50 Hz. You passed: {linefreq}."
+            )
 
         # HARD CODED excluded contacts. Don't read in blanks and dashes
         excluded_contacts = ["-", ""]
@@ -44,13 +50,21 @@ class Loader(BaseLoader):
         # read edf file w/ certain backend
         if backend == "mne":
             # use mne to read the raw edf, events and the info data struct
-            raw = mne.io.read_raw_edf(fname, preload=True, verbose='ERROR', exclude=excluded_contacts,
-                                      montage=montage, eog=eog, misc=misc)
-            samplerate = raw.info['sfreq']
+            raw = mne.io.read_raw_edf(
+                fname,
+                preload=True,
+                verbose="ERROR",
+                exclude=excluded_contacts,
+                montage=montage,
+                eog=eog,
+                misc=misc,
+            )
+            samplerate = raw.info["sfreq"]
 
             # get the annotations
             annotations = mne.events_from_annotations(
-                raw, use_rounding=True, chunk_duration=None, )
+                raw, use_rounding=True, chunk_duration=None
+            )
             event_times, event_ids = annotations
 
             # split event ids into their markernames and key-identifier
@@ -63,22 +77,25 @@ class Loader(BaseLoader):
             eventkeys = event_times[:, 2]  # key-identifier
 
             if any(isinstance(x, float) for x in eventonsets):
-                raise RuntimeError("We are assuming event onsets are in their index form."
-                                   "To convert to seconds, need to divide by sample rate.")
+                raise RuntimeError(
+                    "We are assuming event onsets are in their index form."
+                    "To convert to seconds, need to divide by sample rate."
+                )
             eventonsets = np.divide(eventonsets, samplerate)
 
             # extract seizure onsets/offsets
-            seizure_onset_sec = EventScrub().find_seizure_onset(eventonsets,
-                                                                eventdurations,
-                                                                eventkeys,
-                                                                event_ids)
-            seizure_offset_sec = EventScrub().find_seizure_offset(eventonsets,
-                                                                  eventdurations,
-                                                                  eventkeys,
-                                                                  event_ids,
-                                                                  onset_time=seizure_onset_sec)
+            seizure_onset_sec = EventScrub().find_seizure_onset(
+                eventonsets, eventdurations, eventkeys, event_ids
+            )
+            seizure_offset_sec = EventScrub().find_seizure_offset(
+                eventonsets,
+                eventdurations,
+                eventkeys,
+                event_ids,
+                onset_time=seizure_onset_sec,
+            )
 
-        elif backend == 'pyedflib':
+        elif backend == "pyedflib":
             # raw = pyedflib.
             raw = pyedflib.EdfReader(fname)
             n = raw.signals_in_file
@@ -91,8 +108,10 @@ class Loader(BaseLoader):
             annotations = raw.readAnnotations()
 
         else:
-            raise AttributeError("backend supported for reading edf files are: mne and pyedflib. "
-                                 f"You passed in {backend}. Please choose an appropriate version.")
+            raise AttributeError(
+                "backend supported for reading edf files are: mne and pyedflib. "
+                f"You passed in {backend}. Please choose an appropriate version."
+            )
 
         # scrub channel labels:
         raw = ChannelScrub.channel_text_scrub(raw)
@@ -105,15 +124,18 @@ class Loader(BaseLoader):
 
     def read_fif(self, fname, linefreq: float = 60):
         if linefreq not in [50, 60]:
-            raise ValueError("Line frequency should be set to a valid number! "
-                             f"USA is 60 Hz, and EU is 50 Hz. You passed: {linefreq}.")
+            raise ValueError(
+                "Line frequency should be set to a valid number! "
+                f"USA is 60 Hz, and EU is 50 Hz. You passed: {linefreq}."
+            )
 
         # extract raw object
-        if fname.endswith('.fif'):
+        if fname.endswith(".fif"):
             raw = mne.io.read_raw_fif(fname, preload=False, verbose=False)
         else:
             raise ValueError(
-                "All files read in with eegio need to be preformatted into fif first!")
+                "All files read in with eegio need to be preformatted into fif first!"
+            )
 
         # add line frequency
         if raw.info["line_freq"] == None:
@@ -125,8 +147,10 @@ class Loader(BaseLoader):
 
     def read_mat(self, fname, linefreq: float = 60):
         if linefreq not in [50, 60]:
-            raise ValueError("Line frequency should be set to a valid number! "
-                             f"USA is 60 Hz, and EU is 50 Hz. You passed: {linefreq}.")
+            raise ValueError(
+                "Line frequency should be set to a valid number! "
+                f"USA is 60 Hz, and EU is 50 Hz. You passed: {linefreq}."
+            )
 
         reader = MatReader()
         datastruct = reader.loadmat(fname)

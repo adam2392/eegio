@@ -7,7 +7,7 @@
 # from base.config.dataconfig import IEEG_REFERENCES
 # from eegio.format.dataset_tester import DatasetTester
 # from eegio.format.formatter_raw import ConvertEDFiEEG
-# from eegio.dev.dataset.timeseries.ieegrecording import iEEGRecording
+# from eegio.dev_loaders.dataset.timeseries.ieegrecording import iEEGRecording
 #
 # centers = [
 #     'nih',

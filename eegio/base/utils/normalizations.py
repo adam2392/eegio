@@ -2,7 +2,7 @@ import numpy as np
 import numpy.matlib
 
 
-class Normalize():
+class Normalize:
     @staticmethod
     def compute_fragilitymetric(minnormpertmat):
         # get dimensions of the pert matrix
@@ -10,8 +10,9 @@ class Normalize():
         # assert N < T
         fragilitymat = np.zeros((N, T))
         for icol in range(T):
-            fragilitymat[:, icol] = (np.max(minnormpertmat[:, icol]) - minnormpertmat[:, icol]) / \
-                                    np.max(minnormpertmat[:, icol])
+            fragilitymat[:, icol] = (
+                np.max(minnormpertmat[:, icol]) - minnormpertmat[:, icol]
+            ) / np.max(minnormpertmat[:, icol])
         return fragilitymat
 
     @staticmethod
@@ -26,8 +27,10 @@ class Normalize():
         maxacrosstime = np.max(minnormpertmat, axis=0)
 
         # normalized data with minmax scaling
-        minmax_fragilitymat = -1 * np.true_divide((minnormpertmat - np.matlib.repmat(maxacrosstime, N, 1)),
-                                                  np.matlib.repmat(maxacrosstime - minacrosstime, N, 1))
+        minmax_fragilitymat = -1 * np.true_divide(
+            (minnormpertmat - np.matlib.repmat(maxacrosstime, N, 1)),
+            np.matlib.repmat(maxacrosstime - minacrosstime, N, 1),
+        )
         return minmax_fragilitymat
 
     @staticmethod

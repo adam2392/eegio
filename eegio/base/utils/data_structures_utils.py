@@ -47,42 +47,47 @@ def findtimewins(times, timepoints):
 def compute_samplepoints(winsamps, stepsamps, numtimepoints):
     # Creates a [n,2] array that holds the sample range of each window that
     # is used to index the raw data for a sliding window analysis
-    samplestarts = np.arange(
-        0, numtimepoints - winsamps + 1., stepsamps).astype(int)
+    samplestarts = np.arange(0, numtimepoints - winsamps + 1.0, stepsamps).astype(int)
     sampleends = np.arange(winsamps, numtimepoints + 1, stepsamps).astype(int)
 
     # print(len(sampleends), len(samplestarts))
-    samplepoints = np.append(samplestarts[:, np.newaxis],
-                             sampleends[:, np.newaxis], axis=1)
+    samplepoints = np.append(
+        samplestarts[:, np.newaxis], sampleends[:, np.newaxis], axis=1
+    )
     # print(samplepoints[len(sampleends)-1,:])
     return samplepoints
 
 
 def writejsonfile(metadata, metafilename, overwrite=False):
     if os.path.exists(metafilename) and overwrite is False:
-        raise OSError("Destination for meta json file exists! Please use option"
-                      " overwrite=True to force overwriting.")
-    with io.open(metafilename, 'w', encoding='utf8') as outfile:
-        str_ = json.dumps(metadata,
-                          indent=4, sort_keys=True, cls=NumpyEncoder,
-                          separators=(',', ': '), ensure_ascii=False)
+        raise OSError(
+            "Destination for meta json file exists! Please use option"
+            " overwrite=True to force overwriting."
+        )
+    with io.open(metafilename, "w", encoding="utf8") as outfile:
+        str_ = json.dumps(
+            metadata,
+            indent=4,
+            sort_keys=True,
+            cls=NumpyEncoder,
+            separators=(",", ": "),
+            ensure_ascii=False,
+        )
         outfile.write(str_)
 
 
 def loadjsonfile(metafilename):
-    if not metafilename.endswith('.json'):
-        metafilename += '.json'
+    if not metafilename.endswith(".json"):
+        metafilename += ".json"
 
     # encoding = "ascii", errors = "surrogateescape"
     try:
-        with open(metafilename, mode='r', encoding='utf8', errors="ignore") as f:
+        with open(metafilename, mode="r", encoding="utf8", errors="ignore") as f:
             metadata = json.load(f)
         metadata = json.loads(metadata)
     except Exception as e:
         # print(e)
-        with io.open(metafilename, errors="ignore",
-                     encoding='utf8',
-                     mode='r') as fp:
+        with io.open(metafilename, errors="ignore", encoding="utf8", mode="r") as fp:
             json_str = fp.read()
         # print(json_str)
         try:
@@ -115,8 +120,7 @@ def compute_timepoints(numsignals, winsize, stepsize, samplerate):
     timestarts = np.arange(0, timepoints_ms - winsize + 1, stepsize)
     timeends = np.arange(winsize - 1, timepoints_ms, stepsize)
     # create the timepoints array for entire data array
-    timepoints = np.append(timestarts[:, np.newaxis],
-                           timeends[:, np.newaxis], axis=1)
+    timepoints = np.append(timestarts[:, np.newaxis], timeends[:, np.newaxis], axis=1)
 
     return timepoints
 
@@ -131,42 +135,39 @@ def merge_metadata(metadata1, metadata2, overwrite=False):
     return metadata2
 
 
-class MatReader():
-    '''
+class MatReader:
+    """
     Object to read mat files into a nested dictionary if need be.
     Helps keep strucutre from matlab similar to what is used in python.
-    '''
+    """
 
     def __init__(self, filename=None):
         self.filename = filename
 
     def loadmat(self, filename):
-        '''
+        """
         this function should be called instead of direct spio.loadmat
         as it cures the problem of not properly recovering python dictionaries
         from mat files. It calls the function check keys to cure all entries
         which are still mat-objects
-        '''
-        data = sio.loadmat(
-            filename,
-            struct_as_record=False,
-            squeeze_me=True)
+        """
+        data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True)
         return self._check_keys(data)
 
     def _check_keys(self, dict):
-        '''
+        """
         checks if entries in dictionary are mat-objects. If yes
         todict is called to change them to nested dictionaries
-        '''
+        """
         for key in dict:
             if isinstance(dict[key], sio.matlab.mio5_params.mat_struct):
                 dict[key] = self._todict(dict[key])
         return dict
 
     def _todict(self, matobj):
-        '''
+        """
         A recursive function which constructs from matobjects nested dictionaries
-        '''
+        """
         dict = {}
         for strg in matobj._fieldnames:
             elem = matobj.__dict__[strg]
@@ -179,11 +180,11 @@ class MatReader():
         return dict
 
     def _tolist(self, ndarray):
-        '''
+        """
         A recursive function which constructs lists from cellarrays
         (which are loaded as numpy ndarrays), recursing into the elements
         if they contain matobjects.
-        '''
+        """
         elem_list = []
         for sub_elem in ndarray:
             if isinstance(sub_elem, sio.matlab.mio5_params.mat_struct):
@@ -200,17 +201,18 @@ class MatReader():
         for key in matData.keys():
             if (type(matData[key])) is np.ndarray:
                 serializedData = pickle.dumps(
-                    matData[key], protocol=0)  # protocol 0 is printable ASCII
+                    matData[key], protocol=0
+                )  # protocol 0 is printable ASCII
                 jsonData[key] = serializedData
             else:
                 jsonData[key] = matData[key]
 
-        with contextlib.closing(bz2.BZ2File(fileName, 'wb')) as f:
+        with contextlib.closing(bz2.BZ2File(fileName, "wb")) as f:
             json.dump(jsonData, f)
 
 
 def writematfile(matfilename, **kwargs):
-    '''
+    """
     Function used to write to a mat file.
 
     We will need the matrix CxT and contact regs of Cx1
@@ -225,9 +227,9 @@ def writematfile(matfilename, **kwargs):
     Using these, matlab can easily assign the triangles that
     belong to regions for each channel/region and color with
     that color according to the colormap defined by the function.
-    '''
-    if not matfilename.endswith('.mat'):
-        matfilename += '.mat'
+    """
+    if not matfilename.endswith(".mat"):
+        matfilename += ".mat"
     sio.savemat(matfilename, kwargs)
 
 
@@ -235,12 +237,24 @@ class NumpyEncoder(json.JSONEncoder):
     """ Special json encoder for numpy types """
 
     def default(self, obj):
-        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
-                            np.int16, np.int32, np.int64, np.uint8,
-                            np.uint16, np.uint32, np.uint64)):
+        if isinstance(
+            obj,
+            (
+                np.int_,
+                np.intc,
+                np.intp,
+                np.int8,
+                np.int16,
+                np.int32,
+                np.int64,
+                np.uint8,
+                np.uint16,
+                np.uint32,
+                np.uint64,
+            ),
+        ):
             return int(obj)
-        elif isinstance(obj, (np.float_, np.float16, np.float32,
-                              np.float64)):
+        elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
             return float(obj)
         elif isinstance(obj, (np.ndarray,)):  # This is the fix
             return obj.tolist()
@@ -270,7 +284,7 @@ def list_of_strings_to_string(lstr, sep=","):
 def dict_str(d):
     s = "{"
     for key, value in d.items():
-        s += ("\n" + key + ": " + str(value))
+        s += "\n" + key + ": " + str(value)
     s += "}"
     return s
 
@@ -289,7 +303,7 @@ def isequal_string(a, b, case_sensitive=False):
 def split_string_text_numbers(ls):
     items = []
     for s in ensure_list(ls):
-        match = re.findall('(\d+|\D+)', s)
+        match = re.findall("(\d+|\D+)", s)
         if match:
             items.append(tuple(match[:2]))
     return items
@@ -359,15 +373,15 @@ def reg_dict(x, lbl=None, sort=None):
             x = np.squeeze(x)
         x_no = len(x)
         if not (isinstance(lbl, (list, np.ndarray))):
-            lbl = np.repeat('', x_no)
+            lbl = np.repeat("", x_no)
         else:
             lbl = np.squeeze(lbl)
         labels_no = len(lbl)
         total_no = min(labels_no, x_no)
         if x_no <= labels_no:
-            if sort == 'ascend':
+            if sort == "ascend":
                 ind = np.argsort(x).tolist()
-            elif sort == 'descend':
+            elif sort == "descend":
                 ind = np.argsort(x)
                 ind = ind[::-1].tolist()
             else:
@@ -376,15 +390,15 @@ def reg_dict(x, lbl=None, sort=None):
             ind = range(total_no)
         d = OrderedDict()
         for i in ind:
-            d[str(i) + '.' + str(lbl[i])] = x[i]
+            d[str(i) + "." + str(lbl[i])] = x[i]
         if labels_no > total_no:
             ind_lbl = np.delete(np.array(range(labels_no)), ind).tolist()
             for i in ind_lbl:
-                d[str(i) + '.' + str(lbl[i])] = None
+                d[str(i) + "." + str(lbl[i])] = None
         if x_no > total_no:
             ind_x = np.delete(np.array(range(x_no)), ind).tolist()
             for i in ind_x:
-                d[str(i) + '.'] = x[i]
+                d[str(i) + "."] = x[i]
         return d
 
 
@@ -503,8 +517,12 @@ def labels_to_inds(labels, lbls):
 def generate_region_labels(n_regions, labels=[], str=". ", numbering=True):
     if len(labels) == n_regions:
         if numbering:
-            return np.array([str.join(["%d", "%s"]) % tuple(l)
-                             for l in zip(range(n_regions), labels)])
+            return np.array(
+                [
+                    str.join(["%d", "%s"]) % tuple(l)
+                    for l in zip(range(n_regions), labels)
+                ]
+            )
         else:
             return labels
     else:
@@ -519,9 +537,9 @@ def monopolar_to_bipolar(labels, indices=None, data=None):
     for ind in range(len(indices) - 1):
         iS1 = indices[ind]
         iS2 = indices[ind + 1]
-        if (labels[iS1][0] == labels[iS2][0]) and \
-                int(re.findall(r'\d+', labels[iS1])[0]) == \
-                int(re.findall(r'\d+', labels[iS2])[0]) - 1:
+        if (labels[iS1][0] == labels[iS2][0]) and int(
+            re.findall(r"\d+", labels[iS1])[0]
+        ) == int(re.findall(r"\d+", labels[iS2])[0]) - 1:
             bipolar_lbls.append(labels[iS1] + "-" + labels[iS2])
             bipolar_inds[0].append(iS1)
             bipolar_inds[1].append(iS2)
@@ -538,11 +556,19 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
     def print_not_equal_message(attr, field1, field2, logger):
         # logger.error("\n\nValueError: Original and read object field "+ attr + " not equal!")
         # raise_value_error("\n\nOriginal and read object field " + attr + " not equal!")
-        logger.warning("Original and read object field " + attr + " not equal!" +
-                       "\nOriginal field:\n" + str(field1) +
-                       "\nRead object field:\n" + str(field2), logger)
+        logger.warning(
+            "Original and read object field "
+            + attr
+            + " not equal!"
+            + "\nOriginal field:\n"
+            + str(field1)
+            + "\nRead object field:\n"
+            + str(field2),
+            logger,
+        )
 
     if isinstance(obj1, dict):
+
         def get_field1(obj, key):
             return obj[key]
 
@@ -551,16 +577,14 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
             for key in obj1.keys():
                 attributes_dict.update({key: key})
     elif isinstance(obj1, (list, tuple)):
-        def get_field1(
-                obj,
-                key):
-            return get_list_or_tuple_item_safely(
-                obj,
-                key)
+
+        def get_field1(obj, key):
+            return get_list_or_tuple_item_safely(obj, key)
 
         indices = range(len(obj1))
         attributes_dict = dict(zip([str(ind) for ind in indices], indices))
     else:
+
         def get_field1(obj, attribute):
             return getattr(obj, attribute)
 
@@ -569,16 +593,17 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
             for key in obj1.__dict__.keys():
                 attributes_dict.update({key: key})
     if isinstance(obj2, dict):
+
         def get_field2(obj, key):
             return obj.get(key, None)
+
     elif isinstance(obj2, (list, tuple)):
-        def get_field2(
-                obj,
-                key):
-            return get_list_or_tuple_item_safely(
-                obj,
-                key)
+
+        def get_field2(obj, key):
+            return get_list_or_tuple_item_safely(obj, key)
+
     else:
+
         def get_field2(obj, attribute):
             return getattr(obj, attribute, None)
 
@@ -590,43 +615,60 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
         try:
             # TODO: a better hack for the stupid case of an ndarray of a string, such as model.zmode or pmode
             # For non numeric types
-            if isinstance(field1, str) or isinstance(field1, list) or isinstance(field1, dict) \
-                    or (isinstance(field1, np.ndarray) and field1.dtype.kind in 'OSU'):
+            if (
+                isinstance(field1, str)
+                or isinstance(field1, list)
+                or isinstance(field1, dict)
+                or (isinstance(field1, np.ndarray) and field1.dtype.kind in "OSU")
+            ):
                 if np.any(field1 != field2):
                     print_not_equal_message(
-                        attributes_dict[attribute], field1, field2, logger)
+                        attributes_dict[attribute], field1, field2, logger
+                    )
                     equal = False
             # For numeric numpy arrays:
-            elif isinstance(field1, np.ndarray) and not field1.dtype.kind in 'OSU':
+            elif isinstance(field1, np.ndarray) and not field1.dtype.kind in "OSU":
                 # TODO: handle better accuracy differences, empty matrices and
                 # complex numbers...
                 if field1.shape != field2.shape:
                     print_not_equal_message(
-                        attributes_dict[attribute], field1, field2, logger)
+                        attributes_dict[attribute], field1, field2, logger
+                    )
                     equal = False
                 elif np.any(np.float32(field1) - np.float32(field2) > 0):
                     print_not_equal_message(
-                        attributes_dict[attribute], field1, field2, logger)
+                        attributes_dict[attribute], field1, field2, logger
+                    )
                     equal = False
             # For numeric scalar types
             elif isinstance(field1, (int, float, long, complex, np.number)):
                 if np.float32(field1) - np.float32(field2) > 0:
                     print_not_equal_message(
-                        attributes_dict[attribute], field1, field2, logger)
+                        attributes_dict[attribute], field1, field2, logger
+                    )
                     equal = False
             else:
                 equal = assert_equal_objects(field1, field2, logger=logger)
         except BaseException:
             try:
-                logger.warning("Comparing str(objects) for field "
-                               + attributes_dict[attribute] + " because there was an error!", logger)
+                logger.warning(
+                    "Comparing str(objects) for field "
+                    + attributes_dict[attribute]
+                    + " because there was an error!",
+                    logger,
+                )
                 if np.any(str(field1) != str(field2)):
                     print_not_equal_message(
-                        attributes_dict[attribute], field1, field2, logger)
+                        attributes_dict[attribute], field1, field2, logger
+                    )
                     equal = False
             except BaseException:
-                raise_value_error("ValueError: Something went wrong when trying to compare "
-                                  + attributes_dict[attribute] + " !", logger)
+                raise_value_error(
+                    "ValueError: Something went wrong when trying to compare "
+                    + attributes_dict[attribute]
+                    + " !",
+                    logger,
+                )
 
     if equal:
         return True
@@ -652,7 +694,7 @@ def linspace_broadcast(start, stop, num_steps, maxdims=3):
     x = None
     while x is None and dims < maxdims:
         try:
-            x = (x_star[:, None] * (stop - start) + start)
+            x = x_star[:, None] * (stop - start) + start
         except BaseException:
             x_star = x_star[:, np.newaxis]
             dims = dims + 1
@@ -671,9 +713,11 @@ def squeeze_array_to_scalar(arr):
 
 def assert_arrays(params, shape=None, transpose=False):
     # type: (object, object) -> object
-    if shape is None or \
-            not (isinstance(shape, tuple)
-                 and len(shape) in range(3) and np.all([isinstance(s, (int, np.int)) for s in shape])):
+    if shape is None or not (
+        isinstance(shape, tuple)
+        and len(shape) in range(3)
+        and np.all([isinstance(s, (int, np.int)) for s in shape])
+    ):
         shape = None
         shapes = []  # list of all unique shapes
         n_shapes = []  # list of all unique shapes' frequencies
@@ -698,14 +742,19 @@ def assert_arrays(params, shape=None, transpose=False):
             if isinstance(params[ip], tuple(sympy.core.all_classes)):
                 params[ip] = np.array(params[ip])
             else:
-                raise_value_error("Input " + str(params[ip]) + " of type " + str(type(params[ip])) + " is not numeric, "
-                                                                                                     "of type np.ndarray, nor Symbol")
+                raise_value_error(
+                    "Input "
+                    + str(params[ip])
+                    + " of type "
+                    + str(type(params[ip]))
+                    + " is not numeric, "
+                    "of type np.ndarray, nor Symbol"
+                )
         if shape is None:
             # Only one size > 1 is acceptable
             if params[ip].size != size:
                 if size > 1 and params[ip].size > 1:
-                    raise_value_error(
-                        "Inputs are of at least two distinct sizes > 1")
+                    raise_value_error("Inputs are of at least two distinct sizes > 1")
                 elif params[ip].size > size:
                     size = params[ip].size
             # Construct a kind of histogram of all different shapes of the
@@ -721,7 +770,8 @@ def assert_arrays(params, shape=None, transpose=False):
         else:
             if params[ip].size > size:
                 raise_value_error(
-                    "At least one input is of a greater size than the one given!")
+                    "At least one input is of a greater size than the one given!"
+                )
 
     if shape is None:
         # Keep only shapes of the correct size
@@ -733,8 +783,9 @@ def assert_arrays(params, shape=None, transpose=False):
         shape = tuple(shapes[ind])
 
     if transpose and len(shape) > 1:
-        if (transpose is "horizontal" or "row" and shape[0] > shape[1]) or \
-                (transpose is "vertical" or "column" and shape[0] < shape[1]):
+        if (transpose is "horizontal" or "row" and shape[0] > shape[1]) or (
+            transpose is "vertical" or "column" and shape[0] < shape[1]
+        ):
             shape = list(shape)
             temp = shape[1]
             shape[1] = shape[0]
@@ -794,26 +845,23 @@ def make_int(x, precision="64"):
 
 
 def copy_object_attributes(
-        obj1, obj2, attr1, attr2=None, deep_copy=False, check_none=False):
+    obj1, obj2, attr1, attr2=None, deep_copy=False, check_none=False
+):
     attr1 = ensure_list(attr1)
     if attr2 is None:
         attr2 = attr1
     else:
         attr2 = ensure_list(attr2)
     if deep_copy:
-        def fcopy(
-                a1,
-                a2):
-            return setattr(
-                obj2,
-                a2,
-                deepcopy(
-                    getattr(
-                        obj1,
-                        a1)))
+
+        def fcopy(a1, a2):
+            return setattr(obj2, a2, deepcopy(getattr(obj1, a1)))
+
     else:
+
         def fcopy(a1, a2):
             return setattr(obj2, a2, getattr(obj1, a1))
+
     if check_none:
         for a1, a2 in zip(attr1, attr2):
             if getattr(obj2, a2) is None:

@@ -9,13 +9,10 @@ from natsort import natsorted
 from eegio.loaders.base.baseio import BaseIO
 
 
-class Subject():
-    def __init__(self, root_dir,
-                 subjid,
-                 datatype,
-                 userid: str = "",
-                 clinical_center: str = None,
-                 ):
+class Subject:
+    def __init__(
+        self, root_dir, subjid, datatype, userid: str = "", clinical_center: str = None
+    ):
         super(Subject, self).__init__(root_dir=root_dir)
 
         self.subjid = subjid
@@ -46,7 +43,9 @@ class Subject():
         pass
 
     def summary(self):
-        summary_str = f"{self.subjid} managed by: {self.userid} at {self.clinical_center}."
+        summary_str = (
+            f"{self.subjid} managed by: {self.userid} at {self.clinical_center}."
+        )
         print(summary_str)
         return summary_str
 
@@ -71,11 +70,15 @@ class Subject():
 
         if len(all_dataset_filepaths) > 3:
             mb = "NOT SET YET"
-            warnings.warn(f"You are about to load more then 3 datasets with {mb} of projected"
-                          f" data.")
+            warnings.warn(
+                f"You are about to load more then 3 datasets with {mb} of projected"
+                f" data."
+            )
         if self.is_loaded:
-            raise RuntimeError("Patient already loaded all the datasets. Access them through"
-                               " the datasets attribute, or get_datasets() function. If want to reload, pass in reload=True.")
+            raise RuntimeError(
+                "Patient already loaded all the datasets. Access them through"
+                " the datasets attribute, or get_datasets() function. If want to reload, pass in reload=True."
+            )
         datasets = []
 
         if not reload:

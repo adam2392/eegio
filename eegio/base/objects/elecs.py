@@ -24,6 +24,7 @@ from natsort import natsorted, order_by_index, index_natsorted
 # #         self.xyz = named_points.xyz
 # #         self._initialize_datastructs()
 
+
 def reinitialize_datastructure(f):
     f()
     f._initialize_datastructs()
@@ -72,24 +73,36 @@ class Contacts(object):
     contact_single_regex = re.compile("^([A-Za-z]+[']?)([0-9]+)$")
     contact_pair_regex_1 = re.compile("^([A-Za-z]+[']?)([0-9]+)-([0-9]+)$")
     contact_pair_regex_2 = re.compile(
-        "^([A-Za-z]+[']?)([0-9]+)-([A-Za-z]+[']?)([0-9]+)$")
+        "^([A-Za-z]+[']?)([0-9]+)-([A-Za-z]+[']?)([0-9]+)$"
+    )
 
-    def __init__(self, contacts_list: List = [], contacts_xyz: List = [],
-                 referencespace: str = None, scale: str = None,
-                 require_matching: bool = True):
+    def __init__(
+        self,
+        contacts_list: List = [],
+        contacts_xyz: List = [],
+        referencespace: str = None,
+        scale: str = None,
+        require_matching: bool = True,
+    ):
         self.require_matching = require_matching
         self.chanlabels = list(contacts_list)
 
         if contacts_xyz is not None and referencespace == None:
-            warnings.warn("referencespace should be set explicitly if you are passing in contact coordinates. "
-                          "Defaulting to None. ")
+            warnings.warn(
+                "referencespace should be set explicitly if you are passing in contact coordinates. "
+                "Defaulting to None. "
+            )
         if contacts_xyz is not None and scale == None:
-            warnings.warn("scale should be set explicitly if you are passing in contact coordinates. "
-                          "Defaulting to mm.")
+            warnings.warn(
+                "scale should be set explicitly if you are passing in contact coordinates. "
+                "Defaulting to mm."
+            )
             scale = "mm"
         if contacts_xyz and (len(contacts_list) != len(contacts_xyz)):
-            raise AttributeError("Length of contacts_list and contacts_xyz should be the same. "
-                                 "Length was {} and {}.".format(len(contacts_list), len(contacts_xyz)))
+            raise AttributeError(
+                "Length of contacts_list and contacts_xyz should be the same. "
+                "Length was {} and {}.".format(len(contacts_list), len(contacts_xyz))
+            )
 
         # set class data
         self.xyz = contacts_xyz
@@ -145,8 +158,10 @@ class Contacts(object):
         :return:
         """
         if referencespace == None:
-            warnings.warn("No referencespace passed in. It is set as None. This is ideally passed in "
-                          "to allow user to determine where the contacts were localized.")
+            warnings.warn(
+                "No referencespace passed in. It is set as None. This is ideally passed in "
+                "to allow user to determine where the contacts were localized."
+            )
 
         self.xyz = contacts_xyz
         self.referencespace = referencespace
@@ -163,8 +178,10 @@ class Contacts(object):
         if self.xyz and (len(self.xyz) == len(self.chanlabels)):
             return {chanlabel: xyz for chanlabel, xyz in zip(self.chanlabels, self.xyz)}
 
-        warnings.warn("Contacts xyz coordinates are not yet loaded. See documentation "
-                      "for more details on how to load in the coordinates. This will return None.")
+        warnings.warn(
+            "Contacts xyz coordinates are not yet loaded. See documentation "
+            "for more details on how to load in the coordinates. This will return None."
+        )
         return None
 
     def natsort_contacts(self):
@@ -175,11 +192,12 @@ class Contacts(object):
         """
         if self.natinds == None:
             self.natinds = index_natsorted(self.chanlabels)
-            self.chanlabels = np.array(
-                order_by_index(self.chanlabels, self.natinds))
+            self.chanlabels = np.array(order_by_index(self.chanlabels, self.natinds))
         else:
-            warnings.warn("Already naturally sorted contacts! Extract channel labels naturally sorted by calling "
-                          "chanlabels, and apply ordering to other channel level data with natinds.")
+            warnings.warn(
+                "Already naturally sorted contacts! Extract channel labels naturally sorted by calling "
+                "chanlabels, and apply ordering to other channel level data with natinds."
+            )
 
     def mask_contact_indices(self, mask_inds):
         """
@@ -189,11 +207,12 @@ class Contacts(object):
         :return:
         """
         if max(mask_inds) > len(self.chanlabels):
-            warnings.warn("You passed in masking indices not in the length of the channel labels. "
-                          "Length of channel labels is: {}".format(len(self.chanlabels)))
+            warnings.warn(
+                "You passed in masking indices not in the length of the channel labels. "
+                "Length of channel labels is: {}".format(len(self.chanlabels))
+            )
 
-        keepinds = [i for i in range(
-            len(self.chanlabels)) if i not in mask_inds]
+        keepinds = [i for i in range(len(self.chanlabels)) if i not in mask_inds]
         self.chanlabels = np.array(self.chanlabels)[keepinds]
         if self.xyz:
             self.xyz = [self.xyz[i] for i in keepinds]
@@ -219,7 +238,8 @@ class Contacts(object):
         elec_numstoinds = dict()
         for jdx in range(len(self.chanlabels)):
             _elecname, _num = re.match(
-                "^([A-Za-z]+[']?)([0-9]+)$", self.chanlabels[jdx]).groups()
+                "^([A-Za-z]+[']?)([0-9]+)$", self.chanlabels[jdx]
+            ).groups()
             if elecname == _elecname:
                 elecmaxnum = max(elecmaxnum, int(_num))
                 elec_numstoinds[_num] = jdx
@@ -269,8 +289,12 @@ class Contacts(object):
             # get the corresponding neighbor indices
             _lowerind = max(contact_index - 1, 0)
             _upperind = min(contact_index + 1, 0)
-            nghbrinds = np.vstack((np.arange(_lowerind, contact_index), np.arange(
-                contact_index + 1, _upperind + 1)))
+            nghbrinds = np.vstack(
+                (
+                    np.arange(_lowerind, contact_index),
+                    np.arange(contact_index + 1, _upperind + 1),
+                )
+            )
             nghbrcontacts = electrodecontacts[nghbrinds]
 
         return nghbrcontacts, nghbrinds
@@ -290,15 +314,13 @@ class Contacts(object):
         n = len(self.chanlabels)
 
         # zip through all label indices
-        for inds in zip(np.r_[:n - 1], np.r_[1:n]):
+        for inds in zip(np.r_[: n - 1], np.r_[1:n]):
             # get the names for all the channels
             names = [self.chanlabels[ind] for ind in inds]
 
             # get the electrode, and the number for each channel
-            elec0, num0 = re.match(
-                "^([A-Za-z]+[']?)([0-9]+)$", names[0]).groups()
-            elec1, num1 = re.match(
-                "^([A-Za-z]+[']?)([0-9]+)$", names[1]).groups()
+            elec0, num0 = re.match("^([A-Za-z]+[']?)([0-9]+)$", names[0]).groups()
+            elec1, num1 = re.match("^([A-Za-z]+[']?)([0-9]+)$", names[1]).groups()
 
             # if electrode name matches, and the number are off by 1, then apply bipolar
             if elec0 == elec1 and abs(int(num0) - int(num1)) == 1:
@@ -349,8 +371,7 @@ class Contacts(object):
             assert abs(int(match.group(2)) - int(match.group(3))) == 1
             contact1 = match.group(1) + match.group(2)
             contact2 = match.group(1) + match.group(3)
-            return (self.name_to_xyz[contact1] +
-                    self.name_to_xyz[contact2]) / 2.
+            return (self.name_to_xyz[contact1] + self.name_to_xyz[contact2]) / 2.0
 
         match = self.contact_pair_regex_2.match(contact_name)
         if match is not None:
@@ -358,12 +379,11 @@ class Contacts(object):
             assert abs(int(match.group(2)) - int(match.group(4))) == 1
             contact1 = match.group(1) + match.group(2)
             contact2 = match.group(3) + match.group(4)
-            return (self.name_to_xyz[contact1] +
-                    self.name_to_xyz[contact2]) / 2.
+            return (self.name_to_xyz[contact1] + self.name_to_xyz[contact2]) / 2.0
 
         raise ValueError(
-            "Given name '%s' does not follow any expected pattern." %
-            contact_name)
+            "Given name '%s' does not follow any expected pattern." % contact_name
+        )
 
     def _get1d_neighbors(self, electrodechans, chanlabel):
         # naturally sort the gridlayout
@@ -406,8 +426,10 @@ class Contacts(object):
             chancol = numcols - ((chanrow * numcols) - chanindex)
 
             if chanrow > numrows:
-                raise RuntimeError("How is row of this channel greater then number of rows set!"
-                                   "Error in function, or logic, or data passed in!")
+                raise RuntimeError(
+                    "How is row of this channel greater then number of rows set!"
+                    "Error in function, or logic, or data passed in!"
+                )
 
             return chanrow, chancol
 
@@ -423,8 +445,10 @@ class Contacts(object):
             :return:
             """
             if i > numrows:
-                raise RuntimeError("How is row of this channel greater then number of rows set!"
-                                   "Error in function, or logic, or data passed in!")
+                raise RuntimeError(
+                    "How is row of this channel greater then number of rows set!"
+                    "Error in function, or logic, or data passed in!"
+                )
 
             chanindex = 0
             chanindex += (i - 1) * numcols

@@ -9,7 +9,7 @@ from eegio.writers.basewrite import BaseWrite
 
 
 class DataWriter(BaseWrite):
-    def __init__(self, fpath=None, raw: mne.io.BaseRaw = None, type: str = 'fif'):
+    def __init__(self, fpath=None, raw: mne.io.BaseRaw = None, type: str = "fif"):
         if raw != None and fpath == None:
             raise RuntimeError("Pass in a file path to save data!")
 
@@ -19,13 +19,14 @@ class DataWriter(BaseWrite):
         if fpath != None and raw != None:
             if not os.path.exists(os.path.dirname(fpath)):
                 fdir = os.path.dirname(fpath)
-                raise RuntimeError("Filepath you passed to save data does not exist. Please "
-                                   f"first create the corresponding directory: {fdir}")
+                raise RuntimeError(
+                    "Filepath you passed to save data does not exist. Please "
+                    f"first create the corresponding directory: {fdir}"
+                )
             if type == "fif":
                 self.saveas_fif(fpath, raw.get_data(return_times=False), raw.info)
 
-    def saveas_fif(self, fpath, rawdata, info, bad_chans_list=[],
-                   montage: List = []):
+    def saveas_fif(self, fpath, rawdata, info, bad_chans_list=[], montage: List = []):
         """
         Conversion function for the rawdata + metadata into a .fif file format. The accompanying metadata .json
         file will be handled in the convert_metadata() function.
@@ -39,26 +40,25 @@ class DataWriter(BaseWrite):
         :return: formatted_raw (mne.Raw) the raw fif dataset
         """
         # create the info data struct
-        info['bads'] = bad_chans_list
-        info['montage'] = montage
+        info["bads"] = bad_chans_list
+        info["montage"] = montage
 
         # perform check on the info data struct
         self._check_info(info)
 
         # save the actual raw array
-        formatted_raw = mne.io.RawArray(rawdata, info, verbose='ERROR')
+        formatted_raw = mne.io.RawArray(rawdata, info, verbose="ERROR")
 
-        fmt = 'single'
-        formatted_raw.save(fpath,
-                           overwrite=True,
-                           fmt=fmt,
-                           verbose='ERROR')
+        fmt = "single"
+        formatted_raw.save(fpath, overwrite=True, fmt=fmt, verbose="ERROR")
         return formatted_raw
 
     def saveas_edf(self, fpath, rawdata, info, bad_chans_list=[], montage: List = []):
         pass
 
-    def write_edf(mne_raw, fname, events_list, picks=None, tmin=0, tmax=None, overwrite=False):
+    def write_edf(
+        mne_raw, fname, events_list, picks=None, tmin=0, tmax=None, overwrite=False
+    ):
         """
         Saves the raw content of an MNE.io.Raw and its subclasses to
         a file using the EDF+ filetype
@@ -84,20 +84,18 @@ class DataWriter(BaseWrite):
             If False (default), an error will be raised if the file exists.
         """
         if not issubclass(type(mne_raw), mne.io.BaseRaw):
-            raise TypeError('Must be mne.io.Raw type')
+            raise TypeError("Must be mne.io.Raw type")
         if not overwrite and os.path.exists(fname):
-            raise OSError('File already exists. No overwrite.')
+            raise OSError("File already exists. No overwrite.")
         # static settings
         file_type = pyedflib.FILETYPE_EDFPLUS
-        sfreq = mne_raw.info['sfreq']
-        date = datetime.now().strftime('%d %b %Y %H:%M:%S')
+        sfreq = mne_raw.info["sfreq"]
+        date = datetime.now().strftime("%d %b %Y %H:%M:%S")
         first_sample = int(sfreq * tmin)
         last_sample = int(sfreq * tmax) if tmax is not None else None
 
         # convert data
-        channels = mne_raw.get_data(picks,
-                                    start=first_sample,
-                                    stop=last_sample)
+        channels = mne_raw.get_data(picks, start=first_sample, stop=last_sample)
 
         # convert to microvolts to scale up precision
         channels *= 1e6
@@ -109,33 +107,35 @@ class DataWriter(BaseWrite):
 
         # create channel from this
         try:
-            f = pyedflib.EdfWriter(fname,
-                                   n_channels=n_channels,
-                                   file_type=file_type)
+            f = pyedflib.EdfWriter(fname, n_channels=n_channels, file_type=file_type)
 
             channel_info = []
             data_list = []
 
             for i in range(n_channels):
-                ch_dict = {'label': mne_raw.ch_names[i],
-                           'dimension': 'uV',
-                           'sample_rate': sfreq,
-                           'physical_min': pmin,
-                           'physical_max': pmax,
-                           'digital_min': dmin,
-                           'digital_max': dmax,
-                           'transducer': '',
-                           'prefilter': ''}
+                ch_dict = {
+                    "label": mne_raw.ch_names[i],
+                    "dimension": "uV",
+                    "sample_rate": sfreq,
+                    "physical_min": pmin,
+                    "physical_max": pmax,
+                    "digital_min": dmin,
+                    "digital_max": dmax,
+                    "transducer": "",
+                    "prefilter": "",
+                }
                 #             print(ch_dict)
                 channel_info.append(ch_dict)
                 data_list.append(channels[i])
 
-            f.setTechnician('mne_save_edf_adamli')
+            f.setTechnician("mne_save_edf_adamli")
             f.setSignalHeaders(channel_info)
             for event in events_list:
                 onset_in_seconds, duration_in_seconds, description = event
                 print(onset_in_seconds, duration_in_seconds, description)
-                f.writeAnnotation(float(onset_in_seconds), int(duration_in_seconds), description)
+                f.writeAnnotation(
+                    float(onset_in_seconds), int(duration_in_seconds), description
+                )
             f.setStartdatetime(date)
             f.writeSamples(data_list)
         except Exception as e:

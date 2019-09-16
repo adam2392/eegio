@@ -11,9 +11,7 @@ from eegio.loaders.devloader.subjectresultsloader import SubjectResultsLoader
 
 
 class CenterLoader(BaseMultipleDatasetLoader):
-    def __init__(self, root_dir, centername,
-                 datatype='frag', subjids=[],
-                 preload=True):
+    def __init__(self, root_dir, centername, datatype="frag", subjids=[], preload=True):
         super(CenterLoader, self).__init__(root_dir=root_dir)
         self.centername = centername
         self.subjids = ensure_list(subjids)
@@ -36,15 +34,14 @@ class CenterLoader(BaseMultipleDatasetLoader):
         self.jsonfilepaths = []
         for root, dirs, files in os.walk(self.root_dir):
             for file in files:
-                if file.endswith('.json') \
-                        and not file.startswith('.'):
+                if file.endswith(".json") and not file.startswith("."):
                     self.jsonfilepaths.append(os.path.join(root, file))
 
     def _getallsubjectnames(self):
         for jsonfilepath in self.jsonfilepaths:
             jsonfilename = os.path.basename(jsonfilepath)
 
-            patid = jsonfilename.split('_')[0]
+            patid = jsonfilename.split("_")[0]
             self.subjids.append(patid)
         self.subjids = np.unique(self.subjids)
 
@@ -59,10 +56,12 @@ class CenterLoader(BaseMultipleDatasetLoader):
         # loop through subject ids
         for subjid in self.subjids:
             # print("Loading in: ", subjid)
-            subjloader = self.loadingfunc(root_dir=self.root_dir,
-                                          subjid=subjid,
-                                          datatype=self.datatype,
-                                          preload=False)
+            subjloader = self.loadingfunc(
+                root_dir=self.root_dir,
+                subjid=subjid,
+                datatype=self.datatype,
+                preload=False,
+            )
             subjloader.read_all_files()
 
             # extract results for subject
@@ -71,8 +70,7 @@ class CenterLoader(BaseMultipleDatasetLoader):
 
             centerdatasets.extend(subjectdatasets)
             centerdatasetids.extend(dataset_ids)
-            centerpatientids.extend(
-                list(itertools.repeat(subjid, len(dataset_ids))))
+            centerpatientids.extend(list(itertools.repeat(subjid, len(dataset_ids))))
 
             outcome = subjloader.get_outcomes(returnlist=True)
             engel_score = subjloader.get_engelscores(returnlist=True)

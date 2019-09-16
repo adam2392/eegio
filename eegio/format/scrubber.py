@@ -7,7 +7,7 @@ import numpy as np
 from eegio.base.objects.elecs import Contacts
 
 
-class ChannelScrub():
+class ChannelScrub:
     @classmethod
     def channel_text_scrub(cls, raw: mne.io.BaseRaw):
         def _reformatchanlabel(label):
@@ -22,24 +22,30 @@ class ChannelScrub():
             :return: label (str) the reformatted string that is lowercase and w/o spaces
             """
             # hard coded replacement rules
-            label = str(label).replace('POL', '').replace(' ', '').lower()
-            label = label.replace('eeg', '').replace('-ref', '')
+            label = str(label).replace("POL", "").replace(" ", "").lower()
+            label = label.replace("eeg", "").replace("-ref", "")
 
             # replace "Grid" with 'G' label
-            label = label.replace('grid', 'g')
+            label = label.replace("grid", "g")
             return label
 
         # apply channel scrubbing
-        raw.rename_channels(lambda x: x.strip('.'))  # remove dots from channel names
-        raw.rename_channels(lambda x: x.strip('-'))  # remove dashes from channel names
-        raw.rename_channels(lambda x: x.replace("’", "'"))  # remove dashes from channel names
-        raw.rename_channels(lambda x: x.replace("`", "'"))  # remove dashes from channel names
+        raw.rename_channels(lambda x: x.strip("."))  # remove dots from channel names
+        raw.rename_channels(lambda x: x.strip("-"))  # remove dashes from channel names
+        raw.rename_channels(
+            lambda x: x.replace("’", "'")
+        )  # remove dashes from channel names
+        raw.rename_channels(
+            lambda x: x.replace("`", "'")
+        )  # remove dashes from channel names
         raw.rename_channels(lambda x: _reformatchanlabel(x))
 
         return raw
 
     @classmethod
-    def look_for_bad_channels(self, ch_names, bad_markers: List[str] = ["$", "fz", "gz"]):
+    def look_for_bad_channels(
+        self, ch_names, bad_markers: List[str] = ["$", "fz", "gz"]
+    ):
         """
         Helper function to allow hardcoding of what are "bad channels"
 
@@ -50,16 +56,14 @@ class ChannelScrub():
         bad_channels = []
 
         # look for channels without letter
-        bad_channels.extend(
-            [ch for ch in ch_names if not re.search('[a-zA-Z]', ch)])
+        bad_channels.extend([ch for ch in ch_names if not re.search("[a-zA-Z]", ch)])
         # look for channels that only have letters - turn off for NIH pt17
-        letter_chans = [ch for ch in ch_names if re.search('[a-zA-Z]', ch)]
-        bad_channels.extend(
-            [ch for ch in letter_chans if not re.search('[0-9]', ch)])
+        letter_chans = [ch for ch in ch_names if re.search("[a-zA-Z]", ch)]
+        bad_channels.extend([ch for ch in letter_chans if not re.search("[0-9]", ch)])
 
         if "$" in bad_markers:
             # look for channels with '$'
-            bad_channels.extend([ch for ch in ch_names if re.search('[$]', ch)])
+            bad_channels.extend([ch for ch in ch_names if re.search("[$]", ch)])
         if "fz" in bad_markers:
             badname = "fz"
             bad_channels.extend([ch for ch in ch_names if ch == badname])
@@ -70,8 +74,7 @@ class ChannelScrub():
         return bad_channels
 
     @classmethod
-    def label_channel_types(cls, labels: List[str],
-                            mapping: dict = None):
+    def label_channel_types(cls, labels: List[str], mapping: dict = None):
         """
         Function to load in the channel types. The possibilities are: EEG, STIM, EOG, EKG, Misc.
         that are from MNE-Python.
@@ -96,11 +99,10 @@ class ChannelScrub():
 
             # Now join all elements of the list with '',
             # which puts all of the characters together.
-            result = ''.join(no_digits)
+            result = "".join(no_digits)
             return result
 
-        contacts = Contacts(contacts_list=labels,
-                            require_matching=False)
+        contacts = Contacts(contacts_list=labels, require_matching=False)
 
         # create hash dictionary to store label of each channel
         channeltypes = {}
@@ -110,32 +112,37 @@ class ChannelScrub():
             eleclabel = contacts.get_elec(chanlabel)
 
             # get rest of electrode labels
-            elec_contacts_nums = [int(remove_letters(labels[ind]))
-                                  for ind in contacts.electrodes[eleclabel]]
+            elec_contacts_nums = [
+                int(remove_letters(labels[ind]))
+                for ind in contacts.electrodes[eleclabel]
+            ]
 
             if elec_contacts_nums == []:
-                channeltypes[chanlabel] = 'bad-non'
-            elif eleclabel == 'g':
-                channeltypes[chanlabel] = 'grid'
+                channeltypes[chanlabel] = "bad-non"
+            elif eleclabel == "g":
+                channeltypes[chanlabel] = "grid"
             elif max(elec_contacts_nums) <= 6:
-                channeltypes[chanlabel] = 'strip'
+                channeltypes[chanlabel] = "strip"
             elif max(elec_contacts_nums) > 6 and max(elec_contacts_nums) < 20:
-                channeltypes[chanlabel] = 'seeg'
+                channeltypes[chanlabel] = "seeg"
             else:
-                channeltypes[chanlabel] = 'eeg'
+                channeltypes[chanlabel] = "eeg"
 
         return channeltypes
 
 
-class EventScrub():
+class EventScrub:
     @classmethod
-    def find_seizure_onset(cls, event_onsets: List[int],
-                           event_durations: List[float],
-                           event_keys: List[int],
-                           event_ids: Dict,
-                           offset_time: float = None,
-                           multiple_sz: bool = False,
-                           onset_marker_name: str = ""):
+    def find_seizure_onset(
+        cls,
+        event_onsets: List[int],
+        event_durations: List[float],
+        event_keys: List[int],
+        event_ids: Dict,
+        offset_time: float = None,
+        multiple_sz: bool = False,
+        onset_marker_name: str = "",
+    ):
         """
         Eventscrubber to determine where seizure onset is and return the marker (in seconds)
         after the recording start. E.g. recording starts at 0, and seizure occurs at 45 seconds.
@@ -151,13 +158,7 @@ class EventScrub():
         :return:
         """
         # onset markers
-        onsetmarks = [
-            'onset',
-            'crise',
-            'cgtc',
-            'sz',
-            'absence'
-        ]
+        onsetmarks = ["onset", "crise", "cgtc", "sz", "absence"]
 
         # if an explicit onset marker name is passed
         if onset_marker_name:
@@ -169,10 +170,10 @@ class EventScrub():
 
         # if not, then parse through possible markers
         for name, eventid in event_ids.items():
-            name = ','.join(name.lower().split(' '))
+            name = ",".join(name.lower().split(" "))
 
             # search for onset markers
-            if any(re.search(r'\b{}\b'.format(x), name) for x in onsetmarks):
+            if any(re.search(r"\b{}\b".format(x), name) for x in onsetmarks):
                 # find index where onset marker name occurs and get the corresponding time
                 idx = np.where(event_keys == eventid)[0][0]
                 onset_secs = event_onsets[idx].astype(float)
@@ -180,8 +181,10 @@ class EventScrub():
                 # if event durations is > 0
                 if event_durations[idx] > 0:
                     onset_secs = onset_secs + (event_durations[idx] / 2)
-                    raise RuntimeWarning("Event durations is > 0 for a seizure marker?"
-                                         " Could be an error.")
+                    raise RuntimeWarning(
+                        "Event durations is > 0 for a seizure marker?"
+                        " Could be an error."
+                    )
 
                 # check if we passed in offset time, onset can't be after offset
                 if offset_time:
@@ -194,13 +197,16 @@ class EventScrub():
         return None
 
     @classmethod
-    def find_seizure_offset(cls, event_onsets: List[int],
-                            event_durations: List[float],
-                            event_keys: List[int],
-                            event_ids: Dict,
-                            onset_time: float = None,
-                            multiple_sz: bool = False,
-                            offset_marker_name: str = ""):
+    def find_seizure_offset(
+        cls,
+        event_onsets: List[int],
+        event_durations: List[float],
+        event_keys: List[int],
+        event_ids: Dict,
+        onset_time: float = None,
+        multiple_sz: bool = False,
+        offset_marker_name: str = "",
+    ):
         """
         Eventscrubber to determine where seizure offset is and return the marker (in seconds)
         after the recording start. E.g. recording starts at 0, and seizure offset occurs at 45 seconds.
@@ -216,12 +222,7 @@ class EventScrub():
         :param offset_marker_name:
         :return:
         """
-        offsetmarks = [
-            'offset',
-            'fin',
-            'end',
-            'over'
-        ]
+        offsetmarks = ["offset", "fin", "end", "over"]
 
         # if an explicit onset marker name is passed
         if offset_marker_name:
@@ -233,10 +234,10 @@ class EventScrub():
 
         # if not, then parse through possible markers
         for name, eventid in event_ids.items():
-            name = ','.join(name.lower().split(' '))
+            name = ",".join(name.lower().split(" "))
 
             # search for offset markers
-            if any(re.search(r'\b{}\b'.format(x), name) for x in offsetmarks):
+            if any(re.search(r"\b{}\b".format(x), name) for x in offsetmarks):
                 # find index where onset marker name occurs and get the corresponding time
                 idx = np.where(event_keys == eventid)[0][0]
                 offset_secs = event_onsets[idx].astype(float)
@@ -244,8 +245,10 @@ class EventScrub():
                 # if event durations is > 0
                 if event_durations[idx] > 0:
                     offset_secs = offset_secs + (event_durations[idx] / 2)
-                    raise RuntimeWarning("Event durations is > 0 for a seizure marker?"
-                                         " Could be an error.")
+                    raise RuntimeWarning(
+                        "Event durations is > 0 for a seizure marker?"
+                        " Could be an error."
+                    )
 
                 # check if we passed in onset time, onset can't be after offset
                 if onset_time:
@@ -256,6 +259,5 @@ class EventScrub():
                 if not multiple_sz:
                     return offset_secs
                 else:
-                    raise RuntimeError(
-                        "Can't handle multiple seizures in file yet.")
+                    raise RuntimeError("Can't handle multiple seizures in file yet.")
         return None

@@ -30,7 +30,7 @@ class Recording(BaseRawLoader):
     Examples
     --------
     >>> import numpy as np
-    >>> from eegio.dev.dataset.timeseries.recording import Recording
+    >>> from eegio.dev_loaders.dataset.timeseries.recording import Recording
     >>> jsonfilepath = ""
     >>> root_dir = ""
     >>> recording = Recording(jsonfilepath=jsonfilepath,
@@ -41,7 +41,9 @@ class Recording(BaseRawLoader):
     >>> recording.loadpipeline(jsonfilepaths[0])
     """
 
-    def __init__(self, root_dir, jsonfilepath, preload, apply_mask, reference, datatype):
+    def __init__(
+        self, root_dir, jsonfilepath, preload, apply_mask, reference, datatype
+    ):
         super(Recording, self).__init__(root_dir=root_dir)
 
         # jsonfilepath for this recording, reference scheme
@@ -64,14 +66,16 @@ class Recording(BaseRawLoader):
         self.metadata = dict()
 
         # set reference for this recording and jsonfilepath
-        if datatype == 'ieeg':
-            datatype = 'seeg'
-        if jsonfilepath is None and os.path.exists(os.path.join(self.root_dir, datatype, "fif")):
-            self.eegdir = os.path.join(self.root_dir, datatype, 'fif')
-        elif os.path.exists(os.path.join(self.root_dir, 'ieeg', 'fif')):
-            self.eegdir = os.path.join(self.root_dir, 'ieeg', 'fif')
-        elif os.path.exists(os.path.join(self.root_dir, 'seeg', 'fif')):
-            self.eegdir = os.path.join(self.root_dir, 'seeg', 'fif')
+        if datatype == "ieeg":
+            datatype = "seeg"
+        if jsonfilepath is None and os.path.exists(
+            os.path.join(self.root_dir, datatype, "fif")
+        ):
+            self.eegdir = os.path.join(self.root_dir, datatype, "fif")
+        elif os.path.exists(os.path.join(self.root_dir, "ieeg", "fif")):
+            self.eegdir = os.path.join(self.root_dir, "ieeg", "fif")
+        elif os.path.exists(os.path.join(self.root_dir, "seeg", "fif")):
+            self.eegdir = os.path.join(self.root_dir, "seeg", "fif")
         else:
             self.eegdir = self.root_dir
 
@@ -94,12 +98,12 @@ class Recording(BaseRawLoader):
     @property
     def summary(self):
         summary_dict = {
-            'jsonfilepath': os.path.basename(self.jsonfilepath),
-            'rawfilepath': os.path.basename(self.record_filename),
-            'length': self.length_of_recording,
-            'samplerate': self.samplerate,
-            'numberchans': self.numberchans,
-            'reference': self.reference
+            "jsonfilepath": os.path.basename(self.jsonfilepath),
+            "rawfilepath": os.path.basename(self.record_filename),
+            "length": self.length_of_recording,
+            "samplerate": self.samplerate,
+            "numberchans": self.numberchans,
+            "reference": self.reference,
         }
         return summary_dict
 
@@ -113,11 +117,12 @@ class Recording(BaseRawLoader):
         # load in the metadata json file
         self.metadata = self.loadraw_jsonfile(self.jsonfilepath)
 
-        if 'filename' in self.metadata.keys():
-            record_filename = self.metadata['filename']
+        if "filename" in self.metadata.keys():
+            record_filename = self.metadata["filename"]
         else:
-            record_filename = os.path.basename(
-                self.jsonfilepath).replace(".json", "_raw.fif")
+            record_filename = os.path.basename(self.jsonfilepath).replace(
+                ".json", "_raw.fif"
+            )
 
         # get the filepath for the record data
         rawfilepath = os.path.join(self.eegdir, record_filename)
@@ -126,11 +131,11 @@ class Recording(BaseRawLoader):
         self._loadinfodata(self.rawstruct)
 
         # set samplerate and append to self.metadata
-        samplerate = self.rawstruct.info['sfreq']
+        samplerate = self.rawstruct.info["sfreq"]
         self.chanlabels = np.array(self.rawstruct.ch_names)
-        self.metadata['samplerate'] = samplerate
-        self.metadata['chanlabels'] = self.chanlabels
-        self.metadata['number_chans'] = len(self.chanlabels)
+        self.metadata["samplerate"] = samplerate
+        self.metadata["chanlabels"] = self.chanlabels
+        self.metadata["number_chans"] = len(self.chanlabels)
 
         # extract out self.metadata
         self.load_metadata(self.metadata)
@@ -145,13 +150,13 @@ class Recording(BaseRawLoader):
 
         # create data masks
         goodchannels = self.create_data_masks(
-            bad_channels, non_eeg_channels, self.chanlabels)
+            bad_channels, non_eeg_channels, self.chanlabels
+        )
         return goodchannels
 
     def mask_raw_data(self, rawdata, mask):
         rawmask = []
-        rawmask.extend([idx for idx, ch in enumerate(
-            self.chanlabels) if ch in mask])
+        rawmask.extend([idx for idx, ch in enumerate(self.chanlabels) if ch in mask])
         self.rawmask_inds = rawmask
         self.chanlabels = self.chanlabels[self.rawmask_inds]
         return rawdata[self.rawmask_inds, :]
@@ -180,13 +185,15 @@ class Recording(BaseRawLoader):
         :return: data (np.ndarray) the NxT recording dataset
         """
         if winlist != [] and chunkind is None:
-            raise ValueError("Trying to chunk up the recording dataset! However, you need"
-                             "to pass in a list of windows, and also a chunk index. You passed in"
-                             "{} for winlist and {} for chunkind".format(winlist, chunkind))
+            raise ValueError(
+                "Trying to chunk up the recording dataset! However, you need"
+                "to pass in a list of windows, and also a chunk index. You passed in"
+                "{} for winlist and {} for chunkind".format(winlist, chunkind)
+            )
 
         if chunkind is not None and winlist == []:
             win = winlist[chunkind]
-            data = rawstruct.get_data()[:, win[0]:win[1] + 1]
+            data = rawstruct.get_data()[:, win[0] : win[1] + 1]
         else:
             data = rawstruct.get_data()
         return data
@@ -202,12 +209,14 @@ class Recording(BaseRawLoader):
         eegts = eegobject.get_data()
         chanlabels = eegobject.chanlabels
         metadata = eegobject.get_metadata()
-        samplerate = metadata['samplerate']
+        samplerate = metadata["samplerate"]
 
         # create the info struct
-        info = mne.create_info(ch_names=chanlabels.tolist(),
-                               ch_types=['eeg'] * len(chanlabels),
-                               sfreq=samplerate)
+        info = mne.create_info(
+            ch_names=chanlabels.tolist(),
+            ch_types=["eeg"] * len(chanlabels),
+            sfreq=samplerate,
+        )
 
         # create the raw object
         mneraw = mne.io.RawArray(data=eegts, info=info)
@@ -220,30 +229,30 @@ class Recording(BaseRawLoader):
 
         :return: None
         """
-        self.metadata['chanlabels'] = self.chanlabels
+        self.metadata["chanlabels"] = self.chanlabels
 
         # Set data from the mne file object
-        self.metadata['samplerate'] = self.samplerate
-        self.metadata['lowpass_freq'] = self.lowpass_freq
-        self.metadata['highpass_freq'] = self.highpass_freq
-        self.metadata['linefreq'] = self.linefreq
+        self.metadata["samplerate"] = self.samplerate
+        self.metadata["lowpass_freq"] = self.lowpass_freq
+        self.metadata["highpass_freq"] = self.highpass_freq
+        self.metadata["linefreq"] = self.linefreq
 
-        if 'onset' in self.metadata.keys():
-            self.metadata['onsetsec'] = self.onsetsec
-            self.metadata['offsetsec'] = self.offsetsec
-            self.metadata['onsetind'] = self.onsetind
-            self.metadata['offsetind'] = self.offsetind
+        if "onset" in self.metadata.keys():
+            self.metadata["onsetsec"] = self.onsetsec
+            self.metadata["offsetsec"] = self.offsetsec
+            self.metadata["onsetind"] = self.onsetind
+            self.metadata["offsetind"] = self.offsetind
         else:
-            self.metadata['onsetsec'] = None
-            self.metadata['offsetsec'] = None
-            self.metadata['onsetind'] = None
-            self.metadata['offsetind'] = None
+            self.metadata["onsetsec"] = None
+            self.metadata["offsetsec"] = None
+            self.metadata["onsetind"] = None
+            self.metadata["offsetind"] = None
 
-        self.metadata['reference'] = self.reference
+        self.metadata["reference"] = self.reference
 
         # dataset metadata
-        self.metadata['type'] = self.type
-        self.metadata['number_chans'] = self.numberchans
+        self.metadata["type"] = self.type
+        self.metadata["number_chans"] = self.numberchans
 
         # dataset metadata
         # self.metadata['ez_hypo_contacts'] =

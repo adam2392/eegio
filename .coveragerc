@@ -1,2 +1,2 @@
 [run]
-omit=./eegio/writers/*,eegio/loaders/*,eegio/base/utils/*,eegio/dev/*,eegio/dataset_test/*
+omit=./eegio/writers/*,eegio/loaders/*,eegio/base/utils/*,eegio/dataset_test/*
