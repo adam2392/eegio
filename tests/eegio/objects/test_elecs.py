@@ -4,8 +4,8 @@ import numpy as np
 from eegio.base.objects.elecs import Contacts
 
 
-class TestContacts():
-    @pytest.mark.usefixture('contacts')
+class TestContacts:
+    @pytest.mark.usefixture("contacts")
     def test_contacts_errors(self, contacts):
         """
         Test error and warnings raised by Contacts class.
@@ -36,8 +36,8 @@ class TestContacts():
             contacts.natsort_contacts()
             contacts.natsort_contacts()
 
-    @pytest.mark.filterwarnings('ignore::UserWarning')
-    @pytest.mark.usefixture('contacts')
+    @pytest.mark.filterwarnings("ignore::UserWarning")
+    @pytest.mark.usefixture("contacts")
     def test_contacts(self, contacts):
         """
         Test code runs without errors through all functions with dummy data.
@@ -68,13 +68,12 @@ class TestContacts():
         contacts.mask_contacts(random_ch_mask)
 
         contact = contacts.chanlabels[0]
-        nghbrs, nghbrinds = contacts.get_contact_ngbhrs(contact)
-        seeg_nghbrs, seeg_nghbrinds = contacts.get_seeg_ngbhrs(contact)
-        assert (len(nghbrs) <= len(seeg_nghbrs))
-
-        print(contacts_xyz)
-        print(contacts.chanlabels)
-        print(contact, nghbrs, seeg_nghbrs)
+        # nghbrs, nghbrinds = contacts.get_contact_ngbhrs(contact)
+        # seeg_nghbrs, seeg_nghbrinds = contacts.get_seeg_ngbhrs(contact)
+        # assert len(nghbrs) <= len(seeg_nghbrs)
+        # print(contacts_xyz)
+        # print(contacts.chanlabels)
+        # print(contact, nghbrs, seeg_nghbrs)
         contact_xyz = contacts.get_contact_coords(contact)
         assert len(contact_xyz) == 3
 

@@ -5,9 +5,9 @@ from eegio.loaders.loader import Loader
 
 
 # @pytest.mark.skip(reason="Already tested as part of rawedf to results!")
-@pytest.mark.usefixture('edf_fpath')
-@pytest.mark.usefixture('fif_fpath')
-class Test_Loader():
+@pytest.mark.usefixture("edf_fpath")
+@pytest.mark.usefixture("fif_fpath")
+class Test_Loader:
     """
     Testing class for loading in raw EEG data in the MNE framework.
 
@@ -30,19 +30,16 @@ class Test_Loader():
         print(info)
         print(annotations)
 
-        assert len(chlabels) == info['nchan']
-        assert info['line_freq']
-        assert (isinstance(raw_mne, mne.io.BaseRaw))
+        assert len(chlabels) == info["nchan"]
+        assert info["line_freq"]
+        assert isinstance(raw_mne, mne.io.BaseRaw)
         assert raw_mne.get_data(stop=50).shape[0] == len(chlabels)
 
     def test_edf_pyedflib(self, edf_fpath):
         pass
 
     def test_fif(self, fif_fpath):
-        read_kwargs = {
-            "fname": fif_fpath,
-            "linefreq": 60,
-        }
+        read_kwargs = {"fname": fif_fpath, "linefreq": 60}
         loader = Loader(fif_fpath, metadata={})
         raw_mne, annotations = loader.read_fif(**read_kwargs)
         info = raw_mne.info
@@ -51,9 +48,10 @@ class Test_Loader():
 
         print(raw_mne)
         print(annotations)
-        assert (isinstance(raw_mne, mne.io.BaseRaw))
-        assert len(chlabels) == info['nchan']
-        assert info['line_freq']
+        assert info["meas_date"]
+        assert isinstance(raw_mne, mne.io.BaseRaw)
+        assert len(chlabels) == info["nchan"]
+        assert info["line_freq"]
 
     def test_create_metadata(self):
         pass

@@ -74,7 +74,9 @@ class AbstractClinical(ABC):
             self.load_from_df(df)
         return df
 
-    def from_csv(self, filepath: os.PathLike, cache_vars: bool = False, **read_csv_kwargs):
+    def from_csv(
+        self, filepath: os.PathLike, cache_vars: bool = False, **read_csv_kwargs
+    ):
         # load in csv file
         df = pd.read_csv(filepath, **read_csv_kwargs)
 
@@ -93,18 +95,20 @@ class AbstractClinical(ABC):
 
     def clean_columns(self, df):
         # lower-case column names
-        df.rename(str.lower, axis='columns', inplace=True)
+        df.rename(str.lower, axis="columns", inplace=True)
 
         column_names = df.columns
         column_mapper = {name: self._filter_column_name(name) for name in column_names}
         # remove any markers (extra on clinical excel sheet)
-        df.rename(columns=column_mapper, errors='raise', inplace=True)
+        df.rename(columns=column_mapper, errors="raise", inplace=True)
         return df
+
 
 class DataSheet(AbstractClinical):
     def __init__(self, fpath: os.PathLike = None):
         if fpath != None:
             super(DataSheet, self).__init__(fpath=fpath)
+            self.load(fpath)
 
     def load(self, fpath: os.PathLike):
         fext = os.path.splitext(fpath)[1]
@@ -115,9 +119,11 @@ class DataSheet(AbstractClinical):
         elif fext == ".txt":
             df = self.from_csv(fpath)
         else:
-            raise AttributeError(f"No loading functionality set for {fext} files. "
-                                 f"Currently supports: csv, xlsx, txt.")
-
+            raise AttributeError(
+                f"No loading functionality set for {fext} files. "
+                f"Currently supports: csv, xlsx, txt."
+            )
+        self.df = df
         return df
 
     def summary(self):

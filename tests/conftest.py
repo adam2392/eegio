@@ -1,13 +1,9 @@
 """ Define fixtures available for eegio tests. """
 import os
 import os.path
-from pathlib import Path
 
+import numpy as np
 import pytest
-
-RAWDATADIR = "/home/WIN/ali39/toshibaHDD/data/rawdata/"
-RAWDATADIR = "/Users/adam2392/Downloads/tngpipeline/"
-DATACENTERS = ['cleveland', 'jhu', 'nih', 'ummc']
 
 
 @pytest.fixture(scope="function")
@@ -19,13 +15,17 @@ def contacts():
     """
     import numpy as np
     from eegio.base.objects.elecs import Contacts
-    contactlist = np.hstack(([f"A{i}" for i in range(16)],
-                             [f"L{i}" for i in range(16)],
-                             [f"B'{i}" for i in range(16)],
-                             [f"D'{i}" for i in range(16)],
-                             ["C'1", "C'2", "C'4", "C'8"],
-                             ["C1", "C2", "C3", "C4", "C5", "C6"],
-                             ))
+
+    contactlist = np.hstack(
+        (
+            [f"A{i}" for i in range(16)],
+            [f"L{i}" for i in range(16)],
+            [f"B'{i}" for i in range(16)],
+            [f"D'{i}" for i in range(16)],
+            ["C'1", "C'2", "C'4", "C'8"],
+            ["C1", "C2", "C3", "C4", "C5", "C6"],
+        )
+    )
     contacts = Contacts(contactlist)
     return contacts
 
@@ -40,20 +40,24 @@ def eegts():
     import numpy as np
     from eegio.base.objects.elecs import Contacts
     from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
-    contactlist = np.hstack(([f"A{i}" for i in range(16)],
-                             [f"L{i}" for i in range(16)],
-                             [f"B'{i}" for i in range(16)],
-                             [f"D'{i}" for i in range(16)],
-                             ["C'1", "C'2", "C'4", "C'8"],
-                             ["C1", "C2", "C3", "C4", "C5", "C6"],
-                             ))
+
+    contactlist = np.hstack(
+        (
+            [f"A{i}" for i in range(16)],
+            [f"L{i}" for i in range(16)],
+            [f"B'{i}" for i in range(16)],
+            [f"D'{i}" for i in range(16)],
+            ["C'1", "C'2", "C'4", "C'8"],
+            ["C1", "C2", "C3", "C4", "C5", "C6"],
+        )
+    )
     contacts = Contacts(contactlist)
     N = len(contacts)
     T = 2500
     rawdata = np.random.random((N, T))
     times = np.arange(T)
     samplerate = 1000
-    modality = 'ecog'
+    modality = "ecog"
 
     eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
     return eegts
@@ -68,14 +72,16 @@ def patient():
     """
     from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
     from eegio.base.objects.patient import Patient
+
     eegts = EEGTimeSeries.create_fake_example()
 
     patientid = "test_patient_01"
     datasetids = [f"test_sz{i}" for i in range(5)]
     managing_user = "EZTrack"
     datadir = os.path.join("./")
-    patient = Patient(patientid, datadir=datadir,
-                      managing_user=managing_user, datasetids=datasetids)
+    patient = Patient(
+        patientid, datadir=datadir, managing_user=managing_user, datasetids=datasetids
+    )
 
     return patient
 
@@ -89,16 +95,19 @@ def result():
     """
     from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
     from eegio.base.objects.patient import Patient
+
     eegts = EEGTimeSeries.create_fake_example()
 
     patientid = "test_patient_01"
     datasetids = [f"test_sz{i}" for i in range(5)]
     managing_user = "EZTrack"
     datadir = os.path.join("./")
-    result = Patient(patientid, datadir=datadir,
-                     managing_user=managing_user, datasetids=datasetids)
+    result = Patient(
+        patientid, datadir=datadir, managing_user=managing_user, datasetids=datasetids
+    )
 
     return result
+
 
 @pytest.fixture(scope="class")
 def clinical_sheet():
@@ -108,24 +117,23 @@ def clinical_sheet():
     :return:
     """
     import numpy as np
-    from eegio.base.objects.clinical import MasterClinicalSheet, PatientClinical
+    from eegio.base.objects.clinical import PatientClinical
 
     patid = "test_patient_01"
     datasetids = [f"test_sz{i}" for i in range(2)]
     centerid = "jhu"
     example_datadict = {
-        'length_of_recording': 400,
-        'timepoints': np.hstack((np.arange(0, 100), np.arange(5, 105))),
+        "length_of_recording": 400,
+        "timepoints": np.hstack((np.arange(0, 100), np.arange(5, 105))),
     }
 
     patclin = PatientClinical(patid, datasetids, centerid)
     patclin.load_from_dict(example_datadict)
-    clinical_sheet = MasterClinicalSheet([patclin])
-    return clinical_sheet
+    # clinical_sheet = MasterClinicalSheet([patclin])
+    # return clinical_sheet
 
 
-
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def edf_fpath():
     """
     FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS
@@ -137,7 +145,8 @@ def edf_fpath():
     filepath = os.path.join(testdatadir, "scalp_test.edf")
     return filepath
 
-@pytest.fixture(scope='class')
+
+@pytest.fixture(scope="class")
 def fif_fpath():
     """
     FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS
@@ -149,94 +158,109 @@ def fif_fpath():
     filepath = os.path.join(testdatadir, "scalp_test_raw.fif")
     return filepath
 
+
+@pytest.fixture(scope="class")
+def test_arr():
+    from eegio.base.utils.data_structures_utils import compute_samplepoints
+
+    test_arr = np.random.random(size=(50, 2500))
+
+    samplepoints = compute_samplepoints(250, 125, test_arr.shape[1])
+
+    # split into test windows
+    test_list = []
+    for i, (samplestart, sampleend) in enumerate(samplepoints):
+        test_list.append(test_arr[:, samplestart:sampleend])
+
+    return test_list
+
+
 @pytest.fixture(scope='class')
-def ieeg_data_fif():
+def rawio():
     """
     FOR TESTING FIF RAWDATA LOADING OF IEEG
     :return:
     """
-    testdatadir = os.path.join(os.getcwd(), "tests/test_data/rawieeg/")
-    testfilename = "ummc001_sz_3.json"
+    rawio = []
+    return rawio
 
-    return testdatadir, testfilename
-
-
-@pytest.fixture(scope='class')
-def seeg_data_fif():
-    """
-    FOR TESTING FIF RAWDATA LOADING OF IEEG
-    :return:
-    """
-    testdatadir = os.path.join(os.getcwd(), "tests/test_data/rawieeg/")
-    testfilename = "la02_sz.json"
-    return testdatadir, testfilename
-
-
-@pytest.fixture(scope='class')
-def scalp_data_fif():
-    """
-    FOR TESTING FIF RAWDATA LOADING OF Scalp EEG Raw Data
-    :return:
-    """
-    testdatadir = os.path.join(os.getcwd(), "tests/test_data/rawscalp/")
-    testfilename = "scalp_test.json"
-    return testdatadir, testfilename
-
-
-@pytest.fixture(scope='class')
-def result_frag_files():
-    """
-    Pytest fixture to get the filepaths for all the ltv data,
-    so that tests can load and determine their quality.
-
-    :return:
-    """
-    testdatadir = os.path.join(os.getcwd(), "tests/test_data/results/")
-    testfilename = "pt1_sz_2_frag.json"
-    return testdatadir, testfilename
-
-
-@pytest.fixture(scope='class')
-def all_data_fif():
-    """
-    Pytest fixture to get all the .fif/.json filepaths for the raw data,
-    so that tests can load and determine their quality.
-
-    :return:
-    """
-    # get all center directory names
-    center_dirs = [d for d in os.listdir(
-        RAWDATADIR) if os.path.isdir(os.path.join(RAWDATADIR, d))]
-
-    # json and fiffilepaths
-    fif_file_paths = []
-    json_file_paths = []
-
-    # go through each center and get the data
-    for center in center_dirs:
-        if center not in DATACENTERS:
-            continue
-
-        # get all the json/fif filepaths
-        fif_paths = Path(os.path.join(RAWDATADIR, center)
-                         ).glob("*/seeg/fif/*.fif")
-        json_paths = Path(os.path.join(RAWDATADIR, center)
-                          ).glob("*/seeg/fif/*.json")
-
-        # pair edf name to infile path using a dictionary
-        # edf_infiles_dict = {}
-        for f in fif_paths:
-            # get the actual dataset name
-            fif_name = f.name
-            fif_file_paths.append(os.path.join(
-                os.path.dirname(str(f)), fif_name))
-
-        for f in json_paths:
-            json_name = f.name
-            json_file_paths.append(os.path.join(
-                os.path.dirname(str(f)), json_name))
-
-    return json_file_paths
+#
+# @pytest.fixture(scope='class')
+# def seeg_data_fif():
+#     """
+#     FOR TESTING FIF RAWDATA LOADING OF IEEG
+#     :return:
+#     """
+#     testdatadir = os.path.join(os.getcwd(), "tests/test_data/rawieeg/")
+#     testfilename = "la02_sz.json"
+#     return testdatadir, testfilename
+#
+#
+# @pytest.fixture(scope='class')
+# def scalp_data_fif():
+#     """
+#     FOR TESTING FIF RAWDATA LOADING OF Scalp EEG Raw Data
+#     :return:
+#     """
+#     testdatadir = os.path.join(os.getcwd(), "tests/test_data/rawscalp/")
+#     testfilename = "scalp_test.json"
+#     return testdatadir, testfilename
+#
+#
+# @pytest.fixture(scope='class')
+# def result_frag_files():
+#     """
+#     Pytest fixture to get the filepaths for all the ltv data,
+#     so that tests can load and determine their quality.
+#
+#     :return:
+#     """
+#     testdatadir = os.path.join(os.getcwd(), "tests/test_data/results/")
+#     testfilename = "pt1_sz_2_frag.json"
+#     return testdatadir, testfilename
+#
+#
+# @pytest.fixture(scope='class')
+# def all_data_fif():
+#     """
+#     Pytest fixture to get all the .fif/.json filepaths for the raw data,
+#     so that tests can load and determine their quality.
+#
+#     :return:
+#     """
+#     # get all center directory names
+#     center_dirs = [d for d in os.listdir(
+#         RAWDATADIR) if os.path.isdir(os.path.join(RAWDATADIR, d))]
+#
+#     # json and fiffilepaths
+#     fif_file_paths = []
+#     json_file_paths = []
+#
+#     # go through each center and get the data
+#     for center in center_dirs:
+#         if center not in DATACENTERS:
+#             continue
+#
+#         # get all the json/fif filepaths
+#         fif_paths = Path(os.path.join(RAWDATADIR, center)
+#                          ).glob("*/seeg/fif/*.fif")
+#         json_paths = Path(os.path.join(RAWDATADIR, center)
+#                           ).glob("*/seeg/fif/*.json")
+#
+#         # pair edf name to infile path using a dictionary
+#         # edf_infiles_dict = {}
+#         for f in fif_paths:
+#             # get the actual dataset name
+#             fif_name = f.name
+#             fif_file_paths.append(os.path.join(
+#                 os.path.dirname(str(f)), fif_name))
+#
+#         for f in json_paths:
+#             json_name = f.name
+#             json_file_paths.append(os.path.join(
+#                 os.path.dirname(str(f)), json_name))
+#
+#     return json_file_paths
 
 
 """ FOR CONF TEST OF EDM ALGORITHM - PARAMETER RANGES """

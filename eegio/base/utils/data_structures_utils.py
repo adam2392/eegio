@@ -54,7 +54,6 @@ def compute_samplepoints(winsamps, stepsamps, numtimepoints):
     samplepoints = np.append(
         samplestarts[:, np.newaxis], sampleends[:, np.newaxis], axis=1
     )
-    # print(samplepoints[len(sampleends)-1,:])
     return samplepoints
 
 

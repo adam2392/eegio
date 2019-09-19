@@ -1,6 +1,6 @@
 import warnings
 from typing import Union, List, Tuple
-
+import datetime
 import mne
 import numpy as np
 
@@ -164,8 +164,8 @@ class EEGTimeSeries(BaseDataset):
 
     @property
     def date_of_recording(self):
-        if "date_of_recording" in self.metadata.keys():
-            return self.metadata["date_of_recording"]
+        if self.info["meas_date"]:
+            return datetime.datetime.fromtimestamp(self.info["meas_date"])
         return None
 
     def set_common_avg_ref(self):

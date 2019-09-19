@@ -1,9 +1,10 @@
 import numpy as np
 import pytest
+import datetime
 
 
-@pytest.mark.usefixture('eegts')
-class TestEEGTimeSeries():
+@pytest.mark.usefixture("eegts")
+class TestEEGTimeSeries:
     def test_eegts(self, eegts):
         """
         Test to test eeg time series object. 
@@ -14,10 +15,10 @@ class TestEEGTimeSeries():
         assert eegts.length_of_recording == len(eegts.times)
         assert eegts.n_contacts == eegts.mat.shape[0]
         assert eegts.info and isinstance(eegts.info, dict)
-
+        if eegts.date_of_recording != None:
+            assert isinstance(eegts.date_of_recording, datetime.datetime)
         # length in seconds computed should be approximately equal to length of recording
-        pytest.approx(eegts.len_secs * eegts.samplerate,
-                      eegts.length_of_recording)
+        pytest.approx(eegts.len_secs * eegts.samplerate, eegts.length_of_recording)
 
         # monopolar signal
         monopolar_signal = eegts.mat.copy()
@@ -33,7 +34,7 @@ class TestEEGTimeSeries():
         # test bipolar
         eegts.set_bipolar()
 
-    @pytest.mark.filterwarnings('ignore::RuntimeWarning')
+    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_eegts_utility(self, eegts):
         # test filtering
         linefreq = 60

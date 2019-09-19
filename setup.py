@@ -27,6 +27,7 @@ REQUIRED_PACKAGES = [
     "pandas>=0.23.4",
     "mne>=0.18.2",
     "pyEDFlib == 0.1.14",
+    "xlrd >= 1.2.0",
 ]
 CLASSIFICATION_OF_PACKAGE = [
     # How mature is this project? Common values are
@@ -86,4 +87,5 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     include_package_data=True,
     classifiers=CLASSIFICATION_OF_PACKAGE,
+    zip_ok=False,
 )

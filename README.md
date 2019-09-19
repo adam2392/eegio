@@ -42,6 +42,47 @@ User can then load datasets, or patient (i.e. grouped datasets) data:
     print(datasetobj)
     print(patientobj)
     
+### Reading Clinical Data From Excel
+Most clinical data is stored in excel format. And changing between these two is ideal. We provide examples of
+clinical data in table formats for multiple patients, single patient, or single snapshot. These
+can be stored in a single Excel file if necessary. It just light-weight wraps Pandas, but
+will provide additional functionality in terms of:
+
+1. expanding channels using regex
+2. preprocessing column names
+3. caching/storing data in a Python object
+
+
+    fpath = "./data/clinical_examples/test_clinicaldata.csv"
+    # instantiate datasheet loader
+    clinloader = DataSheet()
+
+    # load csv file
+    csv_df = clinloader.load(fpath=clinical_csv_fpath)
+
+    # clean up the column names
+    csv_df = clinloader.clean_columns(csv_df)
+    
+    # show input data
+    display(csv_df.head())
+    
+### Reading EEG Data From EDF/FiF
+These are just lightweight wrappers of MNE/pyedflib reading to load in EDF/FiF data
+easily, so that raw EEG ts are readily accessible in Python friendly format.    
+
+    edf_fpath = "./data/scalp_test.edf"
+    read_kwargs = {
+        "fname": edf_fpath,
+        "backend": "mne",
+        "montage": None,
+        "eog": None,
+        "misc": None,
+    }
+    loader = Loader(edf_fpath, metadata={})
+    raw_mne, annotations = loader.read_edf(**read_kwargs)
+    info = raw_mne.info
+    chlabels = raw_mne.ch_names
+    n_times = raw_mne.n_times
 
 # Installation Guide
 EEGio is intended to be a lightweight wrapper for easily analyzing large batches of patients with EEG data. eegio relies on the following libraries to work:
@@ -65,12 +106,12 @@ Setup environment via Conda:
 ## Install from Github
 To install, run this command in your repo:
 
-    pip install git+https://github.com/adam2392/eegio#egg=eegio
+    pip install -e git+https://github.com/adam2392/eegio#egg=eegio
 
 
 ## Submodules
 1. base/
-Stores configuration files for the EDP and HARDCODED settings.
+Stores configuration files for the EDP and HARDCODED settings. Stores utility and helper functions.
 
 2. format/
 Stores class objects for how the EDP should preformat any incoming raw data.
@@ -81,9 +122,6 @@ This defines the interface for the raw time series eeg, neuroimaging, and clinic
 This defines code that links together different parts of the EDP API to allow easy data pipelines to be setup.
 
 I define preformat pipeline, neuroimaging pipeline, TBD.
-
-4. util/
-Stores utility and helper functions.
 
 # Documentation
 

@@ -1,11 +1,64 @@
 import datetime
 import os
-from typing import List
+from typing import List, Dict
 
 import mne
+import numpy as np
 import pyedflib
 
+from eegio.base.config import DATE_MODIFIED_KEY
 from eegio.writers.basewrite import BaseWrite
+
+
+def get_tempfilename(x, ext):
+    return f"temp_{x}.{ext}"
+
+
+class TempWriter(BaseWrite):
+    def __init__(self, tempdir: os.PathLike = None):
+        self.tempdir = tempdir
+
+    @classmethod
+    def save_npz_file(cls, fdir: os.PathLike, index: int, compress=False, **kwds):
+        if index == None:
+            raise RuntimeError(
+                "Need to pass in a filepath to save, or an index "
+                "of the file to save. E.g. If you want to save temporary"
+                " arrays in sequence, pass in a sequentially increasing index."
+            )
+        tempfilename = os.path.join(fdir, get_tempfilename(index, ext="npz"))
+
+        if compress:
+            np.savez_compressed(tempfilename, **kwds)
+        else:
+            np.savez(tempfilename, **kwds)
+        return tempfilename
+
+    @classmethod
+    def save_npy_file(cls, fdir: os.PathLike, index: int, arr: np.ndarray):
+        """
+        Temporary writer to a .npy binary file. This provides fast loading/saving of the arrays, since
+        we don't need to save multiple keyword arguments to a .npz file. Fix_imports is set as False, so
+        there is no compatability with Python2.
+
+        :param fdir:
+        :type fdir:
+        :param index:
+        :type index:
+        :param arr:
+        :type arr:
+        :return:
+        :rtype:
+        """
+        if index == None:
+            raise RuntimeError(
+                "Need to pass in a filepath to save, or an index "
+                "of the file to save. E.g. If you want to save temporary"
+                " arrays in sequence, pass in a sequentially increasing index."
+            )
+        tempfilename = os.path.join(fdir, get_tempfilename(index, ext="npy"))
+        np.save(tempfilename, arr, fix_imports=False)
+        return tempfilename
 
 
 class DataWriter(BaseWrite):
@@ -144,3 +197,28 @@ class DataWriter(BaseWrite):
         finally:
             f.close()
         return True
+
+    def merge_npy_arrays(self, outputfpath: str, fpathlist: List, metadata: Dict, resname: str="result"):
+        def check_equal(arr1, arr2):
+            pass
+
+        # store the date that this dataset was computed
+        metadata[DATE_MODIFIED_KEY] = datetime.datetime.now()
+
+        merged_arr = []
+        for i, fpath in enumerate(fpathlist):
+            arr = np.load(fpath)
+            if i > 0:
+                # do some checking
+                check_equal(arr, merged_arr[-1])
+
+            merged_arr.append(arr)
+
+        # save
+        kwd_arrs = {
+            resname: merged_arr,
+            "metadata": metadata
+        }
+        np.savez_compressed(outputfpath, **kwd_arrs)
+
+        return merged_arr

@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 
 
-@pytest.mark.usefixture('patient')
-class TestPatient():
-    @pytest.mark.filterwarnings('ignore::RuntimeWarning')
+@pytest.mark.usefixture("patient")
+class TestPatient:
+    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_patient(self, patient):
         """
         Test to test Patient object.
