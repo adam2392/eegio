@@ -6,6 +6,7 @@ import numpy as np
 import pyedflib
 
 from eegio.base.utils.data_structures_utils import MatReader
+from eegio.base.utils.data_structures_utils import loadjsonfile
 from eegio.format.baseadapter import BaseAdapter
 from eegio.format.scrubber import ChannelScrub, EventScrub
 from eegio.loaders.baseloader import BaseLoader
@@ -28,6 +29,30 @@ class Loader(BaseLoader):
 
     def read_Natus(self, fname: os.PathLike):
         pass
+
+    def read_npzjson(self, jsonfpath: os.PathLike, npzfpath: os.PathLike = None):
+        filedir = os.path.dirname(jsonfpath)
+        # load in json file
+        metadata = loadjsonfile(jsonfpath)
+
+        if npzfpath == None:
+            npzfilename = metadata["resultfilename"]
+            npzfpath = os.path.join(filedir, npzfilename)
+
+        datastruct = np.load(npzfpath)
+        return datastruct, metadata
+
+    def read_npyjson(self, jsonfpath: os.PathLike, npyfpath: os.PathLike = None):
+        filedir = os.path.dirname(jsonfpath)
+        # load in json file
+        metadata = loadjsonfile(jsonfpath)
+
+        if npyfpath == None:
+            npyfilename = metadata["resultfilename"]
+            npyfpath = os.path.join(filedir, npyfilename)
+
+        arr = np.load(npyfpath)
+        return arr, metadata
 
     def read_edf(
         self,
@@ -140,6 +165,10 @@ class Loader(BaseLoader):
         # add line frequency
         if raw.info["line_freq"] == None:
             raw.info["line_freq"] = linefreq
+
+        # scrub channel labels:
+        raw = ChannelScrub.channel_text_scrub(raw)
+        # raw.info["chs"] = ChannelScrub.label_channel_types(raw.info["chs"])
 
         annotations = raw.annotations
 

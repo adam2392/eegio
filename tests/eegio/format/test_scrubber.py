@@ -45,6 +45,4 @@ class TestContacts:
         multiplesz = False
         # pass case for finding onset/offset, marker
 
-
-        # failed case for finding onset/offset, no marker
         pass

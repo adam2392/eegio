@@ -1,4 +1,5 @@
 import collections
+import copy
 from abc import ABC, abstractmethod
 
 import mne
@@ -66,6 +67,7 @@ class BaseDataset(ABC):
 
         self.bufftimes = self.times.copy()
         self.buffmat = self.mat.copy()
+        self.buffcontacts = copy.deepcopy(self.contacts)
 
     def __len__(self):
         return self.mat.shape[1]
@@ -114,7 +116,7 @@ class BaseDataset(ABC):
     def reset(self):
         self.mat = self.buffmat.copy()
         self.times = self.bufftimes.copy()
-        # self.chanlabels = self.buffchanlabels.copy()
+        self.contacts = copy.deepcopy(self.buffcontacts)
 
     @property
     def shape(self):
@@ -151,9 +153,7 @@ class BaseDataset(ABC):
         :return:
         """
         print("Trying to sort naturally contacts in result object")
-
         self.buffchanlabels = self.chanlabels.copy()
-        # pass
         natinds = self.contacts.natsort_contacts()
         self.mat = np.array(order_by_index(self.mat, natinds))
         self.metadata["chanlabels"] = np.array(order_by_index(self.chanlabels, natinds))
@@ -162,20 +162,18 @@ class BaseDataset(ABC):
         return self.mat
 
     def get_channel_data(self, name, interval=(None, None)):
-        idx = self.chanlabels.index(name)
-        tid1, tid2 = self.interval_to_index(interval)
+        idx = list(self.chanlabels).index(name)
+        tid1, tid2 = self._interval_to_index(interval)
         return self.mat[idx, tid1:tid2]
 
     def remove_channels(self, toremovechans):
         removeinds = [
             ind for ind, ch in enumerate(self.chanlabels) if ch in toremovechans
         ]
-        return removeinds
+        self.contacts.mask_contact_indices(removeinds)
+        self.mat = np.delete(self.mat, removeinds, axis=0)
 
-    def split_cez_oez(self, dataset, cez_inds, oez_inds):
-        return dataset[cez_inds, :], dataset[oez_inds, :]
-
-    def trim_dataset(self, mat, interval=(None, None)):
+    def trim_dataset(self, interval=(None, None)):
         """
         Trims dataset to have (seconds) before/after onset/offset.
 
@@ -184,11 +182,11 @@ class BaseDataset(ABC):
         :param offset:
         :return:
         """
-        tid1, tid2 = self.interval_to_index(interval)
-        mat = mat[..., tid1:tid2]
+        tid1, tid2 = self._interval_to_index(interval)
+        mat = self.mat[..., tid1:tid2]
         return mat
 
-    def interval_to_index(self, interval):
+    def _interval_to_index(self, interval):
         tid1, tid2 = 0, -1
         if interval[0] is not None:
             if interval[0] < self.times[0]:
@@ -204,7 +202,7 @@ class BaseDataset(ABC):
         return (tid1, tid2)
 
     def time(self, interval=(None, None)):
-        tid1, tid2 = self.interval_to_index(interval)
+        tid1, tid2 = self._interval_to_index(interval)
         return self.times[tid1:tid2]
 
     def compute_montage_groups(self):

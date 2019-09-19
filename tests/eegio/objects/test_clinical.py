@@ -9,7 +9,6 @@ import pytest
 from eegio.base.objects.clinical import DataSheet, PatientClinical, DatasetClinical
 
 
-# @pytest.mark.usefixture('clinical_sheet')
 class TestClinical:
     clinical_excel_fpath = os.path.join(
         os.getcwd(), "./data/clinical_examples/test_clinicaldata.xlsx"

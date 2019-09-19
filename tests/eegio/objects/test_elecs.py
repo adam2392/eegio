@@ -1,6 +1,8 @@
-import pytest
 import random
+
 import numpy as np
+import pytest
+
 from eegio.base.objects.elecs import Contacts
 
 

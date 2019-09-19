@@ -7,6 +7,7 @@ class Normalize:
     def compute_fragilitymetric(minnormpertmat):
         # get dimensions of the pert matrix
         N, T = minnormpertmat.shape
+
         # assert N < T
         fragilitymat = np.zeros((N, T))
         for icol in range(T):
@@ -19,8 +20,6 @@ class Normalize:
     def compute_minmaxfragilitymetric(minnormpertmat):
         # get dimensions of the pert matrix
         N, T = minnormpertmat.shape
-        # assert N < T
-        minmax_fragilitymat = np.zeros((N, T))
 
         # get the min/max for each column in matrix
         minacrosstime = np.min(minnormpertmat, axis=0)
@@ -35,9 +34,6 @@ class Normalize:
 
     @staticmethod
     def compute_znormalized_fragilitymetric(minnormpertmat):
-        # get dimensions of the pert matrix
-        N, T = minnormpertmat.shape
-
         # get mean, std
         avg_contacts = np.mean(minnormpertmat, keepdims=True, axis=1)
         std_contacts = np.std(minnormpertmat, keepdims=True, axis=1)

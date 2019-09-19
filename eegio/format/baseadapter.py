@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+from eegio.base.config import MB, GB
 
 
 class BaseAdapter(ABC):
@@ -14,8 +15,6 @@ class BaseAdapter(ABC):
         self.type = type
 
     def get_size(self, fname):
-        MB = 1.0e6
-        GB = 1e9
         if os.path.exists(fname):
             fsize = os.path.getsize(fname)
             return fsize / MB

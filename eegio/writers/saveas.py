@@ -198,7 +198,9 @@ class DataWriter(BaseWrite):
             f.close()
         return True
 
-    def merge_npy_arrays(self, outputfpath: str, fpathlist: List, metadata: Dict, resname: str="result"):
+    def merge_npy_arrays(
+        self, outputfpath: str, fpathlist: List, metadata: Dict, resname: str = "result"
+    ):
         def check_equal(arr1, arr2):
             pass
 
@@ -215,10 +217,8 @@ class DataWriter(BaseWrite):
             merged_arr.append(arr)
 
         # save
-        kwd_arrs = {
-            resname: merged_arr,
-            "metadata": metadata
-        }
+        kwd_arrs = {resname: merged_arr, "metadata": metadata}
+
         np.savez_compressed(outputfpath, **kwd_arrs)
 
         return merged_arr

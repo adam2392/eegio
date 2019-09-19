@@ -44,7 +44,7 @@ class ChannelScrub:
 
     @classmethod
     def look_for_bad_channels(
-        self, ch_names, bad_markers: List[str] = ["$", "fz", "gz"]
+        self, ch_names, bad_markers: List[str] = ["$", "fz", "gz", "dc", "sti"]
     ):
         """
         Helper function to allow hardcoding of what are "bad channels"
@@ -70,6 +70,12 @@ class ChannelScrub:
         if "gz" in bad_markers:
             badname = "gz"
             bad_channels.extend([ch for ch in ch_names if ch == badname])
+        if "dc" in bad_markers:
+            badname = "dc"
+            bad_channels.extend([ch for ch in ch_names if badname in ch])
+        if "sti" in bad_markers:
+            badname = "sti"
+            bad_channels.extend([ch for ch in ch_names if badname in ch])
 
         return bad_channels
 

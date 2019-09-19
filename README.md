@@ -16,8 +16,6 @@ This module stores the code for IO of EEG data for human patients, and pipelinin
 
 - [ ] Add documentation
 - [ ] Create fully-functional tests
-- [ ] Preprocessed pipeline first
-- [ ] Separate excel reading into metadata
 
 ## Intended Users / Usage
 
@@ -114,14 +112,16 @@ To install, run this command in your repo:
 Stores configuration files for the EDP and HARDCODED settings. Stores utility and helper functions.
 
 2. format/
-Stores class objects for how the EDP should preformat any incoming raw data.
-
-This defines the interface for the raw time series eeg, neuroimaging, and clinical metadata.
+Stores class objects for how the EDP should preformat any incoming raw data. This defines the interface for the raw time series eeg, neuroimaging, and clinical metadata.
 
 3. loaders/
-This defines code that links together different parts of the EDP API to allow easy data pipelines to be setup.
+This defines code that links together different parts of the eegio API to allow easy data pipelines to be setup.
 
-I define preformat pipeline, neuroimaging pipeline, TBD.
+4. writers/
+This defines writers of data
+
+5. dataset_test/
+A dataset tester that is hardcoded to check quality of certain labeling and annotations.
 
 # Documentation
 
@@ -130,13 +130,14 @@ I define preformat pipeline, neuroimaging pipeline, TBD.
 
 # Testing
 
-    autopep8 --in-place --recursive --max-line-length=80 ./eegio/
-    autopep8 --in-place --recursive --max-line-length=80 ./tests/
     black eegio/*
     pylint ./eegio/
     pytest --cov-config=.coveragerc --cov=./eegio/ tests/
     coverage-badge -f -o coverage.svg
 
+Tests is organized into two directories right now: 
+1. eegio/: consists of all unit tests related to various parts of eegio.
+2. api/: consists of various integration tests tha test when eegio should work.
 
 # License
 

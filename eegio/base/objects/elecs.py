@@ -138,7 +138,11 @@ class Contacts(object):
             match = self.contact_single_regex.match(name)
             if match is None:
                 if self.require_matching:
-                    raise ValueError("Unexpected contact name %s" % name)
+                    raise ValueError(
+                        f"Unexpected contact name {name}. "
+                        f"If you are using scalp electrodes, then pass 'require_matching=False' "
+                        f"to prevent regular expression checking."
+                    )
                 else:
                     continue
 
@@ -198,6 +202,7 @@ class Contacts(object):
                 "Already naturally sorted contacts! Extract channel labels naturally sorted by calling "
                 "chanlabels, and apply ordering to other channel level data with natinds."
             )
+        return self.natinds
 
     def mask_contact_indices(self, mask_inds):
         """

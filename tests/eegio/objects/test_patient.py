@@ -1,5 +1,8 @@
-import numpy as np
+import sys
+
 import pytest
+
+from eegio.base.config import MB
 
 
 @pytest.mark.usefixture("patient")
@@ -32,6 +35,9 @@ class TestPatient:
 
         assert len(patient.wm_channels) == len(test_wm_ch)
         assert len(patient.bad_channels) == len(test_bad_ch)
+
+        # make sure that patient object isn't loading in any explicit data into the object
+        assert sys.getsizeof(patient) < 5 * MB
 
     def test_patient_errors(self, patient):
         """

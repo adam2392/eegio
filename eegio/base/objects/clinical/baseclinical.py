@@ -7,15 +7,14 @@ from sys import getsizeof
 
 import pandas as pd
 
+from eegio.base.config import MB
+
 
 def format_list_str_channels(chanlist):
     return literal_eval(chanlist[0])
 
 
 numerical_attributes = ["onset_age", "age_surgery"]
-
-MB = 1e6
-GB = 1e9
 
 
 class AbstractClinical(ABC):

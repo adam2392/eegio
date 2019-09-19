@@ -68,9 +68,7 @@ class TestSaveas:
                 tempfilename = writerobj.save_npy_file(fdir, index=index, arr=test_arr)
                 tempfilenames.append(tempfilename)
 
-            metadata = {
-                "patid": "hello"
-            }
+            metadata = {"patid": "hello"}
             merger = DataWriter()
             merger.merge_npy_arrays(outputfpath, tempfilenames, metadata)
 
