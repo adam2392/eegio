@@ -124,6 +124,16 @@ class Contacts(object):
     def __len__(self):
         return len(self.chanlabels)
 
+    def __getitem__(self, given):
+        if isinstance(given, slice):
+            # do your handling for a slice object:
+            # print(given.start, given.stop, given.step)
+            return self.chanlabels[given.start : given.stop : given.step]
+        else:
+            # Do your handling for a plain index
+            # print(given)
+            return self.chanlabels[given]
+
     def _initialize_datastructs(self):
         """
         Helper function to initialize an electrodes dictionary for storing contacts belonging to the same electrode.

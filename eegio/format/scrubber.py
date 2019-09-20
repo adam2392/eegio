@@ -44,7 +44,7 @@ class ChannelScrub:
 
     @classmethod
     def look_for_bad_channels(
-        self, ch_names, bad_markers: List[str] = ["$", "fz", "gz", "dc", "sti"]
+            self, ch_names, bad_markers: List[str] = ["$", "fz", "gz", "dc", "sti"]
     ):
         """
         Helper function to allow hardcoding of what are "bad channels"
@@ -140,14 +140,14 @@ class ChannelScrub:
 class EventScrub:
     @classmethod
     def find_seizure_onset(
-        cls,
-        event_onsets: List[int],
-        event_durations: List[float],
-        event_keys: List[int],
-        event_ids: Dict,
-        offset_time: float = None,
-        multiple_sz: bool = False,
-        onset_marker_name: str = "",
+            cls,
+            event_onsets: List[int],
+            event_durations: List[float],
+            event_keys: List[int],
+            event_ids: Dict,
+            offset_time: float = None,
+            multiple_sz: bool = False,
+            onset_marker_name: str = "",
     ):
         """
         Eventscrubber to determine where seizure onset is and return the marker (in seconds)
@@ -204,14 +204,14 @@ class EventScrub:
 
     @classmethod
     def find_seizure_offset(
-        cls,
-        event_onsets: List[int],
-        event_durations: List[float],
-        event_keys: List[int],
-        event_ids: Dict,
-        onset_time: float = None,
-        multiple_sz: bool = False,
-        offset_marker_name: str = "",
+            cls,
+            event_onsets: List[int],
+            event_durations: List[float],
+            event_keys: List[int],
+            event_ids: Dict,
+            onset_time: float = None,
+            multiple_sz: bool = False,
+            offset_marker_name: str = "",
     ):
         """
         Eventscrubber to determine where seizure offset is and return the marker (in seconds)

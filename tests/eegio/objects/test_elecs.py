@@ -20,10 +20,6 @@ class TestContacts:
             contact_xyz = contacts.get_contacts_xyz()
         assert contact_xyz is None
 
-        # load xyz coordinates - assert warning
-        # with pytest.warns(UserWarning):
-        #     contacts.load_contacts_xyz(contact_xyz)
-
         # not passing in correctly lengthed contactlist and coords should result in error
         with pytest.raises(AttributeError):
             contact_xyz = []

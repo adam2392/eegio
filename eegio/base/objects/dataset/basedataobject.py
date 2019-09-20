@@ -1,6 +1,8 @@
 import collections
 import copy
+import warnings
 from abc import ABC, abstractmethod
+from typing import List, Dict
 
 import mne
 import numpy as np
@@ -50,13 +52,13 @@ class BaseDataset(ABC):
     """
 
     def __init__(
-        self,
-        mat: np.ndarray,
-        times: list,
-        contacts: Contacts,
-        patientid: str,
-        datasetid: str = None,
-        model_attributes: dict = None,
+            self,
+            mat: np.ndarray,
+            times: List,
+            contacts: Contacts,
+            patientid: str = None,
+            datasetid: str = None,
+            model_attributes: Dict = None,
     ):
         self.mat = mat
         self.times = times
@@ -69,7 +71,26 @@ class BaseDataset(ABC):
         self.buffmat = self.mat.copy()
         self.buffcontacts = copy.deepcopy(self.contacts)
 
+        if mat.ndim > 2:
+            raise ValueError(
+                "Time series can not have > 2 dimensions right now."
+                "We assume [C x T] shape, channels x time. "
+            )
+
+        if mat.shape[0] != len(contacts):
+            matshape = mat.shape
+            ncontacts = len(contacts)
+            raise AttributeError(
+                f"Matrix data should be shaped: Num Contacts X Time. You "
+                f"passed in {matshape} and {ncontacts} contacts."
+            )
+
     def __len__(self):
+        if len(self.mat) != len(self.times):
+            warnings.warn(
+                f"Times and matrix have different lengths. Their "
+                f"respective shapes are: {np.array(self.times).shape}, {self.mat.shape}."
+            )
         return self.mat.shape[1]
 
     @abstractmethod
@@ -104,6 +125,17 @@ class BaseDataset(ABC):
         return best_montage
 
     def get_montage_channel_indices(self, montage_name, chanlabels):
+        """
+        Helper function to get the channel indices corresponding to a certain montage
+        hardcoded in the MNE-Python framework. For scalp EEG.
+
+        :param montage_name:
+        :type montage_name:
+        :param chanlabels:
+        :type chanlabels:
+        :return:
+        :rtype:
+        """
         # read in montage and strip channel labels not in montage
         montage = mne.channels.read_montage(montage_name)
         montage_chs = [ch.lower() for ch in montage.ch_names]
@@ -114,6 +146,12 @@ class BaseDataset(ABC):
         return to_keep_inds
 
     def reset(self):
+        """
+        Function to cache restore the matrix data, times, and contacts.
+
+        :return:
+        :rtype:
+        """
         self.mat = self.buffmat.copy()
         self.times = self.bufftimes.copy()
         self.contacts = copy.deepcopy(self.buffcontacts)
@@ -124,7 +162,7 @@ class BaseDataset(ABC):
 
     @property
     def contact_tuple_list(self):
-        return [str(a) + str(b) for a, b in self.contacts_list]
+        return [str(a) + str(b) for a, b in self.contacts.chanlabels]
 
     @property
     def electrodes(self):
@@ -172,6 +210,7 @@ class BaseDataset(ABC):
         ]
         self.contacts.mask_contact_indices(removeinds)
         self.mat = np.delete(self.mat, removeinds, axis=0)
+        return removeinds
 
     def trim_dataset(self, interval=(None, None)):
         """
@@ -205,15 +244,21 @@ class BaseDataset(ABC):
         tid1, tid2 = self._interval_to_index(interval)
         return self.times[tid1:tid2]
 
-    def compute_montage_groups(self):
+    def compute_montage_groups(self, rawinfo: mne.Info):
+        """
+        Compute the montage groups for a raw data.
+
+        :return:
+        :rtype:
+        """
         from mne.selection import _divide_to_regions
 
-        rawinfo = mne.create_info(
-            ch_names=list(self.chanlabels),
-            ch_types="eeg",
-            sfreq=self.samplerate,
-            montage=self.montage,
-        )
+        # rawinfo = mne.create_info(
+        #     ch_names=list(self.chanlabels),
+        #     ch_types="eeg",
+        #     sfreq=self.samplerate,
+        #     montage=self.montage,
+        # )
 
         # get channel groups - hashmap of channel indices
         ch_groups = _divide_to_regions(rawinfo, add_stim=False)

@@ -92,10 +92,6 @@ class DataWriter(BaseWrite):
 
         :return: formatted_raw (mne.Raw) the raw fif dataset
         """
-        # create the info data struct
-        info["bads"] = bad_chans_list
-        info["montage"] = montage
-
         # perform check on the info data struct
         self._check_info(info)
 

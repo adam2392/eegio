@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
-from enum import Enum
+from typing import Dict
+
 import numpy as np
 
 from eegio.base.objects.dataset.basedataobject import BaseDataset
 from eegio.base.objects.elecs import Contacts
-from eegio.base.utils.data_structures_utils import compute_timepoints, load_szinds
+from eegio.base.utils.data_structures_utils import findtimewins
 
 
 class Result(BaseDataset):
@@ -35,45 +36,38 @@ class Result(BaseDataset):
     """
 
     def __init__(
-        self,
-        mat,
-        times,
-        contacts,
-        patientid=None,
-        datasetid=None,
-        model_attributes=None,
-        metadata=dict(),
+            self,
+            mat: np.ndarray,
+            times: np.ndarray,
+            contacts: Contacts,
+            patientid: str = None,
+            datasetid: str = None,
+            model_attributes: Dict = None,
+            metadata: Dict = None,
     ):
-        if mat.ndim > 2:
-            raise ValueError(
-                "Time series can not have > 2 dimensions right now."
-                "We assume [C x T] shape, channels x time. "
-            )
-        if mat.shape[0] != len(contacts):
-            matshape = mat.shape
-            ncontacts = len(contacts)
-            raise AttributeError(
-                f"Matrix data should be shaped: Num Contacts X Time. You "
-                f"passed in {matshape} and {ncontacts} contacts."
-            )
+        if metadata is None:
+            metadata = {}
+
+        times = list(times)
 
         super(Result, self).__init__(
-            mat, times, contacts, patientid, datasetid, model_attributes
+            mat,
+            times=times,
+            contacts=contacts,
+            patientid=patientid,
+            datasetid=datasetid,
+            model_attributes=model_attributes,
         )
-
         self.metadata = metadata
 
-        # extract metadata for this time series
-        self.extract_metadata()
-
     def __str__(self):
-        return "{} {} EEG result mat ({}) " "{} seconds".format(
-            self.patientid, self.datasetid, self.mat.shape, self.len_secs
+        return "{} {} EEG result mat ({}) ".format(
+            self.patientid, self.datasetid, self.mat.shape
         )
 
     def __repr__(self):
-        return "{} {} EEG result mat ({}) " "{} seconds".format(
-            self.patientid, self.datasetid, self.mat.shape, self.len_secs
+        return "{} {} EEG result mat ({}) ".format(
+            self.patientid, self.datasetid, self.mat.shape
         )
 
     def summary(self):
@@ -82,20 +76,16 @@ class Result(BaseDataset):
     def pickle_results(self):
         pass
 
-    @property
-    def n_contacts(self):
-        return len(self.contacts.chanlabels)
+    def create_fake_example(self):
+        pass
 
     @property
-    def length_of_result(self):
-        return len(self.times)
+    def samplepoints(self):
+        return self.times
 
     @property
     def record_filename(self):
         return self.metadata["filename"]
-
-    def create_fake_example(self):
-        pass
 
     def get_metadata(self):
         """
@@ -113,7 +103,7 @@ class Result(BaseDataset):
         """
         return self.model_attributes
 
-    def mask_channels(self):
+    def mask_channels(self, badchannels):
         """
         Function to apply mask to channel labels based on if they are denoted as:
 
@@ -124,23 +114,44 @@ class Result(BaseDataset):
 
         :return: None
         """
-        badchannels = self.metadata["bad_channels"]
-        noneegchannels = self.metadata["non_eeg_channels"]
+        # badchannels = self.metadata["bad_channels"]
+        # noneegchannels = self.metadata["non_eeg_channels"]
 
         maskinds = []
-        for chlist in [badchannels, noneegchannels]:
+        for chlist in badchannels:
             removeinds = self.remove_channels(chlist)
             maskinds.extend(removeinds)
+        return maskinds
 
-        maskinds = list(set(maskinds))
-        nonmaskinds = [
-            ind for ind in range(len(self.chanlabels)) if ind not in maskinds
-        ]
+    @property
+    def winsize(self):
+        return self.model_attributes["winsize"]
 
-        # apply to relevant data
-        self.mat = self.mat[nonmaskinds, ...]
-        self.contacts.mask_contact_indices(nonmaskinds)
+    @property
+    def stepsize(self):
+        return self.model_attributes["stepsize"]
 
+    @property
+    def samplerate(self):
+        return self.model_attributes["samplerate"]
+
+    @property
+    def timepoints(self):
+        return np.divide(self.times, self.samplerate)
+        # compute time points
+        # return compute_timepoints(np.array(self.times).ravel()[-1], self.winsize, self.stepsize, self.samplerate)
+
+    @classmethod
+    def compute_onsetwin(self, onsetind):
+        offsetwin = findtimewins(onsetind, self.samplepoints)
+        return offsetwin
+
+    @classmethod
+    def compute_offsetwin(self, offsetind):
+        offsetwin = findtimewins(offsetind, self.samplepoints)
+        return offsetwin
+
+    @classmethod
     def expand_bipolar_chans(self, ch_list):
         if ch_list == []:
             return None
@@ -160,6 +171,7 @@ class Result(BaseDataset):
 
         return new_list
 
+    @classmethod
     def expand_ablated_chans(self, ch_list):
         if ch_list == []:
             return None
@@ -179,6 +191,7 @@ class Result(BaseDataset):
 
         return new_list
 
+    @classmethod
     def make_onset_labels_bipolar(self, clinonsetlabels):
         added_ch_names = []
         for ch in clinonsetlabels:
@@ -191,72 +204,3 @@ class Result(BaseDataset):
         clinonsetlabels.extend(added_ch_names)
         clinonsetlabels = list(set(clinonsetlabels))
         return clinonsetlabels
-
-    @property
-    def timepoints(self):
-        # compute time points
-        # return self.samplepoints.astype(int) / self.samplerate
-        # return self.metadata['timepoints']
-        # compute time points
-        return compute_timepoints(
-            self.samplepoints.ravel()[-1], self.winsize, self.stepsize, self.samplerate
-        )
-
-    @property
-    def onsetwin(self):
-        # if self.metadata['onsetwin'] == []:
-        #     return None
-
-        if self.metadata["onsetwin"] is not None and not np.isnan(
-            self.metadata["onsetwin"]
-        ):
-            return int(self.metadata["onsetwin"])
-        # else:
-        try:
-            print(
-                "Onset index and offsetindex", self.onsetind, self.samplepoints[-1, :]
-            )
-            onsetwin, _ = load_szinds(self.onsetind, None, self.samplepoints)
-            return int(onsetwin[0])
-        except:
-            return None
-
-    @property
-    def offsetwin(self):
-        # if self.metadata['offsetwin'] == []:
-        #     return None
-
-        if self.metadata["offsetwin"] is not None and not np.isnan(
-            self.metadata["offsetwin"]
-        ):
-            return int(self.metadata["offsetwin"])
-        # else:
-        try:
-            print(self.offsetind, self.samplepoints[-1, :])
-            _, offsetwin = load_szinds(self.onsetind, self.offsetind, self.samplepoints)
-            print("Found offsetwin: ", offsetwin)
-            return int(offsetwin[0])
-        except:
-            return None
-
-    def extract_metadata(self):
-        """
-        Function to extract metadata from the object's dictionary data structure.
-        Extracts the
-
-        :return: None
-        """
-        # self.contacts_list = self.metadata["chanlabels"]
-        try:
-            # comment out
-            self.modality = self.metadata["modality"]
-        except Exception as e:
-            self.metadata["modality"] = "ieeg"
-            self.modality = self.metadata["modality"]
-            print("Loading result object. Error in extracting metadata: ", e)
-
-        # # convert channel labels into a Contacts data struct
-        # if self.reference == "bipolar" or self.modality == "scalp":
-        #     self.contacts = Contacts(self.contacts_list, require_matching=False)
-        # else:
-        #     self.contacts = Contacts(self.contacts_list)

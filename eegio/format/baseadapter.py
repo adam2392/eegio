@@ -1,6 +1,7 @@
 import os
 from abc import ABC, abstractmethod
-from eegio.base.config import MB, GB
+
+from eegio.base.config import MB
 
 
 class BaseAdapter(ABC):

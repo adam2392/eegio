@@ -1,14 +1,15 @@
-import warnings
-from typing import Union, List, Tuple
 import datetime
+import warnings
+from typing import Union, List, Tuple, Dict
+
 import mne
 import numpy as np
 
-
 from eegio.base import config
-from eegio.base.objects.elecs import Contacts
 from eegio.base.objects.dataset.basedataobject import BaseDataset
+from eegio.base.objects.elecs import Contacts
 from eegio.base.utils.data_structures_utils import compute_samplepoints
+from eegio.format.scrubber import ChannelScrub
 
 
 class EEGTimeSeries(BaseDataset):
@@ -42,31 +43,24 @@ class EEGTimeSeries(BaseDataset):
     """
 
     def __init__(
-        self,
-        mat,
-        times,
-        contacts,
-        samplerate,
-        modality,
-        reference="monopolar",
-        patientid=None,
-        datasetid=None,
-        model_attributes=None,
-        wm_contacts=[],
-        metadata=dict(),
+            self,
+            mat: np.ndarray,
+            times: np.ndarray,
+            contacts: Contacts,
+            samplerate: float,
+            modality: str,
+            reference: str = "monopolar",
+            patientid: str = None,
+            datasetid: str = None,
+            model_attributes: Dict = None,
+            wm_contacts: List = None,
+            metadata: Dict = None,
     ):
-        if mat.ndim > 2:
-            raise ValueError(
-                "Time series can not have > 2 dimensions right now."
-                "We assume [C x T] shape, channels x time. "
-            )
-        if mat.shape[0] != len(contacts):
-            matshape = mat.shape
-            ncontacts = len(contacts)
-            raise AttributeError(
-                f"Matrix data should be shaped: Num Contacts X Time. You "
-                f"passed in {matshape} and {ncontacts} contacts."
-            )
+        if wm_contacts is None:
+            wm_contacts = []
+        if metadata is None:
+            metadata = dict()
+
         if modality not in config.ACCEPTED_EEG_MODALITIES:
             raise ValueError(
                 f"Modalities of EEG are accepted as: {config.ACCEPTED_EEG_MODALITIES}. "
@@ -119,6 +113,10 @@ class EEGTimeSeries(BaseDataset):
         modality = "ecog"
         eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
         return eegts
+
+    def get_bad_chs(self):
+        badchs = ChannelScrub.look_for_bad_channels(self.chanlabels)
+        return badchs
 
     def summary(self):
         pass
@@ -223,21 +221,21 @@ class EEGTimeSeries(BaseDataset):
         for ind, refinds in self.localreferencedict.items():
             if len(refinds) == 2:
                 self.mat[ind, :] = self.mat[ind, :] - 0.5 * (
-                    self.mat[refinds[0], :] + self.mat[refinds[1], :]
+                        self.mat[refinds[0], :] + self.mat[refinds[1], :]
                 )
             elif len(refinds) == 4:
                 self.mat[ind, :] = self.mat[ind, :] - 0.25 * (
-                    self.mat[refinds[0], :]
-                    + self.mat[refinds[1], :]
-                    + self.mat[refinds[2], :]
-                    + self.mat[refinds[3], :]
+                        self.mat[refinds[0], :]
+                        + self.mat[refinds[1], :]
+                        + self.mat[refinds[2], :]
+                        + self.mat[refinds[3], :]
                 )
         self.reference = "local"
 
     def filter_data(
-        self,
-        linefreq: Union[int, float],
-        bandpass_freq: Union[Tuple, List[float]] = (0.5, 300),
+            self,
+            linefreq: Union[int, float],
+            bandpass_freq: Union[Tuple, List[float]] = (0.5, 300),
     ):
         """
         Filters the time series data according to the line frequency (notch) and
@@ -307,7 +305,7 @@ class EEGTimeSeries(BaseDataset):
         # loop through and format data into chunks of windows
         for i in range(len(samplepoints)):
             win = samplepoints[i, :].astype(int)
-            data_win = self.mat[:, win[0] : win[1]].tolist()
+            data_win = self.mat[:, win[0]: win[1]].tolist()
 
             # swap the time and channel axis
             data_win = np.moveaxis(data_win, 0, 1)

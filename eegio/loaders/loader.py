@@ -25,12 +25,37 @@ class Loader(BaseLoader):
         self.adapter = adapter
 
     def read_NK(self, fname):
+        """
+        Function to read from a Nihon-Kohden based EEG system file.
+
+        :param fname:
+        :type fname:
+        :return:
+        :rtype:
+        """
         pass
 
     def read_Natus(self, fname: os.PathLike):
+        """
+        Function to read from a Natus based EEG system file.
+        :param fname:
+        :type fname:
+        :return:
+        :rtype:
+        """
         pass
 
     def read_npzjson(self, jsonfpath: os.PathLike, npzfpath: os.PathLike = None):
+        """
+        Reads a numpy stored as npz+json file combination.
+
+        :param jsonfpath:
+        :type jsonfpath:
+        :param npzfpath:
+        :type npzfpath:
+        :return:
+        :rtype:
+        """
         filedir = os.path.dirname(jsonfpath)
         # load in json file
         metadata = loadjsonfile(jsonfpath)
@@ -43,6 +68,16 @@ class Loader(BaseLoader):
         return datastruct, metadata
 
     def read_npyjson(self, jsonfpath: os.PathLike, npyfpath: os.PathLike = None):
+        """
+        Reads a numpy stored as npy+json file combination.
+
+        :param jsonfpath:
+        :type jsonfpath:
+        :param npyfpath:
+        :type npyfpath:
+        :return:
+        :rtype:
+        """
         filedir = os.path.dirname(jsonfpath)
         # load in json file
         metadata = loadjsonfile(jsonfpath)
@@ -55,14 +90,33 @@ class Loader(BaseLoader):
         return arr, metadata
 
     def read_edf(
-        self,
-        fname,
-        backend: str = "mne",
-        montage=None,
-        eog: Union[List, Tuple] = None,
-        misc: Union[List, Tuple] = None,
-        linefreq: float = 60,
+            self,
+            fname,
+            backend: str = "mne",
+            montage=None,
+            eog: Union[List, Tuple] = None,
+            misc: Union[List, Tuple] = None,
+            linefreq: float = 60,
     ):
+        """
+        Function to read in edf file either using MNE, or PyEDFLib. Recommended to use
+        MNE.
+
+        :param fname:
+        :type fname:
+        :param backend:
+        :type backend:
+        :param montage:
+        :type montage:
+        :param eog:
+        :type eog:
+        :param misc:
+        :type misc:
+        :param linefreq:
+        :type linefreq:
+        :return:
+        :rtype:
+        """
         if linefreq not in [50, 60]:
             raise ValueError(
                 "Line frequency should be set to a valid number! "
@@ -148,6 +202,16 @@ class Loader(BaseLoader):
         return raw, annotations
 
     def read_fif(self, fname, linefreq: float = 60):
+        """
+        Function to read in a .fif type file using MNE.
+
+        :param fname:
+        :type fname:
+        :param linefreq:
+        :type linefreq:
+        :return:
+        :rtype:
+        """
         if linefreq not in [50, 60]:
             raise ValueError(
                 "Line frequency should be set to a valid number! "

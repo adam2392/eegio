@@ -145,6 +145,19 @@ def clinical_sheet():
 
 
 @pytest.fixture(scope="class")
+def clinical_fpath():
+    """
+    FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS
+
+    :return:
+    """
+    # load in edf data
+    testdatadir = os.path.join(os.getcwd(), "./data/clinical_examples/")
+    filepath = os.path.join(testdatadir, "test_clinicaldata.csv")
+    return filepath
+
+
+@pytest.fixture(scope="class")
 def edf_fpath():
     """
     FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS

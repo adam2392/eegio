@@ -44,11 +44,33 @@ class TestResult:
 
         # create a result
         sampletimes = metadata["samplepoints"]
+        model_attributes = {
+            "winsize": metadata["winsize"],
+            "stepsize": metadata["stepsize"],
+            "samplerate": metadata["samplerate"],
+        }
         contacts = Contacts(chlabels, require_matching=False)
-        resultobj = Result(pertmats, sampletimes, contacts, metadata=metadata)
-
-        # assert resultobj is kosher
-        assert resultobj.n_contacts == resultobj.get_data().shape[0]
-        assert resultobj.length_of_result == resultobj.get_data().shape[1]
+        resultobj = Result(
+            pertmats,
+            sampletimes,
+            contacts,
+            metadata=metadata,
+            model_attributes=model_attributes,
+        )
 
         # slice the data
+        samplepoints = resultobj.samplepoints
+        # assert resultobj is kosher
+        assert resultobj.ncontacts == resultobj.get_data().shape[0]
+        assert len(samplepoints) == pertmats.shape[1]
+        assert len(resultobj.timepoints) == len(samplepoints)
+        assert len(samplepoints) == len(resultobj)
+
+        # drop certain channels
+        beforelen = len(contacts)
+        resultobj.mask_channels(contacts[0:3])
+        assert resultobj.ncontacts == beforelen - 3
+
+        # reset and things should be back to normal
+        resultobj.reset()
+        assert beforelen == resultobj.ncontacts
