@@ -11,7 +11,13 @@ class BaseLoader(ABC):
 
     def __init__(self, fname: os.PathLike = None):
         self.fname = fname
-        self.metadata = None
+        self.metadata_dict = dict()
+
+    def _set_metadatadict(self):
+        self.metadata_dict.update(fname=self.fname)
+
+    def get_metadata(self):
+        return self.metadata_dict
 
     def get_size(self):
         MB = 1.0e6
@@ -41,7 +47,5 @@ class BaseLoader(ABC):
             "Implement function for loading in file for starting conversion!"
         )
 
-    def updatemetadata(self, update_kws: dict = {}):
-        if self.metadata != None:
-            for key in update_kws.keys():
-                self.metadata[key] = update_kws[key]
+    def update_metadata(self, **update_kws):
+        self.metadata_dict.update(**update_kws)

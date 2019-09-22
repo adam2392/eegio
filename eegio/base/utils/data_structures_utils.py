@@ -302,7 +302,7 @@ def isequal_string(a, b, case_sensitive=False):
 def split_string_text_numbers(ls):
     items = []
     for s in ensure_list(ls):
-        match = re.findall("(\d+|\D+)", s)
+        match = re.findall(r"(\d+|\D+)", s)
         if match:
             items.append(tuple(match[:2]))
     return items

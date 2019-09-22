@@ -1,8 +1,9 @@
 import pytest
 import random
+import mne
 from eegio.format.scrubber import ChannelScrub, EventScrub
 
-
+@pytest.mark.usefixture("edf_fpath")
 class TestContacts:
     @pytest.mark.usefixture("rawio")
     def test_channelscrubber(self, rawio):
@@ -12,37 +13,48 @@ class TestContacts:
         :param contacts: (Contacts)
         :return: None
         """
-        pass
-        # no contact coords loaded yet should get a runtime error
-        # with pytest.warns(UserWarning):
-        #     contact_xyz = contacts.get_contacts_xyz()
-        # assert contact_xyz is None
-        #
-        # # load xyz coordinates - assert warning
-        # # with pytest.warns(UserWarning):
-        # #     contacts.load_contacts_xyz(contact_xyz)
-        #
-        # # not passing in correctly lengthed contactlist and coords should result in error
-        # with pytest.raises(AttributeError):
-        #     contact_xyz = []
-        #     for i in range(len(contacts)):
-        #         test_coord = (random.random(), 1, 0)
-        #         contact_xyz.append(test_coord)
-        #
-        #     contactlist = contacts.chanlabels
-        #     contacts = Contacts(contactlist, contact_xyz[1:])
-        #
-        # with pytest.warns(UserWarning):
-        #     contacts.natsort_contacts()
-        #     contacts.natsort_contacts()
+        chlabels = ["$", "", "-", "A1", "a1", "a2"]
+        scrubber = ChannelScrub()
 
-    def test_eventscrubber(self):
-        test_eventonsets = []
-        test_eventdurations = []
-        test_eventkeys = []
+        badchs = scrubber.look_for_bad_channels(chlabels)
+        chlabeled_dict = scrubber.label_channel_types(chlabels)
 
-        test_eventids = []
+    def test_eventscrubber(self, edf_fpath):
+        # use mne to read the raw edf, events and the info data struct
+        raw = mne.io.read_raw_edf(
+            edf_fpath,
+            preload=True,
+            verbose="ERROR",
+        )
+        # get the annotations
+        annotations = mne.events_from_annotations(
+            raw, use_rounding=True, chunk_duration=None
+        )
+        event_times, event_ids = annotations
+
+        # split event ids into their markernames and key-identifier
+        eventnames = event_ids.keys()
+
+        # extract the 3 columns from event times
+        # onset relative to start of recording
+        eventonsets = event_times[:, 0]
+        eventdurations = event_times[:, 1]  # duration of event
+        eventkeys = event_times[:, 2]  # key-identifier
+
+        # test_eventonsets = [20, 30, 40]
+        # test_eventdurations = [0, 0, 0]
+        # test_eventkeys = ["sz onset", "sz offset", "done"]
+        # test_eventids = [0, 1, 2]
+
         multiplesz = False
         # pass case for finding onset/offset, marker
+        eventscrubber = EventScrub()
 
-        pass
+        print(zip(eventonsets, eventdurations, eventkeys))
+
+        szonset = eventscrubber.find_seizure_onset(eventonsets, eventdurations,
+                                         eventkeys, event_ids, multiple_sz=multiplesz)
+        szoffset = eventscrubber.find_seizure_offset(eventonsets, eventdurations,
+                                         eventkeys, event_ids, multiple_sz=multiplesz)
+        # assert szonset
+        # assert szoffset

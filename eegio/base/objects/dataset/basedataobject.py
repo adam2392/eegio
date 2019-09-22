@@ -11,7 +11,6 @@ from natsort import order_by_index
 
 from eegio.base.objects.elecs import Contacts
 
-
 class BaseDataset(ABC):
     """
     The abstract base class for any multi-variate time series EEG dataset. Or resulting time series done on the EEG dataset.
@@ -86,7 +85,7 @@ class BaseDataset(ABC):
             )
 
     def __len__(self):
-        if len(self.mat) != len(self.times):
+        if self.mat.shape[1] != len(self.times):
             warnings.warn(
                 f"Times and matrix have different lengths. Their "
                 f"respective shapes are: {np.array(self.times).shape}, {self.mat.shape}."

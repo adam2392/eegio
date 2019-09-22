@@ -1,5 +1,5 @@
 import os
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict
 
 import mne
 import numpy as np
@@ -13,10 +13,12 @@ from eegio.loaders.baseloader import BaseLoader
 
 
 class Loader(BaseLoader):
-    def __init__(self, fname, metadata: dict = {}):
+    def __init__(self, fname, metadata: Dict=None):
         super(Loader, self).__init__(fname=fname)
 
-        self.metadata = metadata
+        if metadata is None:
+            metadata = {}
+        self.update_metadata(**metadata)
 
     def load_file(self, filepath: os.PathLike):
         pass
@@ -248,5 +250,8 @@ class Loader(BaseLoader):
         reader = MatReader()
         datastruct = reader.loadmat(fname)
 
-        raise RuntimeWarning("Need to explicitly set line frequency in code.")
-        # return datastruct
+        if 'annotations' in datastruct.keys():
+            annotations = datastruct['annotations']
+        else:
+            annotations = []
+        return datastruct, annotations

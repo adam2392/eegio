@@ -1,5 +1,6 @@
 import mne
 import pytest
+import numpy as np
 
 from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 from eegio.base.objects.elecs import Contacts
@@ -33,6 +34,12 @@ class Test_Loader:
             "misc": None,
         }
         loader = Loader(edf_fpath, metadata={})
+        filesize = loader.get_size()
+
+        loader.update_metadata(filesize=filesize)
+        metadata = loader.get_metadata()
+        assert np.isclose(filesize, 4.1, atol=0.5)
+
         raw_mne, annotations = loader.read_edf(**read_kwargs)
         info = raw_mne.info
         chlabels = raw_mne.ch_names
