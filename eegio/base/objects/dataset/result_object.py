@@ -1,12 +1,17 @@
-# -*- coding: utf-8 -*-
-import re
 from typing import Dict
 
 import numpy as np
 
 from eegio.base.objects.dataset.basedataobject import BaseDataset
 from eegio.base.objects.elecs import Contacts
-from eegio.base.utils.data_structures_utils import findtimewins
+
+
+def _findtimewins(time, timepoints):
+    if time == 0:
+        return 0
+    else:
+        timeind = np.where((time >= timepoints[:, 0]) & (time <= timepoints[:, 1]))[0][0]
+        return timeind
 
 
 class Result(BaseDataset):
@@ -48,8 +53,6 @@ class Result(BaseDataset):
         if metadata is None:
             metadata = {}
 
-        times = list(times)
-
         super(Result, self).__init__(
             mat,
             times=times,
@@ -57,8 +60,8 @@ class Result(BaseDataset):
             patientid=patientid,
             datasetid=datasetid,
             model_attributes=model_attributes,
+            metadata=metadata,
         )
-        self.metadata = metadata
 
     def __str__(self):
         return "{} {} EEG result mat ({}) ".format(
@@ -73,35 +76,16 @@ class Result(BaseDataset):
     def summary(self):
         pass
 
-    def pickle_results(self):
-        pass
-
     def create_fake_example(self):
         pass
 
     @property
     def samplepoints(self):
-        return self.times
+        return np.array(self.times)
 
     @property
     def record_filename(self):
         return self.metadata["filename"]
-
-    def get_metadata(self):
-        """
-        Getter method for the dictionary metadata.
-
-        :return: metadata (dict)
-        """
-        return self.metadata
-
-    def get_model_attributes(self):
-        """
-        Getter method for returning the model attributes applied to get this resulting data.
-
-        :return:
-        """
-        return self.model_attributes
 
     def mask_channels(self, badchannels):
         """
@@ -138,69 +122,11 @@ class Result(BaseDataset):
     @property
     def timepoints(self):
         return np.divide(self.times, self.samplerate)
-        # compute time points
-        # return compute_timepoints(np.array(self.times).ravel()[-1], self.winsize, self.stepsize, self.samplerate)
 
-    @classmethod
     def compute_onsetwin(self, onsetind):
-        offsetwin = findtimewins(onsetind, self.samplepoints)
+        offsetwin = _findtimewins(onsetind, self.samplepoints)
         return offsetwin
 
-    @classmethod
     def compute_offsetwin(self, offsetind):
-        offsetwin = findtimewins(offsetind, self.samplepoints)
+        offsetwin = _findtimewins(offsetind, self.samplepoints)
         return offsetwin
-
-    @classmethod
-    def expand_bipolar_chans(self, ch_list):
-        if ch_list == []:
-            return None
-
-        ch_list = [a.replace("’", "'") for a in ch_list]
-        new_list = []
-        for string in ch_list:
-            if not string.strip():
-                continue
-
-            # A1-10
-            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
-            if match:
-                name, fst_idx, last_idx = match.groups()
-
-                new_list.extend([name + str(fst_idx), name + str(last_idx)])
-
-        return new_list
-
-    @classmethod
-    def expand_ablated_chans(self, ch_list):
-        if ch_list == []:
-            return None
-
-        ch_list = [a.replace("’", "'") for a in ch_list]
-        new_list = []
-        for string in ch_list:
-            if not string.strip():
-                continue
-
-            # A1-10
-            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
-            if match:
-                name, fst_idx, last_idx = match.groups()
-
-                new_list.extend([name + str(fst_idx), name + str(last_idx)])
-
-        return new_list
-
-    @classmethod
-    def make_onset_labels_bipolar(self, clinonsetlabels):
-        added_ch_names = []
-        for ch in clinonsetlabels:
-            # A1-10
-            match = re.match("^([a-z]+)([0-9]+)$", ch)
-            if match:
-                name, fst_idx = match.groups()
-            added_ch_names.append(name + str(int(fst_idx) + 1))
-
-        clinonsetlabels.extend(added_ch_names)
-        clinonsetlabels = list(set(clinonsetlabels))
-        return clinonsetlabels

@@ -2,7 +2,7 @@ import collections
 import copy
 import warnings
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import mne
 import numpy as np
@@ -10,6 +10,7 @@ from deprecated import deprecated
 from natsort import order_by_index
 
 from eegio.base.objects.elecs import Contacts
+
 
 class BaseDataset(ABC):
     """
@@ -51,31 +52,23 @@ class BaseDataset(ABC):
     """
 
     def __init__(
-            self,
-            mat: np.ndarray,
-            times: List,
-            contacts: Contacts,
-            patientid: str = None,
-            datasetid: str = None,
-            model_attributes: Dict = None,
+        self,
+        mat: np.ndarray,
+        times: Union[List, np.ndarray],
+        contacts: Contacts,
+        patientid: str = None,
+        datasetid: str = None,
+        model_attributes: Dict = None,
+        cache_data: bool = True,
+        metadata: Dict = None,
     ):
-        self.mat = mat
-        self.times = times
-        self.contacts = contacts
-        self.patientid = patientid
-        self.datasetid = datasetid
-        self.model_attributes = model_attributes
-
-        self.bufftimes = self.times.copy()
-        self.buffmat = self.mat.copy()
-        self.buffcontacts = copy.deepcopy(self.contacts)
-
+        if metadata is None:
+            metadata = dict()
         if mat.ndim > 2:
             raise ValueError(
                 "Time series can not have > 2 dimensions right now."
                 "We assume [C x T] shape, channels x time. "
             )
-
         if mat.shape[0] != len(contacts):
             matshape = mat.shape
             ncontacts = len(contacts)
@@ -83,6 +76,23 @@ class BaseDataset(ABC):
                 f"Matrix data should be shaped: Num Contacts X Time. You "
                 f"passed in {matshape} and {ncontacts} contacts."
             )
+
+        self.mat = mat
+        self.times = times
+        self.contacts = contacts
+        self.patientid = patientid
+        self.datasetid = datasetid
+        self.model_attributes = model_attributes
+        self.metadata = metadata
+
+        # create cached copies
+        self.cache_data = cache_data
+        if self.cache_data:
+            self.bufftimes = self.times.copy()
+            self.buffmat = self.mat.copy()
+            self.buffcontacts = copy.deepcopy(self.contacts)
+        else:
+            self.bufftimes, self.buffmat, self.buffcontacts = None, None, None
 
     def __len__(self):
         if self.mat.shape[1] != len(self.times):
@@ -95,6 +105,32 @@ class BaseDataset(ABC):
     @abstractmethod
     def create_fake_example(self):
         pass
+
+    @abstractmethod
+    def summary(self):
+        pass
+
+    def get_metadata(self):
+        """
+        Getter method for the dictionary metadata.
+
+        :return: metadata (dict)
+        """
+        return self.metadata
+
+    def update_metadata(self, metadata: dict):
+        self.metadata.update(metadata)
+
+    def remove_element_from_metadata(self, key):
+        self.metadata.pop(key)
+
+    def get_model_attributes(self):
+        """
+        Getter method for returning the model attributes applied to get this resulting data.
+
+        :return:
+        """
+        return self.model_attributes
 
     def get_best_matching_montage(self, chanlabels):
         """
@@ -151,9 +187,15 @@ class BaseDataset(ABC):
         :return:
         :rtype:
         """
-        self.mat = self.buffmat.copy()
-        self.times = self.bufftimes.copy()
-        self.contacts = copy.deepcopy(self.buffcontacts)
+        if self.cache_data:
+            self.mat = self.buffmat.copy()
+            self.times = self.bufftimes.copy()
+            self.contacts = copy.deepcopy(self.buffcontacts)
+        else:
+            raise RuntimeError(
+                "You can't reset data because you did not cache the data "
+                "originally. Reload the data and pass in 'cache_data=True'."
+            )
 
     @property
     def shape(self):
@@ -189,7 +231,6 @@ class BaseDataset(ABC):
 
         :return:
         """
-        print("Trying to sort naturally contacts in result object")
         self.buffchanlabels = self.chanlabels.copy()
         natinds = self.contacts.natsort_contacts()
         self.mat = np.array(order_by_index(self.mat, natinds))
@@ -274,14 +315,6 @@ class BaseDataset(ABC):
         self.oezlobeinds = [
             ind for ind in range(len(self.chanlabels)) if ind not in self.cezlobeinds
         ]
-
-    @abstractmethod
-    def pickle_results(self):
-        pass
-
-    @abstractmethod
-    def summary(self):
-        pass
 
     @deprecated(version="0.1", reason="Not working function.")
     def set_localreference(self, chanlabels=[], chantypes=[]):

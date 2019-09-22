@@ -3,6 +3,7 @@ import random
 import mne
 from eegio.format.scrubber import ChannelScrub, EventScrub
 
+
 @pytest.mark.usefixture("edf_fpath")
 class TestContacts:
     @pytest.mark.usefixture("rawio")
@@ -21,11 +22,7 @@ class TestContacts:
 
     def test_eventscrubber(self, edf_fpath):
         # use mne to read the raw edf, events and the info data struct
-        raw = mne.io.read_raw_edf(
-            edf_fpath,
-            preload=True,
-            verbose="ERROR",
-        )
+        raw = mne.io.read_raw_edf(edf_fpath, preload=True, verbose="ERROR")
         # get the annotations
         annotations = mne.events_from_annotations(
             raw, use_rounding=True, chunk_duration=None
@@ -52,9 +49,11 @@ class TestContacts:
 
         print(zip(eventonsets, eventdurations, eventkeys))
 
-        szonset = eventscrubber.find_seizure_onset(eventonsets, eventdurations,
-                                         eventkeys, event_ids, multiple_sz=multiplesz)
-        szoffset = eventscrubber.find_seizure_offset(eventonsets, eventdurations,
-                                         eventkeys, event_ids, multiple_sz=multiplesz)
+        szonset = eventscrubber.find_seizure_onset(
+            eventonsets, eventdurations, eventkeys, event_ids, multiple_sz=multiplesz
+        )
+        szoffset = eventscrubber.find_seizure_offset(
+            eventonsets, eventdurations, eventkeys, event_ids, multiple_sz=multiplesz
+        )
         # assert szonset
         # assert szoffset

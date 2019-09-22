@@ -5,6 +5,7 @@ import mne
 import numpy as np
 import pyedflib
 
+from eegio.base.objects import EEGTimeSeries, Result, Contacts
 from eegio.base.utils.data_structures_utils import MatReader
 from eegio.base.utils.data_structures_utils import loadjsonfile
 from eegio.format.baseadapter import BaseAdapter
@@ -13,7 +14,7 @@ from eegio.loaders.baseloader import BaseLoader
 
 
 class Loader(BaseLoader):
-    def __init__(self, fname, metadata: Dict=None):
+    def __init__(self, fname, metadata: Dict = None):
         super(Loader, self).__init__(fname=fname)
 
         if metadata is None:
@@ -25,6 +26,81 @@ class Loader(BaseLoader):
 
     def load_adapter(self, adapter: BaseAdapter):
         self.adapter = adapter
+
+    def _wrap_raw_in_obj(self, raw_mne: mne.io.BaseRaw, modality: str):
+        """
+        Helps wrap a MNE.io.Raw object into a light-weight wrapper object representing
+        the EEG time series, adds additional metadata.
+
+        :param raw_mne:
+        :type raw_mne:
+        :param modality:
+        :type modality:
+        :return:
+        :rtype:
+        """
+        # create intermediate data structures
+        raw_mne.load_data()
+
+        # scrub channels
+        raw_mne = ChannelScrub.channel_text_scrub(raw_mne)
+        chlabels = raw_mne.ch_names
+        # look for bad channels
+        badchs = ChannelScrub.look_for_bad_channels(chlabels)
+        # goodinds = [i for i, ch in enumerate(chlabels) if ch not in badchs]
+        # drop the bad channels
+        raw_mne.drop_channels(badchs)
+        chlabels = raw_mne.ch_names
+        # label channels
+        labels_of_ch = ChannelScrub.label_channel_types(chlabels)
+
+        # load in the cleaned ch labels
+        contacts = Contacts(chlabels, require_matching=False)
+        samplerate = raw_mne.info["sfreq"]
+        rawdata, times = raw_mne.get_data(return_times=True)
+
+        # create EEG TS object
+        eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+        return eegts
+
+    def _wrap_result_in_obj(self, datastruct, metadata):
+        """
+        Helps wrap a dictionary returned result data in the form of np.ndarrays, along with
+        corresponding metadata into a Result object.
+
+        :param datastruct:
+        :type datastruct:
+        :param metadata:
+        :type metadata:
+        :return:
+        :rtype:
+        """
+        # ensure data quality
+        pertmats = datastruct["pertmats"]
+        delvecs = datastruct["delvecs"]
+        adjmats = datastruct["adjmats"]
+        chlabels = metadata["chanlabels"]
+
+        assert adjmats.ndim == 3
+        assert pertmats.ndim == 2
+        assert delvecs.ndim == 3
+
+        # create a result
+        sampletimes = metadata["samplepoints"]
+        model_attributes = {
+            "winsize": metadata["winsize"],
+            "stepsize": metadata["stepsize"],
+            "samplerate": metadata["samplerate"],
+        }
+        contacts = Contacts(chlabels, require_matching=False)
+        resultobj = Result(
+            pertmats,
+            sampletimes,
+            contacts,
+            metadata=metadata,
+            model_attributes=model_attributes,
+        )
+        return resultobj
 
     def read_NK(self, fname):
         """
@@ -92,13 +168,13 @@ class Loader(BaseLoader):
         return arr, metadata
 
     def read_edf(
-            self,
-            fname,
-            backend: str = "mne",
-            montage=None,
-            eog: Union[List, Tuple] = None,
-            misc: Union[List, Tuple] = None,
-            linefreq: float = 60,
+        self,
+        fname,
+        backend: str = "mne",
+        montage=None,
+        eog: Union[List, Tuple] = None,
+        misc: Union[List, Tuple] = None,
+        linefreq: float = 60,
     ):
         """
         Function to read in edf file either using MNE, or PyEDFLib. Recommended to use
@@ -250,8 +326,8 @@ class Loader(BaseLoader):
         reader = MatReader()
         datastruct = reader.loadmat(fname)
 
-        if 'annotations' in datastruct.keys():
-            annotations = datastruct['annotations']
+        if "annotations" in datastruct.keys():
+            annotations = datastruct["annotations"]
         else:
             annotations = []
         return datastruct, annotations

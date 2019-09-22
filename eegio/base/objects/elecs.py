@@ -85,7 +85,7 @@ class Contacts(object):
         require_matching: bool = True,
     ):
         self.require_matching = require_matching
-        self.chanlabels = list(contacts_list)
+        self.chanlabels = np.array([x.lower() for x in contacts_list])
 
         if contacts_xyz is not None and referencespace == None:
             warnings.warn(
@@ -228,16 +228,36 @@ class Contacts(object):
             )
 
         keepinds = [i for i in range(len(self.chanlabels)) if i not in mask_inds]
-        self.chanlabels = np.array(self.chanlabels)[keepinds]
+        self.chanlabels = self.chanlabels[keepinds]
         if self.xyz:
             self.xyz = [self.xyz[i] for i in keepinds]
+        return keepinds
 
     def mask_contacts(self, contacts):
-        pass
+        """
+        Helper function to make out certain contacts by name.
+
+        :param contacts:
+        :type contacts:
+        :return:
+        :rtype:
+        """
+        if any(x not in self.chanlabels for x in contacts):
+            raise ValueError(
+                "The contacts you passed to mask, were not inside. You passed"
+                f"{contacts}. The contacts available are: {self.chanlabels}."
+            )
+
+        keepinds = [i for i, ch in enumerate(self.chanlabels) if ch not in contacts]
+        self.chanlabels = self.chanlabels[keepinds]
+        if self.xyz:
+            self.xyz = [self.xyz[i] for i in keepinds]
+        return keepinds
 
     def get_seeg_ngbhrs(self, contact: str):
         """
         Helper function to get neighboring contacts for SEEG contacts.
+
         :param contact:
         :param chanlist:
         :return:
@@ -492,3 +512,57 @@ class Contacts(object):
         # get the channels of neighbors
         twoDnbrs_chans = [sortedgrid[ind] for ind in twoDnbrs_inds]
         return twoDnbrs_chans, twoDnbrs_inds
+
+    @classmethod
+    def expand_bipolar_chans(self, ch_list):
+        if ch_list == []:
+            return None
+
+        ch_list = [a.replace("’", "'") for a in ch_list]
+        new_list = []
+        for string in ch_list:
+            if not string.strip():
+                continue
+
+            # A1-10
+            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
+            if match:
+                name, fst_idx, last_idx = match.groups()
+
+                new_list.extend([name + str(fst_idx), name + str(last_idx)])
+
+        return new_list
+
+    @classmethod
+    def expand_ablated_chans(self, ch_list):
+        if ch_list == []:
+            return None
+
+        ch_list = [a.replace("’", "'") for a in ch_list]
+        new_list = []
+        for string in ch_list:
+            if not string.strip():
+                continue
+
+            # A1-10
+            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
+            if match:
+                name, fst_idx, last_idx = match.groups()
+
+                new_list.extend([name + str(fst_idx), name + str(last_idx)])
+
+        return new_list
+
+    @classmethod
+    def make_onset_labels_bipolar(self, clinonsetlabels):
+        added_ch_names = []
+        for ch in clinonsetlabels:
+            # A1-10
+            match = re.match("^([a-z]+)([0-9]+)$", ch)
+            if match:
+                name, fst_idx = match.groups()
+            added_ch_names.append(name + str(int(fst_idx) + 1))
+
+        clinonsetlabels.extend(added_ch_names)
+        clinonsetlabels = list(set(clinonsetlabels))
+        return clinonsetlabels

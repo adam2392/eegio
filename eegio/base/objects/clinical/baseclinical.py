@@ -3,6 +3,7 @@ import os
 import warnings
 from abc import ABC, abstractmethod
 from ast import literal_eval
+from pprint import pprint
 from sys import getsizeof
 
 import pandas as pd
@@ -74,7 +75,7 @@ class AbstractClinical(ABC):
         return df
 
     def from_csv(
-        self, filepath: os.PathLike, cache_vars: bool = False, **read_csv_kwargs
+            self, filepath: os.PathLike, cache_vars: bool = False, **read_csv_kwargs
     ):
         # load in csv file
         df = pd.read_csv(filepath, **read_csv_kwargs)
@@ -126,4 +127,8 @@ class DataSheet(AbstractClinical):
         return df
 
     def summary(self):
-        pass
+        summary_str = (
+            f"Datasheet located at {self.fpath}."
+        )
+        pprint(summary_str)
+        return summary_str

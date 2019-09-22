@@ -48,7 +48,6 @@ class TestContacts:
             test_coord = (random.random(), 1, 0)
             contact_xyz.append(test_coord)
         random_mask = np.random.choice(np.arange(len(contacts)), 6)
-        random_ch_mask = np.random.choice(contacts.chanlabels, 6)
 
         # load xyz coordinates
         print(len(contact_xyz), len(contacts.chanlabels))
@@ -63,6 +62,9 @@ class TestContacts:
 
         contacts.natsort_contacts()
         contacts.mask_contact_indices(random_mask)
+
+        # generate random mask to get rid of
+        random_ch_mask = np.random.choice(contacts.chanlabels, 6)
         contacts.mask_contacts(random_ch_mask)
 
         contact = contacts.chanlabels[0]

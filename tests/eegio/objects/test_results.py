@@ -1,8 +1,8 @@
 import pytest
 
 from eegio.base.objects.dataset.result_object import Result
-from eegio.loaders.loader import Loader
 from eegio.base.objects.elecs import Contacts
+from eegio.loaders.loader import Loader
 
 
 class TestResult:
@@ -74,3 +74,10 @@ class TestResult:
         # reset and things should be back to normal
         resultobj.reset()
         assert beforelen == resultobj.ncontacts
+
+        # test class functions
+        onsetind = 200
+        offsetind = 250
+        onsetwin = resultobj.compute_onsetwin(onsetind)
+        offsetwin = resultobj.compute_offsetwin(offsetind)
+        assert onsetwin <= offsetwin

@@ -22,7 +22,7 @@ class ChannelScrub:
             :return: label (str) the reformatted string that is lowercase and w/o spaces
             """
             # hard coded replacement rules
-            label = str(label).replace("POL", "").replace(" ", "").lower()
+            label = str(label).replace("pol", "").replace(" ", "").lower()
             label = label.replace("eeg", "").replace("-ref", "")
 
             # replace "Grid" with 'G' label
@@ -30,6 +30,7 @@ class ChannelScrub:
             return label
 
         # apply channel scrubbing
+        raw.rename_channels(lambda x: x.lower())
         raw.rename_channels(lambda x: x.strip("."))  # remove dots from channel names
         raw.rename_channels(lambda x: x.strip("-"))  # remove dashes from channel names
         raw.rename_channels(
@@ -44,7 +45,7 @@ class ChannelScrub:
 
     @classmethod
     def look_for_bad_channels(
-            self, ch_names, bad_markers: List[str] = ["$", "fz", "gz", "dc", "sti"]
+        self, ch_names, bad_markers: List[str] = ["$", "fz", "gz", "dc", "sti"]
     ):
         """
         Helper function to allow hardcoding of what are "bad channels"
@@ -140,14 +141,14 @@ class ChannelScrub:
 class EventScrub:
     @classmethod
     def find_seizure_onset(
-            cls,
-            event_onsets: List[int],
-            event_durations: List[float],
-            event_keys: List[int],
-            event_ids: Dict,
-            offset_time: float = None,
-            multiple_sz: bool = False,
-            onset_marker_name: str = "",
+        cls,
+        event_onsets: List[int],
+        event_durations: List[float],
+        event_keys: List[int],
+        event_ids: Dict,
+        offset_time: float = None,
+        multiple_sz: bool = False,
+        onset_marker_name: str = "",
     ):
         """
         Eventscrubber to determine where seizure onset is and return the marker (in seconds)
@@ -204,14 +205,14 @@ class EventScrub:
 
     @classmethod
     def find_seizure_offset(
-            cls,
-            event_onsets: List[int],
-            event_durations: List[float],
-            event_keys: List[int],
-            event_ids: Dict,
-            onset_time: float = None,
-            multiple_sz: bool = False,
-            offset_marker_name: str = "",
+        cls,
+        event_onsets: List[int],
+        event_durations: List[float],
+        event_keys: List[int],
+        event_ids: Dict,
+        onset_time: float = None,
+        multiple_sz: bool = False,
+        offset_marker_name: str = "",
     ):
         """
         Eventscrubber to determine where seizure offset is and return the marker (in seconds)

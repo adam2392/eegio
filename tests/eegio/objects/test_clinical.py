@@ -23,7 +23,7 @@ class TestClinical:
         os.getcwd(), "./data/clinical_examples/test_clinical_singlepatient_data.xlsx"
     )
 
-    def test_clinical_conversion(self):
+    def test_clinical_conversion_exceltocsv(self):
         """
         Test to test MasterClinicalSheet object.
 
@@ -52,6 +52,41 @@ class TestClinical:
         pd.testing.assert_frame_equal(
             temp_csv_df,
             csv_df,
+            check_dtype=True,
+            # check_column_type=True,
+            check_datetimelike_compat=True,
+        )
+
+    def test_clinical_conversion_csvtoexcel(self):
+        """
+        Test to test MasterClinicalSheet object.
+
+        :param clinical_sheet:
+        :return:
+        """
+        clinical_excel_fpath = pathlib.Path(self.clinical_excel_fpath)
+        clinical_csv_fpath = pathlib.Path(self.clinical_csv_fpath)
+
+        # instantiate datasheet loader
+        clinloader = DataSheet()
+
+        # load excel file
+        csv_df = clinloader.load(fpath=clinical_csv_fpath)
+
+        # convert excel file to csv file
+        with tempfile.NamedTemporaryFile() as tmp:
+            tmp.name += ".xlsx"
+            print(tmp.name)
+            csv_df.to_excel(tmp.name, index=None)
+            temp_excel_df = clinloader.from_excel(tmp.name)
+
+        # load csv file
+        excel_df = clinloader.load(fpath=clinical_excel_fpath)
+
+        # make sure all entries are the same
+        pd.testing.assert_frame_equal(
+            temp_excel_df,
+            excel_df,
             check_dtype=True,
             # check_column_type=True,
             check_datetimelike_compat=True,
@@ -109,6 +144,9 @@ class TestClinical:
         assert isinstance(snaploader.df, pd.DataFrame)
         assert patloader.fpath == pat_fpath
         assert snaploader.fpath == snapshot_fpath
+
+        assert patloader.summary()
+        assert snaploader.summary()
 
     def test_clinical_errors(self):
         """

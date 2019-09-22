@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 import datetime
 
+from eegio.base.objects import EEGTimeSeries
+
 
 @pytest.mark.usefixture("eegts")
 class TestEEGTimeSeries:
@@ -35,9 +37,10 @@ class TestEEGTimeSeries:
     def test_eegts_bipolar(self, eegts):
         # test bipolar
         eegts.set_bipolar()
+        eegts.reset()
 
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-    def test_eegts_utility(self, eegts):
+    def test_eegts_utility(self, eegts: EEGTimeSeries):
         # test filtering
         linefreq = 60
         eegts.filter_data(linefreq, bandpass_freq=[0.5, 300])
@@ -45,6 +48,17 @@ class TestEEGTimeSeries:
         # partition data into windows
         windowed_data = eegts.partition_into_windows(250, 125)
         assert len(windowed_data)
+
+        eegts.update_metadata({"test_date": datetime.datetime.now()})
+        eegts.remove_element_from_metadata("test_date")
+        with pytest.raises(KeyError):
+            eegts.remove_element_from_metadata("test_date")
+
+        prevlen = eegts.n_contacts
+        eegts.mask_chs("a1")
+        assert prevlen == eegts.n_contacts + 1
+        eegts.mask_indices([1, 3])
+        assert prevlen == eegts.n_contacts + 3
 
     def test_eegts_errors(self, eegts):
         """

@@ -129,6 +129,7 @@ class Test_Loader:
 
         # test getting the "best montage" wrapping MNE
         testchs = eegts.chanlabels.copy()
+        print(testchs)
         best_montage = eegts.get_best_matching_montage(testchs)
         # get the indices that fit a montage in scalp EEG
         montage_inds = eegts.get_montage_channel_indices(best_montage, testchs)
