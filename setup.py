@@ -17,7 +17,7 @@ To test on test pypi:
 
 PACKAGE_NAME = "eegio"
 VERSION = "0.1"
-DESCRIPTION = "An io package for eeg rawdata and time-series transformations done on it."
+DESCRIPTION = "An io package for eeg data and time-series transformations done on it."
 URL = 'https://github.com/adam2392/eegio'
 MINIMUM_PYTHON_VERSION = 3, 6  # Minimum of Python 3.4
 REQUIRED_PACKAGES = [
@@ -76,7 +76,6 @@ setup(
     packages=find_packages(include=[], exclude=[]),
     project_urls={
         'Documentation': 'https://github.com/adam2392/eegio/docs/',
-        # 'Funding': 'https://www.nsfgrfp.org/',
         'Source': URL,
         'Tracker': 'https://github.com/adam2392/eegio/issues',
     },

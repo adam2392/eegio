@@ -21,7 +21,7 @@ class TestContacts:
         chlabeled_dict = scrubber.label_channel_types(chlabels)
 
     def test_eventscrubber(self, edf_fpath):
-        # use mne to read the raw edf, events and the info data struct
+        # use mne to read the raw edf, events and the metadata data struct
         raw = mne.io.read_raw_edf(edf_fpath, preload=True, verbose="ERROR")
         # get the annotations
         annotations = mne.events_from_annotations(

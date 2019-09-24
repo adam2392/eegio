@@ -10,7 +10,9 @@ def _findtimewins(time, timepoints):
     if time == 0:
         return 0
     else:
-        timeind = np.where((time >= timepoints[:, 0]) & (time <= timepoints[:, 1]))[0][0]
+        timeind = np.where((time >= timepoints[:, 0]) & (time <= timepoints[:, 1]))[0][
+            0
+        ]
         return timeind
 
 
@@ -41,14 +43,14 @@ class Result(BaseDataset):
     """
 
     def __init__(
-            self,
-            mat: np.ndarray,
-            times: np.ndarray,
-            contacts: Contacts,
-            patientid: str = None,
-            datasetid: str = None,
-            model_attributes: Dict = None,
-            metadata: Dict = None,
+        self,
+        mat: np.ndarray,
+        times: np.ndarray,
+        contacts: Contacts,
+        patientid: str = None,
+        datasetid: str = None,
+        model_attributes: Dict = None,
+        metadata: Dict = None,
     ):
         if metadata is None:
             metadata = {}

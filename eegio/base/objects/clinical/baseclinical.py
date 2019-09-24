@@ -75,7 +75,7 @@ class AbstractClinical(ABC):
         return df
 
     def from_csv(
-            self, filepath: os.PathLike, cache_vars: bool = False, **read_csv_kwargs
+        self, filepath: os.PathLike, cache_vars: bool = False, **read_csv_kwargs
     ):
         # load in csv file
         df = pd.read_csv(filepath, **read_csv_kwargs)
@@ -127,8 +127,6 @@ class DataSheet(AbstractClinical):
         return df
 
     def summary(self):
-        summary_str = (
-            f"Datasheet located at {self.fpath}."
-        )
+        summary_str = f"Datasheet located at {self.fpath}."
         pprint(summary_str)
         return summary_str

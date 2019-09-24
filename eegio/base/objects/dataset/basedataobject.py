@@ -35,7 +35,7 @@ class BaseDataset(ABC):
         The time samples of the dataset that is Tx1
 
     contacts: (Contacts)
-        The contacts represented by a Contacts object. See Contacts for more info.
+        The contacts represented by a Contacts object. See Contacts for more metadata.
 
     patientid: (str)
         patient identifier.
@@ -118,8 +118,8 @@ class BaseDataset(ABC):
         """
         return self.metadata
 
-    def update_metadata(self, metadata: dict):
-        self.metadata.update(metadata)
+    def update_metadata(self, **kwargs):
+        self.metadata.update(**kwargs)
 
     def remove_element_from_metadata(self, key):
         self.metadata.pop(key)

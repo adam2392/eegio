@@ -38,9 +38,9 @@ class EEGTimeSeries(BaseDataset):
     Examples
     --------
     >>> from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
-    >>> rawdata = np.random.rand((80,100))
+    >>> data = np.random.rand((80,100))
     >>> metadata = dict()
-    >>> ts = EEGTimeSeries(rawdata, metadata)
+    >>> ts = EEGTimeSeries(data, metadata)
     """
 
     def __init__(
@@ -140,7 +140,7 @@ class EEGTimeSeries(BaseDataset):
         pass
 
     def _create_info(self):
-        # create the info struct
+        # create the metadata struct
         if self.modality == "ecog":
             modality = "ecog"
         elif self.modality == "seeg":

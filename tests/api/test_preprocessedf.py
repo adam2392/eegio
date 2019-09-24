@@ -27,6 +27,7 @@ def test_preprocess_edf(edf_fpath):
         "montage": None,
         "eog": None,
         "misc": None,
+        "return_mne": True
     }
     loader = Loader(edf_fpath, metadata={})
     raw_mne, annotations = loader.read_edf(**read_kwargs)
@@ -49,7 +50,7 @@ def test_preprocess_edf(edf_fpath):
     """
     Third, save as fif file
     """
-    # create the info data struct
+    # create the metadata data struct
     info["bads"] = bad_chans_list
     info["montage"] = montage
 
@@ -64,6 +65,6 @@ def test_preprocess_edf(edf_fpath):
         pass
 
         # load in fif file
-        raw_mne, annotations = loader.read_fif(fpath)
+        raw_mne, annotations = loader.read_fif(fpath, return_mne=True)
         info = raw_mne.info
         chlabels = raw_mne.ch_names

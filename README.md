@@ -28,6 +28,7 @@ EEGio is intended to be a lightweight wrapper for easily analyzing large batches
     pandas
     mne
     pyedflib
+    xlrd
     
 Setup virtual environment via Conda inside your Unix-friendly terminal (aka Mac, or Linux) is recommended (see https://docs.anaconda.com/anaconda/install/):
 
@@ -35,7 +36,7 @@ Setup virtual environment via Conda inside your Unix-friendly terminal (aka Mac,
     conda create -n eegio # creates conda env
     conda activate eegio  # activates the environment
     conda config --add channels conda-forge # add extra channels necessary
-    conda install numpy pandas mne scikit-learn scipy seaborn matplotlib pyedflib
+    conda install numpy pandas mne scikit-learn scipy seaborn matplotlib pyedflib xlrd
     
 ## Install from Github (Mainly for developing)
 To install, run this command inside your virtual environment:
@@ -58,10 +59,19 @@ User can run preprocessing on .edf files to create .fif + .json files:
                                 outputfilepath)
                                 
 User can then load datasets, or patient (i.e. grouped datasets) data:
-
+    
+    # create a patient object that looks through hard coded directory
     patientobj = eegio.get_patients(patientdir)
-    datasetobj = eegio.load_dataset(datasetfilepath)
-    eegio.load_clinicalmetadata(formatted_df)
+    
+    # actually load an EEG Time series from .fif/.edf,etc.
+    datasetobj = eegio.load_file(datasetfilepath)
+    
+    # read in metadata related from an excel file
+    clin_dict = eegio.load_clinicalmetadata(formatted_df)
+    
+    # attach clinical data to metadata for EEG TimeSeries
+    datasetobj.update_metadata(**clin_dict)
+    
     print(datasetobj)
     print(patientobj)
     

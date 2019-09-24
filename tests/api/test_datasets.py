@@ -112,7 +112,7 @@
 #                         ieegts = loader.loadpipeline()
 #
 #                         # assert data is save
-#                         rawdata = ieegts.get_data()
+#                         data = ieegts.get_data()
 #                         metadata = ieegts.get_metadata()
 #
 #                         # test the metadata for this dataset

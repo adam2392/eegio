@@ -3,7 +3,7 @@ import pytest
 from eegio.base.objects.dataset.result_object import Result
 from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 from eegio.base.objects.elecs import Contacts
-from eegio.loaders.loader import Loader
+from eegio.loaders import ResultLoader
 
 
 @pytest.mark.usefixture("result_fpath")
@@ -18,13 +18,13 @@ def test_load_resultdata(result_fpath):
     First, load in data via np.
     """
     result_fpath, result_npzfpath = result_fpath
-    loader = Loader(result_fpath)
+    loader = ResultLoader(result_fpath)
 
     pass
     """
     Second, convert to and object
     """
     # modality = "scalp"
-    # rawdata, times = raw_mne.get_data(return_times=True)
+    # data, times = raw_mne.get_data(return_times=True)
     # contacts = Contacts(chlabels, require_matching=False)
-    # result = Result(rawdata, times, contacts, samplerate, modality)
+    # result = Result(data, times, contacts, samplerate, modality)

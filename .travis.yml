@@ -10,7 +10,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda info -a
+  - conda metadata -a
   - conda create -q -n eegio
   - source activate eegio
 # run conda /pip installation of packages

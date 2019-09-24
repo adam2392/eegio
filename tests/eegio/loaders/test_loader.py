@@ -1,6 +1,6 @@
 import mne
-import pytest
 import numpy as np
+import pytest
 
 from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 from eegio.base.objects.elecs import Contacts
@@ -32,6 +32,7 @@ class Test_Loader:
             "montage": None,
             "eog": None,
             "misc": None,
+            "return_mne": True,
         }
         loader = Loader(edf_fpath, metadata={})
         filesize = loader.get_size()
@@ -64,7 +65,7 @@ class Test_Loader:
         :return:
         :rtype:
         """
-        read_kwargs = {"fname": fif_fpath, "linefreq": 60}
+        read_kwargs = {"fname": fif_fpath, "linefreq": 60, "return_mne": True}
         loader = Loader(fif_fpath, metadata={})
         raw_mne, annotations = loader.read_fif(**read_kwargs)
         info = raw_mne.info
@@ -98,7 +99,7 @@ class Test_Loader:
         :rtype:
         """
         # load in fif file
-        read_kwargs = {"fname": fif_fpath, "linefreq": 60}
+        read_kwargs = {"fname": fif_fpath, "linefreq": 60, "return_mne": True}
         loader = Loader(fif_fpath, metadata={})
         raw_mne, annotations = loader.read_fif(**read_kwargs)
         info = raw_mne.info

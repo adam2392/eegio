@@ -6,19 +6,13 @@ from eegio.loaders.loader import Loader
 
 
 @pytest.mark.usefixture("fif_fpath")
-def test_load_rawdata(fif_fpath):
-    """
-    Test error and warnings raised by Result class.
-
-    :param result: (Result)
-    :return: None
-    """
+def test_load_rawdata_mne(fif_fpath):
     """
     First, load in data via fif.
     """
     loader = Loader(fif_fpath)
     # load in fif file
-    raw_mne, annotations = loader.read_fif(fif_fpath)
+    raw_mne, annotations = loader.read_fif(fif_fpath, return_mne=True)
     info = raw_mne.info
     chlabels = raw_mne.ch_names
     samplerate = info["sfreq"]
@@ -30,3 +24,17 @@ def test_load_rawdata(fif_fpath):
     rawdata, times = raw_mne.get_data(return_times=True)
     contacts = Contacts(chlabels, require_matching=False)
     eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+
+    assert isinstance(eegts, EEGTimeSeries)
+
+
+@pytest.mark.usefixture("fif_fpath")
+def test_load_rawdata_eegts(fif_fpath):
+    """
+    First, load in data via fif automatically to eegts
+    """
+    loader = Loader(fif_fpath)
+    # load in fif file
+    eegts = loader.read_fif(fif_fpath)
+
+    assert isinstance(eegts, EEGTimeSeries)

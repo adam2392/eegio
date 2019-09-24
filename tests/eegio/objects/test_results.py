@@ -2,7 +2,7 @@ import pytest
 
 from eegio.base.objects.dataset.result_object import Result
 from eegio.base.objects.elecs import Contacts
-from eegio.loaders.loader import Loader
+from eegio.loaders import Loader, ResultLoader
 
 
 class TestResult:
@@ -27,7 +27,7 @@ class TestResult:
         jsonfpath, npzfpath = result_fpath
 
         # load in the data
-        loader = Loader(jsonfpath)
+        loader = ResultLoader(jsonfpath)
         datastruct, metadata = loader.read_npzjson(jsonfpath, npzfpath)
 
         assert isinstance(metadata, dict)

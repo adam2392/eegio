@@ -49,7 +49,7 @@ class TestEEGTimeSeries:
         windowed_data = eegts.partition_into_windows(250, 125)
         assert len(windowed_data)
 
-        eegts.update_metadata({"test_date": datetime.datetime.now()})
+        eegts.update_metadata(test_date=datetime.datetime.now())
         eegts.remove_element_from_metadata("test_date")
         with pytest.raises(KeyError):
             eegts.remove_element_from_metadata("test_date")

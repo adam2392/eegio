@@ -7,7 +7,6 @@ import pyedflib
 
 from eegio.base.objects import EEGTimeSeries, Result, Contacts
 from eegio.base.utils.data_structures_utils import MatReader
-from eegio.base.utils.data_structures_utils import loadjsonfile
 from eegio.format.baseadapter import BaseAdapter
 from eegio.format.scrubber import ChannelScrub, EventScrub
 from eegio.loaders.baseloader import BaseLoader
@@ -21,13 +20,25 @@ class Loader(BaseLoader):
             metadata = {}
         self.update_metadata(**metadata)
 
-    def load_file(self, filepath: os.PathLike):
-        pass
+    def load_file(self, filepath: Union[str, os.PathLike]):
+        filepath = str(filepath)
+        if filepath.endswith(".fif"):
+            res = self.read_fif(filepath)
+        elif filepath.endswith(".mat"):
+            res = self.read_mat(filepath)
+        elif filepath.endswith(".edf"):
+            res = self.read_edf(filepath)
+        else:
+            raise OSError("Can't use load_file for this file extension {filepath} yet.")
+
+        return res
 
     def load_adapter(self, adapter: BaseAdapter):
         self.adapter = adapter
 
-    def _wrap_raw_in_obj(self, raw_mne: mne.io.BaseRaw, modality: str):
+    def _wrap_raw_in_obj(
+        self, raw_mne: mne.io.BaseRaw, modality: str, annotations: List
+    ):
         """
         Helps wrap a MNE.io.Raw object into a light-weight wrapper object representing
         the EEG time series, adds additional metadata.
@@ -39,7 +50,7 @@ class Loader(BaseLoader):
         :return:
         :rtype:
         """
-        # create intermediate data structures
+        # load data into RAM
         raw_mne.load_data()
 
         # scrub channels
@@ -61,6 +72,31 @@ class Loader(BaseLoader):
 
         # create EEG TS object
         eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+        eegts.update_metadata(raw_annotations=annotations)
+        return eegts
+
+    def _wrap_mat_in_obj(self, datastruct, modality: str, annotations: List):
+        chlabels = datastruct["chlabels"]
+        rawdata = datastruct["data"]
+        samplerate = datastruct["sfreq"]
+
+        # look for bad channels
+        badchs = ChannelScrub.look_for_bad_channels(chlabels)
+        goodinds = [i for i, ch in enumerate(chlabels) if ch not in badchs]
+        # drop the bad channels
+        rawdata = rawdata[goodinds, ...]
+        chlabels = chlabels[goodinds]
+        times = np.arange(0, rawdata.shape[1])
+
+        # label channels
+        labels_of_ch = ChannelScrub.label_channel_types(chlabels)
+
+        # load in the cleaned ch labels
+        contacts = Contacts(chlabels, require_matching=False)
+
+        # create EEG TS object
+        eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+        eegts.update_metadata(raw_annotations=annotations)
         return eegts
 
     def _wrap_result_in_obj(self, datastruct, metadata):
@@ -123,50 +159,6 @@ class Loader(BaseLoader):
         """
         pass
 
-    def read_npzjson(self, jsonfpath: os.PathLike, npzfpath: os.PathLike = None):
-        """
-        Reads a numpy stored as npz+json file combination.
-
-        :param jsonfpath:
-        :type jsonfpath:
-        :param npzfpath:
-        :type npzfpath:
-        :return:
-        :rtype:
-        """
-        filedir = os.path.dirname(jsonfpath)
-        # load in json file
-        metadata = loadjsonfile(jsonfpath)
-
-        if npzfpath == None:
-            npzfilename = metadata["resultfilename"]
-            npzfpath = os.path.join(filedir, npzfilename)
-
-        datastruct = np.load(npzfpath)
-        return datastruct, metadata
-
-    def read_npyjson(self, jsonfpath: os.PathLike, npyfpath: os.PathLike = None):
-        """
-        Reads a numpy stored as npy+json file combination.
-
-        :param jsonfpath:
-        :type jsonfpath:
-        :param npyfpath:
-        :type npyfpath:
-        :return:
-        :rtype:
-        """
-        filedir = os.path.dirname(jsonfpath)
-        # load in json file
-        metadata = loadjsonfile(jsonfpath)
-
-        if npyfpath == None:
-            npyfilename = metadata["resultfilename"]
-            npyfpath = os.path.join(filedir, npyfilename)
-
-        arr = np.load(npyfpath)
-        return arr, metadata
-
     def read_edf(
         self,
         fname,
@@ -175,6 +167,8 @@ class Loader(BaseLoader):
         eog: Union[List, Tuple] = None,
         misc: Union[List, Tuple] = None,
         linefreq: float = 60,
+        modality: str = "eeg",
+        return_mne: bool = False,
     ):
         """
         Function to read in edf file either using MNE, or PyEDFLib. Recommended to use
@@ -206,7 +200,7 @@ class Loader(BaseLoader):
 
         # read edf file w/ certain backend
         if backend == "mne":
-            # use mne to read the raw edf, events and the info data struct
+            # use mne to read the raw edf, events and the metadata data struct
             raw = mne.io.read_raw_edf(
                 fname,
                 preload=True,
@@ -272,14 +266,24 @@ class Loader(BaseLoader):
 
         # scrub channel labels:
         raw = ChannelScrub.channel_text_scrub(raw)
-        # raw.info["chs"] = ChannelScrub.label_channel_types(raw.info["chs"])
+        # raw.metadata["chs"] = ChannelScrub.label_channel_types(raw.metadata["chs"])
 
         # add line frequency
         raw.info["line_freq"] = linefreq
 
-        return raw, annotations
+        if return_mne:
+            return raw, annotations
+        else:
+            eegts = self._wrap_raw_in_obj(raw, modality, annotations)
+            return eegts
 
-    def read_fif(self, fname, linefreq: float = 60):
+    def read_fif(
+        self,
+        fname,
+        linefreq: float = 60,
+        modality: str = "eeg",
+        return_mne: bool = False,
+    ):
         """
         Function to read in a .fif type file using MNE.
 
@@ -310,24 +314,72 @@ class Loader(BaseLoader):
 
         # scrub channel labels:
         raw = ChannelScrub.channel_text_scrub(raw)
-        # raw.info["chs"] = ChannelScrub.label_channel_types(raw.info["chs"])
-
         annotations = raw.annotations
 
-        return raw, annotations
+        if return_mne:
+            return raw, annotations
+        else:
+            eegts = self._wrap_raw_in_obj(raw, modality, annotations)
+            return eegts
 
-    def read_mat(self, fname, linefreq: float = 60):
+    def read_mat(
+        self,
+        fname,
+        linefreq: float = 60,
+        modality: str = "eeg",
+        return_struct: bool = False,
+    ):
+        """
+        Function to read in a .mat type file and convert if necessary into an EEGTimeSeries.
+
+        :param fname:
+        :type fname:
+        :param linefreq:
+        :type linefreq:
+        :param modality:
+        :type modality:
+        :param return_struct:
+        :type return_struct:
+        :return:
+        :rtype:
+        """
         if linefreq not in [50, 60]:
             raise ValueError(
                 "Line frequency should be set to a valid number! "
                 f"USA is 60 Hz, and EU is 50 Hz. You passed: {linefreq}."
             )
-
         reader = MatReader()
         datastruct = reader.loadmat(fname)
+
+        errmessage = []
+        if "chlabels" not in datastruct.keys():
+            errstr = (
+                f"'chlabels' needs to be part of the datastruct in your .mat file. "
+                f"If not, then you need to add it to use read_mat."
+            )
+            errmessage.append(errstr)
+        if "data" not in datastruct.keys():
+            errstr = (
+                f"'data' needs to be part of the datastruct in your .mat file. "
+                f"If not, then you need to add it to use read_mat."
+            )
+            errmessage.append(errstr)
+        if "sfreq" not in datastruct.keys():
+            errstr = (
+                f"'sfreq' needs to be part of the datastruct in your .mat file. "
+                f"If not, then you need to add it to use read_mat."
+            )
+            errmessage.append(errstr)
+        if errmessage:
+            raise RuntimeError(errmessage)
 
         if "annotations" in datastruct.keys():
             annotations = datastruct["annotations"]
         else:
             annotations = []
-        return datastruct, annotations
+
+        if return_struct:
+            return datastruct, annotations
+        else:
+            eegts = self._wrap_mat_in_obj(datastruct, modality, annotations)
+            return eegts

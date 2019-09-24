@@ -26,11 +26,11 @@ class DatasetClinical(DataSheet):
     """
 
     def __init__(
-            self,
-            patid: str = None,
-            datasetid=None,
-            centerid=None,
-            fpath: os.PathLike = None,
+        self,
+        patid: str = None,
+        datasetid=None,
+        centerid=None,
+        fpath: os.PathLike = None,
     ):
         super(DatasetClinical, self).__init__(fpath=fpath)
         self.patid = patid
@@ -48,11 +48,11 @@ class DatasetClinical(DataSheet):
 
 class PatientClinical(DataSheet):
     def __init__(
-            self,
-            patid: str = None,
-            datasetlist=[],
-            centerid=None,
-            fpath: os.PathLike = None,
+        self,
+        patid: str = None,
+        datasetlist=[],
+        centerid=None,
+        fpath: os.PathLike = None,
     ):
         super(PatientClinical, self).__init__(fpath=fpath)
         self.patid = patid

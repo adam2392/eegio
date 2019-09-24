@@ -1,6 +1,6 @@
 import datetime
 import os
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import mne
 import numpy as np
@@ -9,12 +9,14 @@ import pyedflib
 from eegio.base.config import DATE_MODIFIED_KEY
 from eegio.writers.basewrite import BaseWrite
 
+
 def _check_hd5py():
     try:
         import h5py as hpy
     except ImportError as e:
         raise ImportError("Need to download h5py if you want to use this.")
     return hpy
+
 
 def get_tempfilename(x, ext):
     return f"temp_{x}.{ext}"
@@ -85,20 +87,64 @@ class DataWriter(BaseWrite):
             if type == "fif":
                 self.saveas_fif(fpath, raw.get_data(return_times=False), raw.info)
 
-    def saveas_hd5(self, fpath, rawdata, info, group=None):
+    def saveas_hdf(
+        self,
+        fpath: Union[os.PathLike, str],
+        data: np.ndarray,
+        metadata: Union[mne.Info, dict],
+        name: str = None,
+        group: str = None,
+    ):
+        """
+        Saving function for some dataset to be put into hdf format with the corresponding info data structure, and/or
+        metadata dictionary.
+
+        If data is rawdata, pass in the corresponding mne.Info object.
+
+        If data is computed result, pass in corresponding metadata in dictionary format.
+
+        :param fpath:
+        :type fpath:
+        :param data:
+        :type data:
+        :param metadata:
+        :type metadata:
+        :param name:
+        :type name:
+        :param group:
+        :type group:
+        :return:
+        :rtype:
+        """
         h5py = _check_hd5py()
+
+        # get shape to create hdf file wiht
+        shape = data.shape
+
+        if name == None:
+            name = os.path.basename(fpath)
 
         with h5py.File("mytestfile.hdf5", "w") as f:
             if group != None:
-                dset = f.create_dataset("mydataset", (100,), dtype='i')
-        pass
+                grp = f.create_group(group)
+                dset = grp.create_dataset(
+                    name=name, shape=shape, data=data, dtype="float"
+                )
+            else:
+                dset = f.create_dataset(
+                    name=name, shape=shape, data=data, dtype="float"
+                )
+
+            dset.attrs["metadata"] = metadata
+
+        return dset
 
     def saveas_fif(self, fpath, rawdata, info, bad_chans_list=[], montage: List = []):
         """
-        Conversion function for the rawdata + metadata into a .fif file format. The accompanying metadata .json
+        Conversion function for the data + metadata into a .fif file format. The accompanying metadata .json
         file will be handled in the convert_metadata() function.
 
-        rawdata.edf -> .fif
+        data.edf -> .fif
 
         :param bad_chans_list: (optional; list) a list of the bad channels string
         :param fpath: (optional; os.PathLike) the file path for the converted fif data
@@ -106,7 +152,7 @@ class DataWriter(BaseWrite):
 
         :return: formatted_raw (mne.Raw) the raw fif dataset
         """
-        # perform check on the info data struct
+        # perform check on the metadata data struct
         self._check_info(info)
 
         # save the actual raw array
@@ -116,11 +162,34 @@ class DataWriter(BaseWrite):
         formatted_raw.save(fpath, overwrite=True, fmt=fmt, verbose="ERROR")
         return formatted_raw
 
-    def saveas_edf(self, fpath, rawdata, info, bad_chans_list=[], montage: List = []):
+    def saveas_edf(
+        self,
+        fpath,
+        rawdata,
+        info,
+        events,
+        bad_chans_list: List = [],
+        montage: List = [],
+    ):
+        # perform check on the metadata data struct
+        self._check_info(info)
+
+        # save the actual raw array
+        formatted_raw = mne.io.RawArray(rawdata, info, verbose="ERROR")
+
+        self._pyedf_saveas_edf(formatted_raw, fpath, events_list=events, overwrite=True)
+
         pass
 
     def _pyedf_saveas_edf(
-        mne_raw, fname, events_list, picks=None, tmin=0, tmax=None, overwrite=False
+        self,
+        mne_raw: mne.io.RawArray,
+        fname: Union[os.PathLike, str],
+        events_list: List[Union[float, float, str]],
+        picks=None,
+        tmin=0,
+        tmax=None,
+        overwrite=False,
     ):
         """
         Saves the raw content of an MNE.io.Raw and its subclasses to
@@ -128,7 +197,7 @@ class DataWriter(BaseWrite):
         pyEDFlib is used to save the raw contents of the RawArray to disk
         Parameters
         ----------
-        mne_raw : mne.io.Raw
+        mne_raw : mne.io.RawArray
             An object with super class mne.io.Raw that contains the data
             to save
         fname : string
@@ -187,15 +256,13 @@ class DataWriter(BaseWrite):
                     "transducer": "",
                     "prefilter": "",
                 }
-                #             print(ch_dict)
                 channel_info.append(ch_dict)
                 data_list.append(channels[i])
 
-            f.setTechnician("mne_save_edf_adamli")
+            f.setTechnician("eegio")
             f.setSignalHeaders(channel_info)
             for event in events_list:
                 onset_in_seconds, duration_in_seconds, description = event
-                print(onset_in_seconds, duration_in_seconds, description)
                 f.writeAnnotation(
                     float(onset_in_seconds), int(duration_in_seconds), description
                 )
