@@ -10,12 +10,38 @@
 
 For an easy-to-use API interfacing with EEG data in EDF, or FIF format.
 
-This module stores the code for IO of EEG data for human patients, and pipelining code to convert clinical center data (i.e. time series eeg, neuroimaging, clinical metadata) into a developer-friendly dataset that is also invertible and debug-friendly.
+This module stores the code for IO of EEG data for human patients, and pipelining code to convert clinical center data (i.e. time series eeg, clinical metadata) into a developer-friendly dataset that is also invertible and debug-friendly.
 
 ## Dev Process - TODO
 
 - [ ] Add documentation
 - [ ] Create fully-functional tests
+- [ ] Add support for adding structural context via neuroimaging processed data (e.g. FreeSurfer)
+
+# Installation Guide
+EEGio is intended to be a lightweight wrapper for easily analyzing large batches of patients with EEG data. eegio relies on the following libraries to work:
+
+    numpy
+    scipy
+    scikit-learn
+    seaborn
+    pandas
+    mne
+    pyedflib
+    
+Setup virtual environment via Conda inside your Unix-friendly terminal (aka Mac, or Linux) is recommended (see https://docs.anaconda.com/anaconda/install/):
+
+
+    conda create -n eegio # creates conda env
+    conda activate eegio  # activates the environment
+    conda config --add channels conda-forge # add extra channels necessary
+    conda install numpy pandas mne scikit-learn scipy seaborn matplotlib pyedflib
+    
+## Install from Github (Mainly for developing)
+To install, run this command inside your virtual environment:
+
+    pip install -e git+https://github.com/adam2392/eegio#egg=eegio
+
 
 ## Intended Users / Usage
 
@@ -80,31 +106,6 @@ easily, so that raw EEG ts are readily accessible in Python friendly format.
     info = raw_mne.info
     chlabels = raw_mne.ch_names
     n_times = raw_mne.n_times
-
-# Installation Guide
-EEGio is intended to be a lightweight wrapper for easily analyzing large batches of patients with EEG data. eegio relies on the following libraries to work:
-
-    numpy
-    scipy
-    scikit-learn
-    seaborn
-    pandas
-    mne
-    pyedflib
-    
-Setup environment via Conda:
-
-
-    conda create -n eegio
-    conda activate eegio
-    conda config --add channels conda-forge
-    conda install numpy pandas mne
-    
-## Install from Github
-To install, run this command in your repo:
-
-    pip install -e git+https://github.com/adam2392/eegio#egg=eegio
-
 
 ## Submodules
 1. base/
