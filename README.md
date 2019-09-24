@@ -19,24 +19,23 @@ This module stores the code for IO of EEG data for human patients, and pipelinin
 
 ## Intended Users / Usage
 
-EZTrack team. Epilepsy researchers dealing with EEG data. Anyone with human patient EEG data. 
-
-The main data workflow is to maintain a running Excel sheet with variables related to your patient population. 
+Epilepsy researchers dealing with EEG data. Anyone with human patient EEG data. The main data workflow is to maintain a running Excel sheet with variables related to your patient population. 
 See example and docs for info on how to format this.
 
 User can run:
 
-    eegio.format.format_clinical_sheet(excelfilepath)
+    formatted_df = eegio.format_clinical_sheet(excelfilepath)
 
 User can run preprocessing on .edf files to create .fif + .json files:
 
-    eegio.format.format_eegdata(edffilepath=edffilepath,
+    eegio.format_eegdata(edffilepath=edffilepath,
                                 outputfilepath)
                                 
 User can then load datasets, or patient (i.e. grouped datasets) data:
 
-    datasetobj = eegio.load.load_dataset(datasetfilepath)
-    patientobj = eegio.load.load_patients(patientdir)
+    patientobj = eegio.get_patients(patientdir)
+    datasetobj = eegio.load_dataset(datasetfilepath)
+    eegio.load_clinicalmetadata(formatted_df)
     print(datasetobj)
     print(patientobj)
     

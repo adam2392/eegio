@@ -9,6 +9,12 @@ import pyedflib
 from eegio.base.config import DATE_MODIFIED_KEY
 from eegio.writers.basewrite import BaseWrite
 
+def _check_hd5py():
+    try:
+        import h5py as hpy
+    except ImportError as e:
+        raise ImportError("Need to download h5py if you want to use this.")
+    return hpy
 
 def get_tempfilename(x, ext):
     return f"temp_{x}.{ext}"
@@ -79,6 +85,14 @@ class DataWriter(BaseWrite):
             if type == "fif":
                 self.saveas_fif(fpath, raw.get_data(return_times=False), raw.info)
 
+    def saveas_hd5(self, fpath, rawdata, info, group=None):
+        h5py = _check_hd5py()
+
+        with h5py.File("mytestfile.hdf5", "w") as f:
+            if group != None:
+                dset = f.create_dataset("mydataset", (100,), dtype='i')
+        pass
+
     def saveas_fif(self, fpath, rawdata, info, bad_chans_list=[], montage: List = []):
         """
         Conversion function for the rawdata + metadata into a .fif file format. The accompanying metadata .json
@@ -105,7 +119,7 @@ class DataWriter(BaseWrite):
     def saveas_edf(self, fpath, rawdata, info, bad_chans_list=[], montage: List = []):
         pass
 
-    def write_edf(
+    def _pyedf_saveas_edf(
         mne_raw, fname, events_list, picks=None, tmin=0, tmax=None, overwrite=False
     ):
         """
