@@ -101,12 +101,12 @@ class EEGTimeSeries(BaseDataset):
             self.ref_signal = None
 
     def __str__(self):
-        return "{} {} EEG mat ({}) " "{} seconds".format(
+        return "EEGTimeSeries object: {} {} EEG mat ({}) " "{} seconds".format(
             self.patientid, self.datasetid, self.mat.shape, self.len_secs
         )
 
     def __repr__(self):
-        return "{} {} EEG mat ({}) " "{} seconds".format(
+        return "EEGTimeSeries object: {} {} EEG mat ({}) " "{} seconds".format(
             self.patientid, self.datasetid, self.mat.shape, self.len_secs
         )
 
