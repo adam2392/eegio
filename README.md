@@ -119,19 +119,24 @@ easily, so that raw EEG ts are readily accessible in Python friendly format.
 
 ## Submodules
 1. base/
-Stores configuration files for the EDP and HARDCODED settings. Stores utility and helper functions.
+Stores configuration files for the settings. Stores utility and helper functions. In addition, defines dataset objects
+that we use in this module: mainly Contacts, EEGTimeSeries, and Result
 
 2. format/
-Stores class objects for how the EDP should preformat any incoming raw data. This defines the interface for the raw time series eeg, neuroimaging, and clinical metadata.
+Stores class objects for how you should preformat any incoming raw data. This defines the interface for the raw time series eeg, and clinical metadata.
 
 3. loaders/
 This defines code that links together different parts of the eegio API to allow easy data pipelines to be setup.
 
 4. writers/
-This defines writers of data
+This defines writers of data to save into hdf, npy, mat files.
 
 5. dataset_test/
 A dataset tester that is hardcoded to check quality of certain labeling and annotations.
+
+# Contributing
+We welcome contributions from anyone. Our [issues](https://github.com/adam2392/eegio/issues) page is full of places we could use help! 
+If you have an idea for an improvement not listed there, please [make an issue](https://github.com/adam2392/eegio/issues/new) first so you can discuss with the developers. 
 
 # Documentation
 
