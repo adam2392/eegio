@@ -12,8 +12,6 @@ from datetime import date, datetime
 import numpy as np
 import scipy.io as sio
 
-from eegio.base.utils.log_error import raise_value_error, raise_import_error
-
 
 def load_szinds(onsetind, offsetind, timepoints):
     timepoints = np.array(timepoints)
@@ -237,20 +235,20 @@ class NumpyEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(
-            obj,
-            (
-                np.int_,
-                np.intc,
-                np.intp,
-                np.int8,
-                np.int16,
-                np.int32,
-                np.int64,
-                np.uint8,
-                np.uint16,
-                np.uint32,
-                np.uint64,
-            ),
+                obj,
+                (
+                        np.int_,
+                        np.intc,
+                        np.intp,
+                        np.int8,
+                        np.int16,
+                        np.int32,
+                        np.int64,
+                        np.uint8,
+                        np.uint16,
+                        np.uint32,
+                        np.uint64,
+                ),
         ):
             return int(obj)
         elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
@@ -357,48 +355,6 @@ def obj_to_dict(obj):
         val = getattr(obj, key, None)
         ret[key] = obj_to_dict(val)
     return ret
-
-
-def reg_dict(x, lbl=None, sort=None):
-    """
-    :x: a list or np vector
-    :lbl: a list or np vector of labels
-    :return: dictionary
-    """
-    if not (isinstance(x, (str, int, float, list, np.ndarray))):
-        return x
-    else:
-        if not (isinstance(x, list)):
-            x = np.squeeze(x)
-        x_no = len(x)
-        if not (isinstance(lbl, (list, np.ndarray))):
-            lbl = np.repeat("", x_no)
-        else:
-            lbl = np.squeeze(lbl)
-        labels_no = len(lbl)
-        total_no = min(labels_no, x_no)
-        if x_no <= labels_no:
-            if sort == "ascend":
-                ind = np.argsort(x).tolist()
-            elif sort == "descend":
-                ind = np.argsort(x)
-                ind = ind[::-1].tolist()
-            else:
-                ind = range(x_no)
-        else:
-            ind = range(total_no)
-        d = OrderedDict()
-        for i in ind:
-            d[str(i) + "." + str(lbl[i])] = x[i]
-        if labels_no > total_no:
-            ind_lbl = np.delete(np.array(range(labels_no)), ind).tolist()
-            for i in ind_lbl:
-                d[str(i) + "." + str(lbl[i])] = None
-        if x_no > total_no:
-            ind_x = np.delete(np.array(range(x_no)), ind).tolist()
-            for i in ind_x:
-                d[str(i) + "."] = x[i]
-        return d
 
 
 def sort_dict(d):
@@ -528,27 +484,6 @@ def generate_region_labels(n_regions, labels=[], str=". ", numbering=True):
         return np.array(["%d" % l for l in range(n_regions)])
 
 
-def monopolar_to_bipolar(labels, indices=None, data=None):
-    if indices is None:
-        indices = range(len(labels))
-    bipolar_lbls = []
-    bipolar_inds = [[], []]
-    for ind in range(len(indices) - 1):
-        iS1 = indices[ind]
-        iS2 = indices[ind + 1]
-        if (labels[iS1][0] == labels[iS2][0]) and int(
-            re.findall(r"\d+", labels[iS1])[0]
-        ) == int(re.findall(r"\d+", labels[iS2])[0]) - 1:
-            bipolar_lbls.append(labels[iS1] + "-" + labels[iS2])
-            bipolar_inds[0].append(iS1)
-            bipolar_inds[1].append(iS2)
-    if isinstance(data, np.ndarray):
-        data = data[bipolar_inds[0]] - data[bipolar_inds[1]]
-        return bipolar_lbls, bipolar_inds, data
-    else:
-        return bipolar_lbls, bipolar_inds
-
-
 # This function is meant to confirm that two objects assumingly of the
 # same type are equal, i.e., identical
 def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
@@ -615,10 +550,10 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
             # TODO: a better hack for the stupid case of an ndarray of a string, such as model.zmode or pmode
             # For non numeric types
             if (
-                isinstance(field1, str)
-                or isinstance(field1, list)
-                or isinstance(field1, dict)
-                or (isinstance(field1, np.ndarray) and field1.dtype.kind in "OSU")
+                    isinstance(field1, str)
+                    or isinstance(field1, list)
+                    or isinstance(field1, dict)
+                    or (isinstance(field1, np.ndarray) and field1.dtype.kind in "OSU")
             ):
                 if np.any(field1 != field2):
                     print_not_equal_message(
@@ -675,47 +610,12 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
         return False
 
 
-def shape_to_size(shape):
-    shape = np.array(shape)
-    shape = shape[shape > 0]
-    return np.int(np.max([shape.prod(), 1]))
-
-
-def shape_to_ndim(shape, squeeze=False):
-    if squeeze:
-        shape = filter(lambda x: not (np.any(np.in1d(x, [0, 1]))), list(shape))
-    return len(shape)
-
-
-def linspace_broadcast(start, stop, num_steps, maxdims=3):
-    x_star = np.linspace(0, 1, num_steps)
-    dims = 0
-    x = None
-    while x is None and dims < maxdims:
-        try:
-            x = x_star[:, None] * (stop - start) + start
-        except BaseException:
-            x_star = x_star[:, np.newaxis]
-            dims = dims + 1
-    return x
-
-
-def squeeze_array_to_scalar(arr):
-    arr = np.array(arr)
-    if arr.size == 1:
-        return arr
-    elif np.all(arr == arr[0]):
-        return arr[0]
-    else:
-        return arr
-
-
 def assert_arrays(params, shape=None, transpose=False):
     # type: (object, object) -> object
     if shape is None or not (
-        isinstance(shape, tuple)
-        and len(shape) in range(3)
-        and np.all([isinstance(s, (int, np.int)) for s in shape])
+            isinstance(shape, tuple)
+            and len(shape) in range(3)
+            and np.all([isinstance(s, (int, np.int)) for s in shape])
     ):
         shape = None
         shapes = []  # list of all unique shapes
@@ -747,7 +647,7 @@ def assert_arrays(params, shape=None, transpose=False):
                     + " of type "
                     + str(type(params[ip]))
                     + " is not numeric, "
-                    "of type np.ndarray, nor Symbol"
+                      "of type np.ndarray, nor Symbol"
                 )
         if shape is None:
             # Only one size > 1 is acceptable
@@ -783,7 +683,7 @@ def assert_arrays(params, shape=None, transpose=False):
 
     if transpose and len(shape) > 1:
         if (transpose is "horizontal" or "row" and shape[0] > shape[1]) or (
-            transpose is "vertical" or "column" and shape[0] < shape[1]
+                transpose is "vertical" or "column" and shape[0] < shape[1]
         ):
             shape = list(shape)
             temp = shape[1]
@@ -809,42 +709,8 @@ def assert_arrays(params, shape=None, transpose=False):
         return tuple(params)
 
 
-def make_float(x, precision="64"):
-    if isinstance(x, np.ndarray):
-        if isequal_string(precision, "64"):
-            return x.astype(np.float64)
-        elif isequal_string(precision, "32"):
-            return x.astype(np.float32)
-        else:
-            return x.astype(np.float)
-    else:
-        if isequal_string(precision, "64"):
-            return np.float64(x)
-        elif isequal_string(precision, "32"):
-            np.float32(x)
-        else:
-            return np.float(x)
-
-
-def make_int(x, precision="64"):
-    if isinstance(x, np.ndarray):
-        if isequal_string(precision, "64"):
-            return x.astype(np.int64)
-        elif isequal_string(precision, "32"):
-            return x.astype(np.int32)
-        else:
-            return x.astype(np.int)
-    else:
-        if isequal_string(precision, "64"):
-            return np.int64(x)
-        elif isequal_string(precision, "32"):
-            np.int32(x)
-        else:
-            return np.int(x)
-
-
 def copy_object_attributes(
-    obj1, obj2, attr1, attr2=None, deep_copy=False, check_none=False
+        obj1, obj2, attr1, attr2=None, deep_copy=False, check_none=False
 ):
     attr1 = ensure_list(attr1)
     if attr2 is None:

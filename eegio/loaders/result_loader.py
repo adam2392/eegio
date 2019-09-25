@@ -50,9 +50,9 @@ class ResultLoader(BaseLoader):
         pass
 
     def read_npzjson(
-            self,
-            jsonfpath: Union[str, os.PathLike],
-            npzfpath: Union[os.PathLike, str] = None,
+        self,
+        jsonfpath: Union[str, os.PathLike],
+        npzfpath: Union[os.PathLike, str] = None,
     ):
         """
         Reads a numpy stored as npz+json file combination.
@@ -76,9 +76,9 @@ class ResultLoader(BaseLoader):
         return datastruct, metadata
 
     def read_npyjson(
-            self,
-            jsonfpath: Union[str, os.PathLike],
-            npyfpath: Union[str, os.PathLike] = None,
+        self,
+        jsonfpath: Union[str, os.PathLike],
+        npyfpath: Union[str, os.PathLike] = None,
     ):
         """
         Reads a numpy stored as npy+json file combination.

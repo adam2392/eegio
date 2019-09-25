@@ -1,4 +1,3 @@
-import collections
 import copy
 import warnings
 from abc import ABC, abstractmethod
@@ -6,7 +5,7 @@ from typing import List, Dict, Union
 
 import mne
 import numpy as np
-from deprecated import deprecated
+from mne.selection import _divide_to_regions
 from natsort import order_by_index
 
 from eegio.base.objects.elecs import Contacts
@@ -291,15 +290,6 @@ class BaseDataset(ABC):
         :return:
         :rtype:
         """
-        from mne.selection import _divide_to_regions
-
-        # rawinfo = mne.create_info(
-        #     ch_names=list(self.chanlabels),
-        #     ch_types="eeg",
-        #     sfreq=self.samplerate,
-        #     montage=self.montage,
-        # )
-
         # get channel groups - hashmap of channel indices
         ch_groups = _divide_to_regions(rawinfo, add_stim=False)
 
@@ -307,113 +297,4 @@ class BaseDataset(ABC):
         self.ch_groups = {}
         for k, v in ch_groups.items():
             self.ch_groups[k.lower()] = v
-
-        # get the indices of the cez lobe
-        self.cezlobeinds = []
-        for lobe in self.cezlobe:
-            self.cezlobeinds.extend(self.ch_groups[lobe])
-        self.oezlobeinds = [
-            ind for ind in range(len(self.chanlabels)) if ind not in self.cezlobeinds
-        ]
-
-    @deprecated(version="0.1", reason="Not working function.")
-    def set_localreference(self, chanlabels=[], chantypes=[]):
-        """
-        Only applies for SEEG and Strip channels.
-
-        TODO: Can run computation for grids
-
-        http://www.jneurosci.org/content/31/9/3400
-        :param chanlabels:
-        :return:
-        """
-        remaining_labels = np.array([])
-        # apply to channel labels, if none are passed in
-        if len(chanlabels) == 0:
-            chanlabels = self.chanlabels
-        else:
-            # get the remaining labels in the channels
-            remaining_labels = np.array(
-                [ch for ch in self.chanlabels if ch not in chanlabels]
-            )
-        n = len(chanlabels)
-
-        """ ASSUME ALL SEEG OR STRIP FOR NOW """
-        if chantypes == []:
-            chantypes = ["seeg" for i in range(n)]
-
-        if any(chantype not in ["seeg", "grid", "strip"] for chantype in chantypes):
-            raise ValueError(
-                "Channel types can only be of seeg, grid, or strip. "
-                "Make sure you pass in valid channel types! You passed in {}".format(
-                    chantypes
-                )
-            )
-
-        # # first naturally sort contacts
-        # natinds = index_natsorted(self.chanlabels)
-        # sortedchanlabels = self.chanlabels.copy()
-        # sortedchanlabels = sortedchanlabels[natinds]
-
-        # # get end indices on the electrode that don't have a local reference
-        # endinds = []
-        # for elec in self.electrodes.keys():
-        #     endinds.extend([self.electrodes[elec][0], self.electrodes[elec][-1]])
-
-        # create a dictionary to store all key/values of channels/nbrs
-        localreferenceinds = collections.defaultdict(list)
-
-        # get all neighboring channels
-        for i, (electrode, inds) in enumerate(self.electrodes.items()):
-            for ind in inds:
-                # get for this index the channel type
-                chantype = chantypes[ind]
-                chanlabel = self.chanlabels[ind]
-
-                if chantype == "grid":
-                    # get all grid channels
-                    gridlayout = [self.chanlabels[g_ind] for g_ind in inds]
-                    # run 2d neighbors
-                    nbrs_chans, nbrs_inds = self._get2d_neighbors(gridlayout, chanlabel)
-
-                else:
-                    # get all channels for this electrode
-                    electrodechans = [self.chanlabels[elec_ind] for elec_ind in inds]
-                    # run 1d neighbors
-                    nbrs_chans, nbrs_inds = self._get1d_neighbors(
-                        electrodechans, chanlabel
-                    )
-
-                # create dictionary of neighbor channels
-                localreferenceinds[chanlabel] = nbrs_chans
-
-        # loop through combinations of channels
-        # for inds in zip(np.r_[:n - 2], np.r_[1:n - 1], np.r_[2:n]):
-        #     # get the names for all the channels
-        #     names = [sortedchanlabels[ind] for ind in inds]
-        #
-        #     # get the electrode, and the number for each channel
-        #     elec0, num0 = re.match("^([A-Za-z]+[']?)([0-9]+)$", names[0]).groups()
-        #     elec1, num1 = re.match("^([A-Za-z]+[']?)([0-9]+)$", names[1]).groups()
-        #     elec2, num2 = re.match("^([A-Za-z]+[']?)([0-9]+)$", names[2]).groups()
-        #
-        #     # if electrode name matches, and the number are off by 1, then apply bipolar
-        #     if elec0 == elec1 and elec1 == elec2 and abs(int(num0) - int(num1)) == 1 and abs(
-        #             int(num1) - int(num2)) == 1:
-        #         localreferenceinds[inds[1]] = [inds[0], inds[2]]
-
-        # get indices for all the local referenced channels
-        self.localreferencedict = localreferenceinds
-
-        # compute leftover channels
-        leftoverinds = [
-            ind
-            for ind, ch in enumerate(chanlabels)
-            if ch not in localreferenceinds.keys()
-        ]
-        self.leftoverchanlabels = self.chanlabels[leftoverinds]
-
-        if remaining_labels.size == 0:
-            return self.localreferencedict
-        else:
-            return self.localreferencedict, self.leftoverchanlabels
+        return self.ch_groups

@@ -5,18 +5,18 @@ from pprint import pprint
 from eegio.base.objects.clinical.baseclinical import DataSheet
 
 
-def patient_check(f):
-    def wrapper(*args):
-        patientdict = args[0].patientdict
-        patid = args[1]
-        if patid not in patientdict.keys():
-            raise RuntimeError(
-                "{} is not in our clinical timeseries?! "
-                "In Master_clinical.py".format(patid)
-            )
-        return f(*args)
-
-    return wrapper
+# def patient_check(f):
+#     def wrapper(*args):
+#         patientdict = args[0].patientdict
+#         patid = args[1]
+#         if patid not in patientdict.keys():
+#             raise RuntimeError(
+#                 "{} is not in our clinical timeseries?! "
+#                 "In Master_clinical.py".format(patid)
+#             )
+#         return f(*args)
+#
+#     return wrapper
 
 
 class DatasetClinical(DataSheet):

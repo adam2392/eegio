@@ -18,7 +18,7 @@ To test on test pypi:
 PACKAGE_NAME = "eegio"
 VERSION = "0.1"
 DESCRIPTION = "An io package for eeg data and time-series transformations done on it."
-URL = 'https://github.com/adam2392/eegio'
+URL = "https://github.com/adam2392/eegio"
 MINIMUM_PYTHON_VERSION = 3, 6  # Minimum of Python 3.4
 REQUIRED_PACKAGES = [
     "numpy>=1.14.5",
@@ -34,25 +34,21 @@ CLASSIFICATION_OF_PACKAGE = [
     #   3 - Alpha
     #   4 - Beta
     #   5 - Production/Stable
-    'Development Status :: 3 - Alpha',
-
+    "Development Status :: 3 - Alpha",
     # Indicate who your project is intended for
-    'Intended Audience :: Developers',
-    'Intended Audience :: Science/Research',
-    'Topic :: Scientific/Engineering :: Medical Science Apps.',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Utilities',
-
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Utilities",
     # Pick your license as you wish (should match "license" above)
-    'License :: OSI Approved :: GNU General Public License (GPL)',
-
+    "License :: OSI Approved :: GNU General Public License (GPL)",
     # Specify the Python versions you support here. In particular, ensure
     # that you indicate whether you support Python 2, Python 3 or both.
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: Implementation',
-
-    'Natural Language :: English',
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: Implementation",
+    "Natural Language :: English",
 ]
 
 
@@ -69,20 +65,18 @@ setup(
     version=VERSION,
     description=DESCRIPTION,
     author="Adam Li",
-    long_description=open('README.md').read(),
+    long_description=open("README.md").read(),
     url=URL,
     license="GNU General Public License (GPL)",
     keywords="EEG, epilepsy, research tools, IO tools",
     packages=find_packages(include=[], exclude=[]),
     project_urls={
-        'Documentation': 'https://github.com/adam2392/eegio/docs/',
-        'Source': URL,
-        'Tracker': 'https://github.com/adam2392/eegio/issues',
+        "Documentation": "https://github.com/adam2392/eegio/docs/",
+        "Source": URL,
+        "Tracker": "https://github.com/adam2392/eegio/issues",
     },
     include_dirs=[numpy.get_include()],
-    dependency_links=[
-        'git+https://github.com/adam2392/eegio#egg=eegio',
-    ],
+    dependency_links=["git+https://github.com/adam2392/eegio#egg=eegio"],
     install_requires=REQUIRED_PACKAGES,
     include_package_data=True,
     classifiers=CLASSIFICATION_OF_PACKAGE,

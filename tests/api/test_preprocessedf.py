@@ -27,7 +27,7 @@ def test_preprocess_edf(edf_fpath):
         "montage": None,
         "eog": None,
         "misc": None,
-        "return_mne": True
+        "return_mne": True,
     }
     loader = Loader(edf_fpath, metadata={})
     raw_mne, annotations = loader.read_edf(**read_kwargs)

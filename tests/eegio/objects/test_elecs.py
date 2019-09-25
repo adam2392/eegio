@@ -68,9 +68,10 @@ class TestContacts:
         contacts.mask_contacts(random_ch_mask)
 
         contact = contacts.chanlabels[0]
-        # nghbrs, nghbrinds = contacts.get_contact_ngbhrs(contact)
-        # seeg_nghbrs, seeg_nghbrinds = contacts.get_seeg_ngbhrs(contact)
-        # assert len(nghbrs) <= len(seeg_nghbrs)
+        seeg_nghbrs, seeg_nghbrinds = contacts.get_seeg_ngbhrs(contact)
+
+        nghbrs, nghbrinds = contacts.get_contact_ngbhrs(contact)
+        assert len(nghbrs) <= len(seeg_nghbrs)
         # print(contacts_xyz)
         # print(contacts.chanlabels)
         # print(contact, nghbrs, seeg_nghbrs)
@@ -86,3 +87,7 @@ class TestContacts:
 
         electrodename = contacts.get_elec(contact)
         assert electrodename is not None
+
+    @pytest.mark.usefixture("contacts")
+    def test_contacts_expansion(self, contacts):
+        pass

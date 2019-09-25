@@ -83,14 +83,7 @@ class DatasetTester(object):
         :return: None
         """
         keys = {"type": ["sz", "ii"]}
-        for key, possibilities in keys.items():
-            if key in self.data.keys():
-                if any(possibility in self.data[key] for possibility in possibilities):
-                    continue
-                else:
-                    self.problems.append((key, self.data[key]))
-            else:
-                self.problems.append((key, None))
+        self._check_keys(keys)
 
     def check_modality(self):
         """
@@ -106,14 +99,7 @@ class DatasetTester(object):
         :return: None
         """
         keys = {"modality": ["seeg", "ecog", "scalp", "ieeg"]}
-        for key, possibilities in keys.items():
-            if key in self.data.keys():
-                if self.data[key] in possibilities:
-                    continue
-                else:
-                    self.problems.append((key, self.data[key]))
-            else:
-                self.problems.append((key, None))
+        self._check_keys(keys)
 
     def check_clinical_outcomes(self):
         """
@@ -131,6 +117,9 @@ class DatasetTester(object):
             "clinical_difficulty": [1, 2, 3, 4],
         }
 
+        self._check_keys(keys)
+
+    def _check_keys(self, keys):
         for key, possibilities in keys.items():
             if key in self.data.keys():
                 if self.data[key] in possibilities:
@@ -183,14 +172,7 @@ class DatasetTester(object):
             # "implantation_distribution": [],
         }
 
-        for key, possibilities in keys.items():
-            if key in self.data.keys():
-                if isinstance(self.data[key], list):
-                    continue
-                else:
-                    self.problems.append((key, self.data[key]))
-            else:
-                self.problems.append((key, None))
+        self._check_keys(keys)
 
         not_empty = False
         for key in keys.keys():
@@ -216,14 +198,7 @@ class DatasetTester(object):
             "seizure_semiology": [],
         }
 
-        for key, possibilities in keys.items():
-            if key in self.data.keys():
-                if isinstance(self.data[key], list):
-                    continue
-                else:
-                    self.problems.append((key, self.data[key]))
-            else:
-                self.problems.append((key, None))
+        self._check_keys(keys)
 
         not_empty = False
         for key in keys.keys():

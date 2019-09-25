@@ -143,6 +143,7 @@ A dataset tester that is hardcoded to check quality of certain labeling and anno
     black eegio/*
     black tests/*
     pylint ./eegio/
+    pre-commit run black --all-files
     pytest --cov-config=.coveragerc --cov=./eegio/ tests/
     coverage-badge -f -o coverage.svg
 

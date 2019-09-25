@@ -7,24 +7,6 @@ import numpy as np
 from natsort import natsorted, order_by_index, index_natsorted
 
 
-# class NamedPoints(object):
-# #     def __init__(self, fl):
-# #         data = np.genfromtxt(fl, dtype=None)  # , encoding='utf-8')
-# #         self.xyz = np.array([[l[1], l[2], l[3]] for l in data])
-# #         # self.names = [l[0] for l in data]
-# #         self.names = [l[0].decode('ascii') for l in data]
-# #         self.name_to_xyz = dict(zip(self.names, self.xyz))
-# #
-# #     def load_contacts_regions(self, contact_regs):
-# #         self.contact_regs = contact_regs
-# #
-# #     def load_from_file(self, filename):
-# #         named_points = NamedPoints(filename)
-# #         self.chanlabels = named_points.names
-# #         self.xyz = named_points.xyz
-# #         self._initialize_datastructs()
-
-
 def reinitialize_datastructure(f):
     f()
     f._initialize_datastructs()
@@ -566,3 +548,21 @@ class Contacts(object):
         clinonsetlabels.extend(added_ch_names)
         clinonsetlabels = list(set(clinonsetlabels))
         return clinonsetlabels
+
+
+# class NamedPoints(object):
+# #     def __init__(self, fl):
+# #         data = np.genfromtxt(fl, dtype=None)  # , encoding='utf-8')
+# #         self.xyz = np.array([[l[1], l[2], l[3]] for l in data])
+# #         # self.names = [l[0] for l in data]
+# #         self.names = [l[0].decode('ascii') for l in data]
+# #         self.name_to_xyz = dict(zip(self.names, self.xyz))
+# #
+# #     def load_contacts_regions(self, contact_regs):
+# #         self.contact_regs = contact_regs
+# #
+# #     def load_from_file(self, filename):
+# #         named_points = NamedPoints(filename)
+# #         self.chanlabels = named_points.names
+# #         self.xyz = named_points.xyz
+# #         self._initialize_datastructs()

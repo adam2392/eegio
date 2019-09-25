@@ -16,6 +16,12 @@ class Test_Loader:
 
     Ensures class type, and also correct functionality in annotations framework.
     """
+    def test_load_file(self, edf_fpath, fif_fpath):
+        loader = Loader(edf_fpath, metadata={})
+
+        eegts = loader.load_file(edf_fpath)
+
+        eegts = loader.load_file(fif_fpath)
 
     def test_edf(self, edf_fpath):
         """
@@ -53,6 +59,22 @@ class Test_Loader:
         assert isinstance(raw_mne, mne.io.BaseRaw)
         assert raw_mne.get_data(stop=50).shape[0] == len(chlabels)
 
+        read_kwargs = {
+            "fname": edf_fpath,
+            "backend": "mne",
+            "montage": None,
+            "eog": None,
+            "misc": None,
+        }
+        loader = Loader(edf_fpath, metadata={})
+        filesize = loader.get_size()
+        loader.update_metadata(filesize=filesize)
+        metadata = loader.get_metadata()
+        assert np.isclose(filesize, 4.1, atol=0.5)
+        eegts = loader.read_edf(**read_kwargs)
+
+        assert isinstance(eegts, EEGTimeSeries)
+
     def test_edf_pyedflib(self, edf_fpath):
         pass
 
@@ -78,6 +100,12 @@ class Test_Loader:
         assert isinstance(raw_mne, mne.io.BaseRaw)
         assert len(chlabels) == info["nchan"]
         assert info["line_freq"]
+
+        read_kwargs = {"fname": fif_fpath, "linefreq": 60}
+        loader = Loader(fif_fpath, metadata={})
+        eegts = loader.read_fif(**read_kwargs)
+
+        assert isinstance(eegts, EEGTimeSeries)
 
     def test_create_metadata(self):
         pass
