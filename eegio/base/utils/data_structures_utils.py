@@ -235,20 +235,20 @@ class NumpyEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(
-                obj,
-                (
-                        np.int_,
-                        np.intc,
-                        np.intp,
-                        np.int8,
-                        np.int16,
-                        np.int32,
-                        np.int64,
-                        np.uint8,
-                        np.uint16,
-                        np.uint32,
-                        np.uint64,
-                ),
+            obj,
+            (
+                np.int_,
+                np.intc,
+                np.intp,
+                np.int8,
+                np.int16,
+                np.int32,
+                np.int64,
+                np.uint8,
+                np.uint16,
+                np.uint32,
+                np.uint64,
+            ),
         ):
             return int(obj)
         elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
@@ -550,10 +550,10 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
             # TODO: a better hack for the stupid case of an ndarray of a string, such as model.zmode or pmode
             # For non numeric types
             if (
-                    isinstance(field1, str)
-                    or isinstance(field1, list)
-                    or isinstance(field1, dict)
-                    or (isinstance(field1, np.ndarray) and field1.dtype.kind in "OSU")
+                isinstance(field1, str)
+                or isinstance(field1, list)
+                or isinstance(field1, dict)
+                or (isinstance(field1, np.ndarray) and field1.dtype.kind in "OSU")
             ):
                 if np.any(field1 != field2):
                     print_not_equal_message(
@@ -613,9 +613,9 @@ def assert_equal_objects(obj1, obj2, attributes_dict=None, logger=None):
 def assert_arrays(params, shape=None, transpose=False):
     # type: (object, object) -> object
     if shape is None or not (
-            isinstance(shape, tuple)
-            and len(shape) in range(3)
-            and np.all([isinstance(s, (int, np.int)) for s in shape])
+        isinstance(shape, tuple)
+        and len(shape) in range(3)
+        and np.all([isinstance(s, (int, np.int)) for s in shape])
     ):
         shape = None
         shapes = []  # list of all unique shapes
@@ -647,7 +647,7 @@ def assert_arrays(params, shape=None, transpose=False):
                     + " of type "
                     + str(type(params[ip]))
                     + " is not numeric, "
-                      "of type np.ndarray, nor Symbol"
+                    "of type np.ndarray, nor Symbol"
                 )
         if shape is None:
             # Only one size > 1 is acceptable
@@ -683,7 +683,7 @@ def assert_arrays(params, shape=None, transpose=False):
 
     if transpose and len(shape) > 1:
         if (transpose is "horizontal" or "row" and shape[0] > shape[1]) or (
-                transpose is "vertical" or "column" and shape[0] < shape[1]
+            transpose is "vertical" or "column" and shape[0] < shape[1]
         ):
             shape = list(shape)
             temp = shape[1]
@@ -710,7 +710,7 @@ def assert_arrays(params, shape=None, transpose=False):
 
 
 def copy_object_attributes(
-        obj1, obj2, attr1, attr2=None, deep_copy=False, check_none=False
+    obj1, obj2, attr1, attr2=None, deep_copy=False, check_none=False
 ):
     attr1 = ensure_list(attr1)
     if attr2 is None:

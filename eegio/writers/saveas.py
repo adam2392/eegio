@@ -1,5 +1,6 @@
 import datetime
 import os
+import warnings
 from typing import List, Dict, Union
 
 import mne
@@ -124,7 +125,7 @@ class DataWriter(BaseWrite):
         if name == None:
             name = os.path.basename(fpath)
 
-        with h5py.File("mytestfile.hdf5", "w") as f:
+        with h5py.File(fpath, "w") as f:
             if group != None:
                 grp = f.create_group(group)
                 dset = grp.create_dataset(
@@ -134,8 +135,10 @@ class DataWriter(BaseWrite):
                 dset = f.create_dataset(
                     name=name, shape=shape, data=data, dtype="float"
                 )
-
-            dset.attrs["metadata"] = metadata
+            try:
+                dset.attrs["metadata"] = metadata
+            except TypeError as e:
+                warnings.warn(f"Problem saving metadata. {e}")
 
         return dset
 
@@ -179,8 +182,6 @@ class DataWriter(BaseWrite):
 
         self._pyedf_saveas_edf(formatted_raw, fpath, events_list=events, overwrite=True)
 
-        pass
-
     def _pyedf_saveas_edf(
         self,
         mne_raw: mne.io.RawArray,
@@ -222,7 +223,7 @@ class DataWriter(BaseWrite):
         # static settings
         file_type = pyedflib.FILETYPE_EDFPLUS
         sfreq = mne_raw.info["sfreq"]
-        date = datetime.now().strftime("%d %b %Y %H:%M:%S")
+        date = datetime.datetime.now().strftime("%d %b %Y %H:%M:%S")
         first_sample = int(sfreq * tmin)
         last_sample = int(sfreq * tmax) if tmax is not None else None
 
@@ -238,9 +239,10 @@ class DataWriter(BaseWrite):
         n_channels = len(channels)
 
         # create channel from this
-        try:
-            f = pyedflib.EdfWriter(fname, n_channels=n_channels, file_type=file_type)
+        print(fname)
+        f = pyedflib.EdfWriter(fname, n_channels=n_channels, file_type=file_type)
 
+        try:
             channel_info = []
             data_list = []
 
@@ -273,6 +275,7 @@ class DataWriter(BaseWrite):
             return False
         finally:
             f.close()
+
         return True
 
     def merge_npy_arrays(

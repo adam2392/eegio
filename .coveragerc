@@ -1,2 +1,2 @@
 [run]
-omit=./eegio/writers/database/*,eegio/writers/pickle/*,eegio/writers/ppt/*,eegio/base/utils/*,eegio/dataset_test/*,*__init__.py,eegio/*config*
+omit=./eegio/writers/database/*,eegio/writers/pickle/*,eegio/writers/ppt/*,eegio/base/utils/*,eegio/dataset_test/*,*__init__.py,eegio/*config*,eegio/format/baseadapter.py

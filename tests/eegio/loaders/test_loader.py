@@ -16,6 +16,7 @@ class Test_Loader:
 
     Ensures class type, and also correct functionality in annotations framework.
     """
+
     def test_load_file(self, edf_fpath, fif_fpath):
         loader = Loader(edf_fpath, metadata={})
 
