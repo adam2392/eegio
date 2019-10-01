@@ -18,6 +18,19 @@ class FormatEEGData:
         self.raw = self._format_fif_file(eegts)
         self.metadata = self._format_json_file(eegts)
 
+    def __new__(cls, in_fpath, out_fpath, json_fpath):
+        cls.in_fpath = in_fpath
+        cls.out_fpath = out_fpath
+        cls.json_fpath = json_fpath
+
+        # load in the file
+        loader = Loader(in_fpath)
+        eegts = loader.load_file(in_fpath)
+
+        raw = cls._format_fif_file(cls, eegts)
+        metadata = cls._format_json_file(cls, eegts)
+        return raw, metadata
+
     def __repr__(self):
         return self.raw, self.metadata
 

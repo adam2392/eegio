@@ -33,7 +33,8 @@ def test_preprocess_clinical(clinical_fpath):
             clinical_fpath, cols_to_reg_expand=["bad_channels"]
         )
 
+        formatted_df = formatter.df
         # assert saved mne file and json file can load in
-        formatter.write_file(temp_outfpath)
+        formatted_df.to_csv(temp_outfpath, index=None)
 
         test_csv = pd.read_csv(temp_outfpath, index_col=None)

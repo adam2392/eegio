@@ -75,15 +75,19 @@ def expand_channels(ch_list):
     return new_list
 
 
+def format_clinical_sheet(
+    fpath: Union[str, os.PathLike], cols_to_reg_expand: List = None
+):
+    formatter = FormatClinicalSheet(fpath, cols_to_reg_expand)
+    return formatter.df
+
+
 class FormatClinicalSheet:
     def __init__(self, fpath: Union[str, os.PathLike], cols_to_reg_expand: List = None):
         self.fpath = fpath
         self.cols_to_expand = cols_to_reg_expand
 
         self.read_file(self.fpath)
-
-    def __repr__(self):
-        return self.df
 
     def read_file(self, fpath):
         if fpath.endswith(".csv"):
@@ -121,6 +125,3 @@ class FormatClinicalSheet:
 
             # expand channel labels
             self.df[col] = self.df[col].apply(lambda x: expand_channels(x))
-
-    def write_file(self, fpath):
-        self.df.to_csv(fpath, index=None)

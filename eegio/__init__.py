@@ -1,8 +1,8 @@
 from os.path import dirname, basename, isfile
 import glob
 
-# from .format.format_eeg_data import FormatEEGData as format_eegdata
-# from .format.format_clinical_sheet import FormatClinicalSheet as format_clinical_sheet
+from .format.format_eeg_data import FormatEEGData as format_eegdata
+from .format.format_clinical_sheet import format_clinical_sheet
 
 modules = glob.glob(dirname(__file__) + "/*.py")
 __all__ = [

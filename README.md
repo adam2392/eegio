@@ -57,7 +57,7 @@ User can run:
 
 User can run preprocessing on .edf files to create .fif + .json files:
 
-    eegio.format_eegdata(in_fpath=edffilepath,
+    rawmne, metadata = eegio.format_eegdata(in_fpath=edffilepath,
                         out_fpath=outputfilepath,
                         json_fpath=jsonfpath)
 

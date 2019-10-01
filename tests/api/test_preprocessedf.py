@@ -74,25 +74,29 @@ def test_preprocess_edf(edf_fpath):
         chlabels = raw_mne.ch_names
 
 
-# @pytest.mark.usefixture("edf_fpath")
-# @pytest.mark.usefixture("clinical_fpath")
-# def test_preprocess_format_api(edf_fpath, clinical_fpath):
-#     with tempfile.TemporaryDirectory() as fdir:
-#         temp_outfpath = os.path.join(fdir, "test_raw.fif")
-#         temp_jsonfpath = os.path.join(fdir, "test_raw.json")
-#         raw, metadata = eegio.format_eegdata(edf_fpath, temp_outfpath, temp_jsonfpath)
-#
-#         # assert saved mne file and json file can load in
-#         raw = mne.io.read_raw_fif(temp_outfpath, preload=True)
-#         with open(temp_jsonfpath, "r", encoding="utf8") as fp:
-#             metadata = json.load(fp)
-#
-#         assert isinstance(metadata, dict)
-#
-#         temp_outfpath = os.path.join(fdir, "test_clinical.csv")
-#         formatter = eegio.format_clinical_sheet(clinical_fpath, cols_to_reg_expand=["bad_channels"])
-#
-#         # assert saved mne file and json file can load in
-#         formatter.write_file(temp_outfpath)
-#
-#         test_csv = pd.read_csv(temp_outfpath, index_col=None)
+@pytest.mark.usefixture("edf_fpath")
+@pytest.mark.usefixture("clinical_fpath")
+def test_preprocess_format_api(edf_fpath, clinical_fpath):
+    writer = DataWriter()
+
+    with tempfile.TemporaryDirectory() as fdir:
+        temp_outfpath = os.path.join(fdir, "test_raw.fif")
+        temp_jsonfpath = os.path.join(fdir, "test_raw.json")
+        raw, metadata = eegio.format_eegdata(edf_fpath, temp_outfpath, temp_jsonfpath)
+
+        # assert saved mne file and json file can load in
+        raw = mne.io.read_raw_fif(temp_outfpath, preload=True)
+        with open(temp_jsonfpath, "r", encoding="utf8") as fp:
+            metadata = json.load(fp)
+
+        assert isinstance(metadata, dict)
+
+        temp_outfpath = os.path.join(fdir, "test_clinical.csv")
+        formatted_clinsheet = eegio.format_clinical_sheet(
+            clinical_fpath, cols_to_reg_expand=["bad_channels"]
+        )
+
+        # assert saved mne file and json file can load in
+        formatted_clinsheet.to_csv(temp_outfpath, index=None)
+
+        test_csv = pd.read_csv(temp_outfpath, index_col=None)
