@@ -16,6 +16,20 @@ class TestResult:
         """
         pass
 
+    def test_result_natus(self):
+        natus_fpath = ""
+
+        # load in the data
+        loader = ResultLoader()
+        loader.read_Natus(natus_fpath)
+
+    def test_result_NK(self):
+        NK_fpath = ""
+
+        # load in the data
+        loader = ResultLoader()
+        loader.read_NK(NK_fpath)
+
     @pytest.mark.usefixture("result_fpath")
     def test_result(self, result_fpath):
         """

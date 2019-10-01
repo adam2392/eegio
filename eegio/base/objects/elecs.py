@@ -265,20 +265,27 @@ class Contacts(object):
         elecnumkeys = natsorted(elec_numstoinds.keys())
         elecnumkeys = np.arange(1, elecmaxnum).astype(str).tolist()
 
-        print(elecnumkeys)
+        # print(elecnumkeys)
 
         if num in elecnumkeys:
             currnumind = elecnumkeys.index(num)
             lowerind = max(0, currnumind - 2)
             upperind = min(int(elecnumkeys[-1]), currnumind + 2)
 
-            print(num, currnumind, lowerind, upperind)
+            # print(num, currnumind, lowerind, upperind)
 
-            lower_ngbhrs = np.arange(lowerind, currnumind)
-            upper_ngbhrs = np.arange(currnumind + 1, upperind)
+            if lowerind == currnumind:
+                lower_nghbrs = np.array([currnumind])
+            else:
+                lower_nghbrs = np.arange(lowerind, currnumind)
 
-            print(lower_ngbhrs, upper_ngbhrs)
-            nghbrinds = np.vstack((lower_ngbhrs, upper_ngbhrs))
+            if currnumind + 1 == upperind:
+                upper_nghbrs = np.array([currnumind + 1])
+            else:
+                upper_nghbrs = np.arange(currnumind + 1, upperind)
+
+            # print(lower_ngbhrs, upper_ngbhrs)
+            nghbrinds = np.vstack((lower_nghbrs, upper_nghbrs))
             nghbrcontacts = self.chanlabels[nghbrinds]
 
         return nghbrcontacts, nghbrinds
@@ -402,99 +409,6 @@ class Contacts(object):
             "Given name '%s' does not follow any expected pattern." % contact_name
         )
 
-    def _get1d_neighbors(self, electrodechans, chanlabel):
-        # naturally sort the gridlayout
-        natinds = index_natsorted(electrodechans)
-        sortedelec = electrodechans[natinds]
-
-        # get the channel index - ijth index
-        chanindex = sortedelec.index(chanlabel)
-
-        # get the neighboring indices and channels
-        nbrinds = [chanindex + 1, chanindex - 1]
-        nbrchans = [chanlabel[ind] for ind in nbrinds]
-
-        return nbrchans, nbrinds
-
-    def _get2d_neighbors(self, gridlayout, chanlabel):
-        """
-        Helper function to retrun the 2D neighbors of a certain
-        channel label based on.
-
-        TODO: ensure the grid layout logic is correct. Assumes a certain grid structure.
-
-        :param gridlayout:
-        :param chanlabel:
-        :return:
-        """
-
-        def convert_index_to_grid(chanindex, numcols, numrows):
-            """
-            Helper function with indices from 0-7, 0-31, etc.
-            Index starts at 0.
-
-            :param chanindex:
-            :param numcols:
-            :param numrows:
-            :return:
-            """
-            # get column and row of channel index
-            chanrow = np.ceil(chanindex / numcols)
-            chancol = numcols - ((chanrow * numcols) - chanindex)
-
-            if chanrow > numrows:
-                raise RuntimeError(
-                    "How is row of this channel greater then number of rows set!"
-                    "Error in function, or logic, or data passed in!"
-                )
-
-            return chanrow, chancol
-
-        def convert_grid_to_index(i, j, numcols, numrows):
-            """
-            Helper function with indices from 1-32, 1-64, etc.
-            Index starts at 1.
-
-            :param i:
-            :param j:
-            :param numcols:
-            :param numrows:
-            :return:
-            """
-            if i > numrows:
-                raise RuntimeError(
-                    "How is row of this channel greater then number of rows set!"
-                    "Error in function, or logic, or data passed in!"
-                )
-
-            chanindex = 0
-            chanindex += (i - 1) * numcols
-            chanindex += j
-            return chanindex
-
-        # naturally sort the gridlayout
-        natinds = index_natsorted(gridlayout)
-        sortedgrid = gridlayout[natinds]
-
-        # determine number of rows/cols in the grid
-        numcols = 8
-        numrows = len(sortedgrid) // numcols
-
-        # get the channel index - ijth index
-        chanindex = sortedgrid.index(chanlabel)
-        chanrow, chancol = convert_index_to_grid(chanindex, numcols, numrows)
-
-        # get the neighbor indices
-        twoDnbrs_inds = [
-            convert_grid_to_index(chanrow + 1, chancol, numcols, numrows),
-            convert_grid_to_index(chanrow - 1, chancol, numcols, numrows),
-            convert_grid_to_index(chanrow, chancol + 1, numcols, numrows),
-            convert_grid_to_index(chanrow, chancol - 1, numcols, numrows),
-        ]
-        # get the channels of neighbors
-        twoDnbrs_chans = [sortedgrid[ind] for ind in twoDnbrs_inds]
-        return twoDnbrs_chans, twoDnbrs_inds
-
     @classmethod
     def expand_bipolar_chans(self, ch_list):
         if ch_list == []:
@@ -537,6 +451,8 @@ class Contacts(object):
 
     @classmethod
     def make_onset_labels_bipolar(self, clinonsetlabels):
+        clinonsetlabels = list(clinonsetlabels)
+
         added_ch_names = []
         for ch in clinonsetlabels:
             # A1-10
@@ -548,21 +464,3 @@ class Contacts(object):
         clinonsetlabels.extend(added_ch_names)
         clinonsetlabels = list(set(clinonsetlabels))
         return clinonsetlabels
-
-
-# class NamedPoints(object):
-# #     def __init__(self, fl):
-# #         data = np.genfromtxt(fl, dtype=None)  # , encoding='utf-8')
-# #         self.xyz = np.array([[l[1], l[2], l[3]] for l in data])
-# #         # self.names = [l[0] for l in data]
-# #         self.names = [l[0].decode('ascii') for l in data]
-# #         self.name_to_xyz = dict(zip(self.names, self.xyz))
-# #
-# #     def load_contacts_regions(self, contact_regs):
-# #         self.contact_regs = contact_regs
-# #
-# #     def load_from_file(self, filename):
-# #         named_points = NamedPoints(filename)
-# #         self.chanlabels = named_points.names
-# #         self.xyz = named_points.xyz
-# #         self._initialize_datastructs()

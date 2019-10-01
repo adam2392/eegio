@@ -88,6 +88,14 @@ class TestContacts:
         electrodename = contacts.get_elec(contact)
         assert electrodename is not None
 
+        print(contacts)
+
     @pytest.mark.usefixture("contacts")
     def test_contacts_expansion(self, contacts):
-        pass
+        ch_list = contacts[:]
+        ablated_list = ch_list[0:4]
+        onset_labels = ch_list[2:]
+
+        bip_chs = Contacts().expand_bipolar_chans(ch_list)
+        ablated_list = Contacts().expand_ablated_chans(ch_list)
+        onset_labels = Contacts().make_onset_labels_bipolar(ch_list)

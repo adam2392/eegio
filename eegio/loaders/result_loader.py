@@ -8,7 +8,7 @@ from eegio.loaders.baseloader import BaseLoader
 
 
 class ResultLoader(BaseLoader):
-    def __init__(self, fname, metadata: Dict = None):
+    def __init__(self, fname: Union[str, os.PathLike] = None, metadata: Dict = None):
         super(ResultLoader, self).__init__(fname=fname)
 
         if metadata is None:
@@ -28,7 +28,7 @@ class ResultLoader(BaseLoader):
 
         return res
 
-    def read_NK(self, fname):
+    def read_NK(self, fname: Union[os.PathLike, str]):
         """
         Function to read from a Nihon-Kohden based EEG system file.
 
@@ -39,7 +39,7 @@ class ResultLoader(BaseLoader):
         """
         pass
 
-    def read_Natus(self, fname: os.PathLike):
+    def read_Natus(self, fname: Union[os.PathLike, str]):
         """
         Function to read from a Natus based EEG system file.
         :param fname:
