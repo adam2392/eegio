@@ -60,7 +60,7 @@
 #
 #             # test saving the data
 #             rawfif = edfconverter.convert_fif(
-#                 fpath=newfifpath, save=True, replace=True)
+#                 in_fpath=newfifpath, save=True, replace=True)
 #             metadata = edfconverter.convert_metadata(
 #                 pat_id, dataset_id, clinical_center, save=True, jsonfilepath=newjsonpath)
 #

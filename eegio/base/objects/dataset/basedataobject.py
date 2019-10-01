@@ -60,6 +60,7 @@ class BaseDataset(ABC):
         model_attributes: Dict = None,
         cache_data: bool = True,
         metadata: Dict = None,
+        montage: List = None,
     ):
         if metadata is None:
             metadata = dict()
@@ -83,6 +84,7 @@ class BaseDataset(ABC):
         self.datasetid = datasetid
         self.model_attributes = model_attributes
         self.metadata = metadata
+        self.montage = montage
 
         # create cached copies
         self.cache_data = cache_data
@@ -116,6 +118,9 @@ class BaseDataset(ABC):
         :return: metadata (dict)
         """
         return self.metadata
+
+    def get_montage(self):
+        return self.montage
 
     def update_metadata(self, **kwargs):
         self.metadata.update(**kwargs)

@@ -49,15 +49,19 @@ To install, run this command inside your virtual environment:
 Epilepsy researchers dealing with EEG data. Anyone with human patient EEG data. The main data workflow is to maintain a running Excel sheet with variables related to your patient population. 
 See example and docs for info on how to format this.
 
+## Formatting
 User can run:
 
-    formatted_df = eegio.format_clinical_sheet(excelfilepath)
+    formatted_df = eegio.format_clinical_sheet(excelfilepath,
+                                            cols_to_reg_expand=["bad_channels"])
 
 User can run preprocessing on .edf files to create .fif + .json files:
 
-    eegio.format_eegdata(edffilepath=edffilepath,
-                                outputfilepath)
-                                
+    eegio.format_eegdata(in_fpath=edffilepath,
+                        out_fpath=outputfilepath,
+                        json_fpath=jsonfpath)
+
+## Loading
 User can then load datasets, or patient (i.e. grouped datasets) data:
     
     # create a patient object that looks through hard coded directory

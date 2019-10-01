@@ -72,11 +72,11 @@ class TempWriter(BaseWrite):
 
 class DataWriter(BaseWrite):
     def __init__(self, fpath=None, raw: mne.io.BaseRaw = None, type: str = "fif"):
-        if raw != None and fpath == None:
-            raise RuntimeError("Pass in a file path to save data!")
-
-        if fpath != None and raw == None:
-            raise RuntimeError("Pass in a MNE Raw object to save!")
+        # if raw != None and fpath == None:
+        #     raise RuntimeError("Pass in a file path to save data!")
+        #
+        # if fpath != None and raw == None:
+        #     raise RuntimeError("Pass in a MNE Raw object to save!")
 
         if fpath != None and raw != None:
             if not os.path.exists(os.path.dirname(fpath)):
