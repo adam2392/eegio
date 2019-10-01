@@ -114,6 +114,9 @@ class FormatClinicalSheet:
         self.df = self.df.replace("nan", "", regex=True)
 
     def _expand_ch_annotations(self):
+        if self.cols_to_expand == None:
+            return
+        
         # do some string processing to expand out contacts
         for col in self.cols_to_expand:
             # strip out blank spacing
