@@ -55,7 +55,9 @@ class ResultLoader(BaseLoader):
         )
         return resultobj
 
-    def load_file(self, filepath: Union[str, os.PathLike], jsonfpath: Union[str, os.PathLike]):
+    def load_file(
+        self, filepath: Union[str, os.PathLike], jsonfpath: Union[str, os.PathLike]
+    ):
         if filepath.endswith(".npz"):
             res = self.read_npzjson(jsonfpath, filepath)
         elif filepath.endswith(".npy"):
@@ -87,10 +89,10 @@ class ResultLoader(BaseLoader):
         pass
 
     def read_npzjson(
-            self,
-            jsonfpath: Union[str, os.PathLike],
-            npzfpath: Union[os.PathLike, str] = None,
-            return_struct=False,
+        self,
+        jsonfpath: Union[str, os.PathLike],
+        npzfpath: Union[os.PathLike, str] = None,
+        return_struct=False,
     ):
         """
         Reads a numpy stored as npz+json file combination.
@@ -118,12 +120,11 @@ class ResultLoader(BaseLoader):
             resultobj = self._wrap_result_in_obj(datastruct, metadata)
             return resultobj
 
-
     def read_npyjson(
-            self,
-            jsonfpath: Union[str, os.PathLike],
-            npyfpath: Union[str, os.PathLike] = None,
-            return_struct=False,
+        self,
+        jsonfpath: Union[str, os.PathLike],
+        npyfpath: Union[str, os.PathLike] = None,
+        return_struct=False,
     ):
         """
         Reads a numpy stored as npy+json file combination.
@@ -169,4 +170,3 @@ class ResultLoader(BaseLoader):
                 model_attributes=model_attributes,
             )
             return resultobj
-

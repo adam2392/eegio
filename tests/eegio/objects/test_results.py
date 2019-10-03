@@ -42,7 +42,9 @@ class TestResult:
 
         # load in the data
         loader = ResultLoader(jsonfpath)
-        datastruct, metadata = loader.read_npzjson(jsonfpath, npzfpath, return_struct=True)
+        datastruct, metadata = loader.read_npzjson(
+            jsonfpath, npzfpath, return_struct=True
+        )
 
         assert isinstance(metadata, dict)
         assert datastruct.files
@@ -133,4 +135,3 @@ class TestResult:
         onsetwin = resultobj.compute_onsetwin(onsetind)
         offsetwin = resultobj.compute_offsetwin(offsetind)
         assert onsetwin <= offsetwin
-

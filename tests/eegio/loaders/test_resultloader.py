@@ -3,7 +3,7 @@ import pytest
 from eegio.loaders import ResultLoader
 
 
-class Test_ResultLoader():
+class Test_ResultLoader:
     @pytest.mark.usefixture("result_fpath")
     def test_result_loading(self, result_fpath):
         jsonfpath, npzfpath = result_fpath
