@@ -1,2 +1,14 @@
 [run]
 omit=./eegio/writers/database/*,eegio/writers/pickle/*,eegio/writers/ppt/*,eegio/base/utils/*,eegio/dataset_test/*,*__init__.py,eegio/*config*,eegio/format/baseadapter.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    @deprecated
+    def read_NK
+    def read_Natus
+    def get_contact_coords
+
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ == .__main__.:

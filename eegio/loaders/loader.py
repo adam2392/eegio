@@ -3,9 +3,10 @@ from typing import Union, List, Tuple, Dict
 
 import mne
 import numpy as np
+import deprecated
 import pyedflib
 
-from eegio.base.objects import EEGTimeSeries, Result, Contacts
+from eegio.base.objects import EEGTimeSeries, Contacts
 from eegio.base.utils.data_structures_utils import MatReader
 from eegio.format.baseadapter import BaseAdapter
 from eegio.format.scrubber import ChannelScrub, EventScrub
@@ -98,45 +99,6 @@ class Loader(BaseLoader):
         eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
         eegts.update_metadata(raw_annotations=annotations)
         return eegts
-
-    def _wrap_result_in_obj(self, datastruct, metadata):
-        """
-        Helps wrap a dictionary returned result data in the form of np.ndarrays, along with
-        corresponding metadata into a Result object.
-
-        :param datastruct:
-        :type datastruct:
-        :param metadata:
-        :type metadata:
-        :return:
-        :rtype:
-        """
-        # ensure data quality
-        pertmats = datastruct["pertmats"]
-        delvecs = datastruct["delvecs"]
-        adjmats = datastruct["adjmats"]
-        chlabels = metadata["chanlabels"]
-
-        assert adjmats.ndim == 3
-        assert pertmats.ndim == 2
-        assert delvecs.ndim == 3
-
-        # create a result
-        sampletimes = metadata["samplepoints"]
-        model_attributes = {
-            "winsize": metadata["winsize"],
-            "stepsize": metadata["stepsize"],
-            "samplerate": metadata["samplerate"],
-        }
-        contacts = Contacts(chlabels, require_matching=False)
-        resultobj = Result(
-            pertmats,
-            sampletimes,
-            contacts,
-            metadata=metadata,
-            model_attributes=model_attributes,
-        )
-        return resultobj
 
     def read_NK(self, fname):
         """
@@ -322,6 +284,7 @@ class Loader(BaseLoader):
             eegts = self._wrap_raw_in_obj(raw, modality, annotations)
             return eegts
 
+    @deprecated.deprecated(reason="mat loading may be unnecessary for now.")
     def read_mat(
         self,
         fname,

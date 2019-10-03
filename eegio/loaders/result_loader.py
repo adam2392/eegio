@@ -3,6 +3,7 @@ from typing import Dict, Union
 
 import numpy as np
 
+from eegio.base.objects import Result, Contacts
 from eegio.base.utils.data_structures_utils import loadjsonfile
 from eegio.loaders.baseloader import BaseLoader
 
@@ -15,14 +16,50 @@ class ResultLoader(BaseLoader):
             metadata = {}
         self.update_metadata(**metadata)
 
-    def load_file(self, filepath: Union[str, os.PathLike]):
-        filepath = str(filepath)
-        if filepath.endswith(".fif"):
-            res = self.read_fif(filepath)
-        elif filepath.endswith(".mat"):
-            res = self.read_mat(filepath)
-        elif filepath.endswith(".edf"):
-            res = self.read_edf(filepath)
+    def _wrap_result_in_obj(self, datastruct, metadata):
+        """
+        Helps wrap a dictionary returned result data in the form of np.ndarrays, along with
+        corresponding metadata into a Result object.
+
+        :param datastruct:
+        :type datastruct:
+        :param metadata:
+        :type metadata:
+        :return:
+        :rtype:
+        """
+        # ensure data quality
+        pertmats = datastruct["pertmats"]
+        delvecs = datastruct["delvecs"]
+        adjmats = datastruct["adjmats"]
+        chlabels = metadata["chanlabels"]
+
+        assert adjmats.ndim == 3
+        assert pertmats.ndim == 2
+        assert delvecs.ndim == 3
+
+        # create a result
+        sampletimes = metadata["samplepoints"]
+        model_attributes = {
+            "winsize": metadata["winsize"],
+            "stepsize": metadata["stepsize"],
+            "samplerate": metadata["samplerate"],
+        }
+        contacts = Contacts(chlabels, require_matching=False)
+        resultobj = Result(
+            pertmats,
+            sampletimes,
+            contacts,
+            metadata=metadata,
+            model_attributes=model_attributes,
+        )
+        return resultobj
+
+    def load_file(self, filepath: Union[str, os.PathLike], jsonfpath: Union[str, os.PathLike]):
+        if filepath.endswith(".npz"):
+            res = self.read_npzjson(jsonfpath, filepath)
+        elif filepath.endswith(".npy"):
+            res = self.read_npyjson(jsonfpath, filepath)
         else:
             raise OSError("Can't use load_file for this file extension {filepath} yet.")
 
@@ -50,9 +87,10 @@ class ResultLoader(BaseLoader):
         pass
 
     def read_npzjson(
-        self,
-        jsonfpath: Union[str, os.PathLike],
-        npzfpath: Union[os.PathLike, str] = None,
+            self,
+            jsonfpath: Union[str, os.PathLike],
+            npzfpath: Union[os.PathLike, str] = None,
+            return_struct=False,
     ):
         """
         Reads a numpy stored as npz+json file combination.
@@ -73,12 +111,19 @@ class ResultLoader(BaseLoader):
             npzfpath = os.path.join(filedir, npzfilename)
 
         datastruct = np.load(npzfpath)
-        return datastruct, metadata
+
+        if return_struct:
+            return datastruct, metadata
+        else:
+            resultobj = self._wrap_result_in_obj(datastruct, metadata)
+            return resultobj
+
 
     def read_npyjson(
-        self,
-        jsonfpath: Union[str, os.PathLike],
-        npyfpath: Union[str, os.PathLike] = None,
+            self,
+            jsonfpath: Union[str, os.PathLike],
+            npyfpath: Union[str, os.PathLike] = None,
+            return_struct=False,
     ):
         """
         Reads a numpy stored as npy+json file combination.
@@ -99,4 +144,29 @@ class ResultLoader(BaseLoader):
             npyfpath = os.path.join(filedir, npyfilename)
 
         arr = np.load(npyfpath)
-        return arr, metadata
+
+        if return_struct:
+            return arr, metadata
+        else:
+            chlabels = metadata["chanlabels"]
+
+            assert arr.ndim == 2
+            assert arr.shape[0] == len(chlabels)
+
+            # create a result
+            sampletimes = metadata["samplepoints"]
+            model_attributes = {
+                "winsize": metadata["winsize"],
+                "stepsize": metadata["stepsize"],
+                "samplerate": metadata["samplerate"],
+            }
+            contacts = Contacts(chlabels, require_matching=False)
+            resultobj = Result(
+                arr,
+                sampletimes,
+                contacts,
+                metadata=metadata,
+                model_attributes=model_attributes,
+            )
+            return resultobj
+

@@ -21,11 +21,11 @@ DESCRIPTION = "An io package for eeg data and time-series transformations done o
 URL = "https://github.com/adam2392/eegio"
 MINIMUM_PYTHON_VERSION = 3, 6  # Minimum of Python 3.4
 REQUIRED_PACKAGES = [
-    "numpy>=1.14.5",
-    "scipy>=1.1.0",
-    "scikit-learn>=0.19.2",
-    "pandas>=0.23.4",
-    "mne>=0.18.2",
+    "numpy>=1.17.2",
+    "scipy>=1.3.1",
+    "scikit-learn>=0.21.3",
+    "pandas>=0.25.1",
+    "mne>=0.19",
     "pyEDFlib == 0.1.14",
     "xlrd >= 1.2.0",
 ]

@@ -2,7 +2,7 @@ import pytest
 
 from eegio.base.objects.dataset.result_object import Result
 from eegio.base.objects.elecs import Contacts
-from eegio.loaders import Loader, ResultLoader
+from eegio.loaders import ResultLoader
 
 
 class TestResult:
@@ -31,7 +31,7 @@ class TestResult:
         loader.read_NK(NK_fpath)
 
     @pytest.mark.usefixture("result_fpath")
-    def test_result(self, result_fpath):
+    def test_result_withstruct(self, result_fpath):
         """
         Test code runs without errors through all functions with dummy data.
 
@@ -42,7 +42,7 @@ class TestResult:
 
         # load in the data
         loader = ResultLoader(jsonfpath)
-        datastruct, metadata = loader.read_npzjson(jsonfpath, npzfpath)
+        datastruct, metadata = loader.read_npzjson(jsonfpath, npzfpath, return_struct=True)
 
         assert isinstance(metadata, dict)
         assert datastruct.files
@@ -95,3 +95,42 @@ class TestResult:
         onsetwin = resultobj.compute_onsetwin(onsetind)
         offsetwin = resultobj.compute_offsetwin(offsetind)
         assert onsetwin <= offsetwin
+
+    @pytest.mark.usefixture("result_fpath")
+    def test_result_withstruct(self, result_fpath):
+        """
+        Test code runs without errors through all functions with dummy data.
+
+        :param result:
+        :return:
+        """
+        jsonfpath, npzfpath = result_fpath
+
+        # load in the data
+        loader = ResultLoader(jsonfpath)
+        resultobj = loader.read_npzjson(jsonfpath, npzfpath)
+        contacts = resultobj.contacts
+
+        # slice the data
+        samplepoints = resultobj.samplepoints
+        # assert resultobj is kosher
+        assert resultobj.ncontacts == resultobj.get_data().shape[0]
+        assert len(resultobj.timepoints) == len(samplepoints)
+        assert len(samplepoints) == len(resultobj)
+
+        # drop certain channels
+        beforelen = len(contacts)
+        resultobj.mask_channels(contacts[0:3])
+        assert resultobj.ncontacts == beforelen - 3
+
+        # reset and things should be back to normal
+        resultobj.reset()
+        assert beforelen == resultobj.ncontacts
+
+        # test class functions
+        onsetind = 200
+        offsetind = 250
+        onsetwin = resultobj.compute_onsetwin(onsetind)
+        offsetwin = resultobj.compute_offsetwin(offsetind)
+        assert onsetwin <= offsetwin
+
