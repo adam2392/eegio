@@ -11,7 +11,7 @@ import eegio
 from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 from eegio.base.objects.elecs import Contacts
 from eegio.loaders.loader import Loader
-from eegio.writers.saveas import DataWriter
+from eegio.writers import DataWriter
 
 
 @pytest.mark.usefixture("edf_fpath")
