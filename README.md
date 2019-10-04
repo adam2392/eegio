@@ -153,7 +153,7 @@ If you have an idea for an improvement not listed there, please [make an issue](
     black tests/*
     pylint ./eegio/
     pre-commit run black --all-files
-    pytest --cov-config=.coveragerc --cov=./eegio/ tests/
+    pytest --cov-config=.coveragerc --cov=./eegio/ tests/ --cov-report annotate
     coverage-badge -f -o coverage.svg
 
 Tests is organized into two directories right now: 

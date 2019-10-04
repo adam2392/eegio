@@ -19,8 +19,13 @@ def test_preprocess_edf(edf_fpath):
     """
     Test error and warnings raised by Result class.
 
-    :param result: (Result)
-    :return: None
+    Parameters
+    ----------
+    edf_fpath :
+
+    Returns
+    -------
+
     """
     """
     First, load in data via edf.
@@ -77,6 +82,18 @@ def test_preprocess_edf(edf_fpath):
 @pytest.mark.usefixture("edf_fpath")
 @pytest.mark.usefixture("clinical_fpath")
 def test_preprocess_format_api(edf_fpath, clinical_fpath):
+    """
+    Tests preprocessing an edf file into a formatted .fif + .json pair of files.
+
+    Parameters
+    ----------
+    edf_fpath :
+    clinical_fpath :
+
+    Returns
+    -------
+
+    """
     writer = DataWriter()
 
     with tempfile.TemporaryDirectory() as fdir:

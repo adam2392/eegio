@@ -12,3 +12,13 @@ exclude_lines =
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
+    logger.
+    raise NotImplementedError
+
+    __repr__
+    __str__
+    warnings.warn
+    reinitialize_datastructure
+    raise OSError
+    load_adapter
+    _wrap_mat_in_obj

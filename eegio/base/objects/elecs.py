@@ -60,21 +60,25 @@ class Contacts(object):
 
     def __init__(
         self,
-        contacts_list: List = [],
-        contacts_xyz: List = [],
+        contacts_list=None,
+        contacts_xyz=None,
         referencespace: str = None,
         scale: str = None,
         require_matching: bool = True,
     ):
+        if contacts_list is None:
+            contacts_list = []
+        if contacts_xyz is None:
+            contacts_xyz = []
         self.require_matching = require_matching
         self.chanlabels = np.array([x.lower() for x in contacts_list])
 
-        if contacts_xyz is not None and referencespace == None:
+        if contacts_xyz != [] and referencespace == None:
             warnings.warn(
                 "referencespace should be set explicitly if you are passing in contact coordinates. "
                 "Defaulting to None. "
             )
-        if contacts_xyz is not None and scale == None:
+        if contacts_xyz != [] and scale == None:
             warnings.warn(
                 "scale should be set explicitly if you are passing in contact coordinates. "
                 "Defaulting to mm."

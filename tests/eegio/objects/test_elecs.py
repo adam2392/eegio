@@ -28,7 +28,8 @@ class TestContacts:
                 contact_xyz.append(test_coord)
 
             contactlist = contacts.chanlabels
-            contacts = Contacts(contactlist, contact_xyz[1:])
+            with pytest.warns(UserWarning):
+                contacts = Contacts(contactlist, contact_xyz[1:])
 
         with pytest.warns(UserWarning):
             contacts.natsort_contacts()
@@ -87,8 +88,8 @@ class TestContacts:
 
         electrodename = contacts.get_elec(contact)
         assert electrodename is not None
-
-        print(contacts)
+        ch = contacts[1]
+        assert isinstance(ch, str)
 
     @pytest.mark.usefixture("contacts")
     def test_contacts_expansion(self, contacts):

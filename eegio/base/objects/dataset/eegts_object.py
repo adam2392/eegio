@@ -55,20 +55,9 @@ class EEGTimeSeries(BaseDataset):
         datasetid: str = None,
         model_attributes: Dict = None,
         wm_contacts: List = None,
+        out_contacts: List = None,
         metadata: Dict = None,
     ):
-        if wm_contacts is None:
-            wm_contacts = []
-        if metadata is None:
-            metadata = dict()
-        if isinstance(times, list):
-            times = np.array(times)
-        if modality not in config.ACCEPTED_EEG_MODALITIES:
-            raise ValueError(
-                f"Modalities of EEG are accepted as: {config.ACCEPTED_EEG_MODALITIES}. "
-                f"You passed {modality}"
-            )
-        # times = np.arange(mat.shape[1]).astype(int)
         super(EEGTimeSeries, self).__init__(
             mat=mat,
             times=times,
@@ -78,12 +67,26 @@ class EEGTimeSeries(BaseDataset):
             model_attributes=model_attributes,
             metadata=metadata,
         )
-
+        if wm_contacts is None:
+            wm_contacts = []
+        if out_contacts is None:
+            out_contacts = []
+        if mat.ndim > 2:
+            raise ValueError(
+                "Time series can not have > 2 dimensions right now."
+                "We assume [C x T] shape, channels x time. "
+            )
+        if modality not in config.ACCEPTED_EEG_MODALITIES:
+            raise ValueError(
+                f"Modalities of EEG are accepted as: {config.ACCEPTED_EEG_MODALITIES}. "
+                f"You passed {modality}"
+            )
         # default as monopolar reference
         self.reference = reference
         self.samplerate = samplerate
         self.modality = modality
         self.wm_contacts = wm_contacts
+        self.out_contacts = out_contacts
         self._create_info()
 
         # initialize referencing if not set as monopolar

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import datetime
 
-from eegio.base.objects import EEGTimeSeries
+from eegio.base.objects import EEGTimeSeries, Contacts
 
 
 @pytest.mark.usefixture("eegts")
@@ -60,6 +60,9 @@ class TestEEGTimeSeries:
         eegts.mask_indices([1, 3])
         assert prevlen == eegts.n_contacts + 3
 
+        rawinfo = eegts.info
+        montage_groups = eegts.compute_montage_groups(rawinfo)
+
     def test_eegts_errors(self, eegts):
         """
         Test error and warnings raised by eegts class.
@@ -76,3 +79,28 @@ class TestEEGTimeSeries:
         with pytest.warns(UserWarning):
             windowed_data = eegts.partition_into_windows(250, 1250)
         assert len(windowed_data)
+
+        contactlist = np.hstack(
+            (
+                [f"A{i}" for i in range(16)],
+                [f"L{i}" for i in range(16)],
+                [f"B'{i}" for i in range(16)],
+                [f"D'{i}" for i in range(16)],
+                ["C'1", "C'2", "C'4", "C'8"],
+                ["C1", "C2", "C3", "C4", "C5", "C6"],
+            )
+        )
+        contacts = Contacts(contactlist)
+        N = len(contacts) + 1
+        T = 2500
+        rawdata = np.random.random((N, T))
+        times = np.arange(T)
+        samplerate = 1000
+        modality = "ecog"
+        with pytest.raises(AttributeError):
+            eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+
+        N = len(contacts)
+        rawdata = np.random.random((N, N, T))
+        with pytest.raises(ValueError):
+            eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)

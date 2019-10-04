@@ -1,5 +1,6 @@
 import copy
 import warnings
+import deprecated
 from abc import ABC, abstractmethod
 from typing import List, Dict, Union
 
@@ -64,11 +65,7 @@ class BaseDataset(ABC):
     ):
         if metadata is None:
             metadata = dict()
-        if mat.ndim > 2:
-            raise ValueError(
-                "Time series can not have > 2 dimensions right now."
-                "We assume [C x T] shape, channels x time. "
-            )
+
         if mat.shape[0] != len(contacts):
             matshape = mat.shape
             ncontacts = len(contacts)
@@ -120,9 +117,31 @@ class BaseDataset(ABC):
         return self.metadata
 
     def get_montage(self):
+        """
+        Get's the EEG dataset montage (i.e. xyz coordinates) based on a specific coordinate system. For scalp EEG
+        these can be obtained from the a list of set montages in MNE-Python.
+
+        Returns
+        -------
+
+        """
         return self.montage
 
     def update_metadata(self, **kwargs):
+        """
+        Function to update metadata dictionary with keyword arguments. This method allows the user to flexibly add
+        additional metadata attached to the raw EEG dataset. This is then easily exported when the user gets the metadata
+        with get_metadata().
+
+        Parameters
+        ----------
+        kwargs : dict
+            keyword arguments to update the metadata dictionary with
+
+        Returns
+        -------
+
+        """
         self.metadata.update(**kwargs)
 
     def remove_element_from_metadata(self, key):
@@ -136,11 +155,18 @@ class BaseDataset(ABC):
         """
         return self.model_attributes
 
-    def get_best_matching_montage(self, chanlabels):
+    def get_best_matching_montage(self, chanlabels: Union[List, np.ndarray]):
         """
-        Get the best matching montage with respect to this montage
-        :param chanlabels:
-        :return:
+        Get the best matching montage with respect to this montage in MNE-Python.
+
+        Parameters
+        ----------
+        chanlabels : np.ndarray, List
+            list of electrode labels to match against fixed montages.
+
+        Returns
+        -------
+
         """
         montages = mne.channels.get_builtin_montages()
         best_montage = None
@@ -148,7 +174,7 @@ class BaseDataset(ABC):
 
         for montage_name in montages:
             # read in standardized montage
-            montage = mne.channels.read_montage(montage_name)
+            montage = mne.channels.make_standard_montage(montage_name)
 
             # get the channels and score for this montage wrt channels
             montage_score = 0
@@ -163,20 +189,24 @@ class BaseDataset(ABC):
 
         return best_montage
 
-    def get_montage_channel_indices(self, montage_name, chanlabels):
+    def get_montage_channel_indices(
+        self, montage_name: str, chanlabels: Union[List, np.ndarray]
+    ):
         """
         Helper function to get the channel indices corresponding to a certain montage
         hardcoded in the MNE-Python framework. For scalp EEG.
 
-        :param montage_name:
-        :type montage_name:
-        :param chanlabels:
-        :type chanlabels:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        montage_name :
+        chanlabels :
+
+        Returns
+        -------
+
         """
         # read in montage and strip channel labels not in montage
-        montage = mne.channels.read_montage(montage_name)
+        montage = mne.channels.make_standard_montage(montage_name)
         montage_chs = [ch.lower() for ch in montage.ch_names]
 
         # get indices to keep
@@ -186,10 +216,12 @@ class BaseDataset(ABC):
 
     def reset(self):
         """
-        Function to cache restore the matrix data, times, and contacts.
+        Function to cache restore the matrix data, times, and contacts. Requires that user initially cached the data
+        with cache_data=True.
 
-        :return:
-        :rtype:
+        Returns
+        -------
+
         """
         if self.cache_data:
             self.mat = self.buffmat.copy()
@@ -233,7 +265,9 @@ class BaseDataset(ABC):
 
         A1,A2, ..., B1, B2, ..., Z1, Z2, ..., A'1, A'2, ...
 
-        :return:
+        Returns
+        -------
+
         """
         self.buffchanlabels = self.chanlabels.copy()
         natinds = self.contacts.natsort_contacts()
@@ -284,16 +318,17 @@ class BaseDataset(ABC):
                 tid2 = np.argmax(self.times >= interval[1])
         return (tid1, tid2)
 
-    def time(self, interval=(None, None)):
-        tid1, tid2 = self._interval_to_index(interval)
-        return self.times[tid1:tid2]
-
     def compute_montage_groups(self, rawinfo: mne.Info):
         """
         Compute the montage groups for a raw data.
 
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        rawinfo :
+
+        Returns
+        -------
+
         """
         # get channel groups - hashmap of channel indices
         ch_groups = _divide_to_regions(rawinfo, add_stim=False)

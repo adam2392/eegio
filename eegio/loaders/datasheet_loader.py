@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from pprint import pprint
 from sys import getsizeof
+from typing import Union
 
 import pandas as pd
 
@@ -130,3 +131,56 @@ class DataSheet(AbstractClinical):
         summary_str = f"Datasheet located at {self.fpath}."
         pprint(summary_str)
         return summary_str
+
+    def load_elec_layout_sheet(self, fpath: Union[str, os.PathLike]):
+        """
+        Loads an electrode layout sheet that is contact number on the column headers, and electrode name on the row
+        index. For example:
+
+            1   2   3   ....    16
+        A'  wm  mtg out ...     out
+        B
+        C
+
+        Parameters
+        ----------
+        fpath : os.PathLike
+
+        Returns
+        -------
+
+        """
+
+        def scrub_chs(chs):
+            chs = [x.lower() for x in chs]
+            chs = [x.replace("’", "'") for x in chs]
+            chs = [x.replace("’", "'") for x in chs]
+            return chs
+
+        wm_contacts = []
+        out_contacts = []
+
+        elec_layout_df = pd.read_excel(fpath, header=None, index_col=0, names=None)
+        # convert entire dataframe to upper case
+        elec_layout_df = elec_layout_df.apply(lambda x: x.astype(str).str.lower())
+        elec_layout_df.iloc[0].apply(int)  # convert first row to integers
+
+        assert len(elec_layout_df.iloc[0]) <= 16
+
+        # loop over rows and search for 'wm', or 'out' labeled chs
+        for idx, (index, row) in enumerate(elec_layout_df.iterrows()):
+            # get the contact numbers
+            if idx == 0:
+                contactnums = row.astype(int).tolist()
+
+            # go through each item in each row
+            for jdx, region in enumerate(row):
+                if region == "out":
+                    out_contacts.append(row.name + str(contactnums[jdx]))
+                if region == "wm":
+                    wm_contacts.append(row.name + str(contactnums[jdx]))
+
+        out_contacts = scrub_chs(out_contacts)
+        wm_contacts = scrub_chs(wm_contacts)
+
+        return wm_contacts, out_contacts
