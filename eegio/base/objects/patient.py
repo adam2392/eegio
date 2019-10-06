@@ -13,7 +13,7 @@ class Patient(object):
     Attributes
     ----------
         :param patientid: patient identifier for this Patient.
-        :type patientid: bool
+        :type patientid: str
         :param managing_user: managing user that is tied to this Patient. E.g. a clinical center, or a specific researcher, or specific doctor.
         :type managing_user: str
         :param datasetids: list of recording snapshots tied to this Patient.
@@ -49,23 +49,37 @@ class Patient(object):
     """
 
     def __init__(
-        self,
-        patientid: str,
-        datadir: os.PathLike,
-        managing_user: str = None,
-        datasetids: List[str] = [],
-        modality: str = "ieeg",
-        samplerate: float = None,
-        wm_channels: List = [],
-        bad_channels: List = [],
-        metadata: Dict = dict(),
-        rz_contacts: List[str] = [],
-        soz_contacts: List[str] = [],
-        spread_contacts: List[str] = [],
-        brain_region_hypo: str = None,
-        resected_region: str = None,
-        lesion_present: bool = False,
+            self,
+            patientid: str,
+            datadir: os.PathLike,
+            managing_user: str = None,
+            datasetids=None,
+            modality: str = "ieeg",
+            samplerate: float = None,
+            wm_channels=None,
+            bad_channels=None,
+            metadata=None,
+            rz_contacts=None,
+            soz_contacts=None,
+            spread_contacts=None,
+            brain_region_hypo: str = None,
+            resected_region: str = None,
+            lesion_present: bool = False,
     ):
+        if spread_contacts is None:
+            spread_contacts = []
+        if soz_contacts is None:
+            soz_contacts = []
+        if rz_contacts is None:
+            rz_contacts = []
+        if bad_channels is None:
+            bad_channels = []
+        if metadata is None:
+            metadata = dict()
+        if wm_channels is None:
+            wm_channels = []
+        if datasetids is None:
+            datasetids = []
         self.datadir = datadir
 
         # set recording metadata

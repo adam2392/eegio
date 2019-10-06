@@ -6,6 +6,8 @@ from typing import List
 import numpy as np
 from natsort import natsorted, order_by_index, index_natsorted
 
+from eegio.base.objects.electrode import Electrode
+
 
 def reinitialize_datastructure(f):
     f()
@@ -59,12 +61,12 @@ class Contacts(object):
     )
 
     def __init__(
-        self,
-        contacts_list=None,
-        contacts_xyz=None,
-        referencespace: str = None,
-        scale: str = None,
-        require_matching: bool = True,
+            self,
+            contacts_list=None,
+            contacts_xyz=None,
+            referencespace: str = None,
+            scale: str = None,
+            require_matching: bool = True,
     ):
         if contacts_list is None:
             contacts_list = []
@@ -114,7 +116,7 @@ class Contacts(object):
         if isinstance(given, slice):
             # do your handling for a slice object:
             # print(given.start, given.stop, given.step)
-            return self.chanlabels[given.start : given.stop : given.step]
+            return self.chanlabels[given.start: given.stop: given.step]
         else:
             # Do your handling for a plain index
             # print(given)
