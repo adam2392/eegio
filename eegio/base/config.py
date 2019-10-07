@@ -7,6 +7,9 @@ ACCEPTED_EEG_MODALITIES = [
 ]  # EEG modalities that EEGIO supports
 DATE_MODIFIED_KEY = "date_modified"  # dataset modified tracker keyname
 
+NON_EEG_MARKERS = ['dc', 'ekg', 'ref', 'emg', "ecg",
+           "events", "markers", "mark", "sti014", "stim", "sti"]
+
 """ Clinical excel sheet configuration """
 COLS_TO_REGEXP_EXPAND = [
     "bad_contacts",

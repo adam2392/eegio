@@ -5,7 +5,7 @@ import mne
 import numpy as np
 
 from eegio.base.objects.electrodes.elecs import Contacts
-
+from eegio.base.config import NON_EEG_MARKERS
 
 class ChannelScrub:
     @classmethod
@@ -77,6 +77,13 @@ class ChannelScrub:
         if "sti" in bad_markers:
             badname = "sti"
             bad_channels.extend([ch for ch in ch_names if badname in ch])
+
+        # extract non eeg channels based on some rules we set
+        non_eeg_channels = [chan for chan in ch_names if any(
+            x in chan for x in NON_EEG_MARKERS)]
+        # get rid of these channels == 'e'
+        non_eeg_channels.extend([ch for ch in ch_names if ch == 'e'])
+        bad_channels.extend(non_eeg_channels)
 
         return bad_channels
 
