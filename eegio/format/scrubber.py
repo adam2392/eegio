@@ -4,7 +4,7 @@ from typing import List, Dict
 import mne
 import numpy as np
 
-from eegio.base.objects.elecs import Contacts
+from eegio.base.objects.electrodes.elecs import Contacts
 
 
 class ChannelScrub:

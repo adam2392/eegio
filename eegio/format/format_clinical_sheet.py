@@ -62,29 +62,29 @@ def expand_channels(ch_list):
         if match:
             new_list.extend([ch for ch in match])
             continue
-        #             print("Printing: ", match)
-        #
-        # ops = re.findall(r"\d+", string)  # r"\d+" searches for digits of variables length
-        # if ops:
-        #     prefix = re.findall(r"\D+", string)[0]  # r"\D+" complement set of "\d+"
-        #     new_list.extend([prefix + str(i) for i in list(range(int(ops[0]), int(ops[1]), 1))])
-        #     continue
-
         print("expand_channels: Cannot parse this: %s" % string)
-
     return new_list
 
 
 def format_clinical_sheet(
-    fpath: Union[str, os.PathLike], cols_to_reg_expand: List = None
+    fpath: Union[str, os.PathLike],
+    cols_to_reg_expand: List = None,
+    patientid: str = None,
+    # return_bad_contacts: bool = True,
 ):
-    formatter = FormatClinicalSheet(fpath, cols_to_reg_expand)
-    return formatter.df
+    formatter = FormatClinicalSheet(fpath, cols_to_reg_expand, patientid)
+    return formatter.df.to_dict()
 
 
 class FormatClinicalSheet:
-    def __init__(self, fpath: Union[str, os.PathLike], cols_to_reg_expand: List = None):
+    def __init__(
+        self,
+        fpath: Union[str, os.PathLike],
+        cols_to_reg_expand: List = None,
+        patientid: str = None,
+    ):
         self.fpath = fpath
+        self.patientid = patientid
         self.cols_to_expand = cols_to_reg_expand
 
         self.read_file(self.fpath)
@@ -106,6 +106,10 @@ class FormatClinicalSheet:
 
         # expand channel annotations
         self._expand_ch_annotations()
+
+        # if patient id passed in, only get row w/ that patient id
+        if self.patientid != None:
+            self.df = self.df[self.df["patient_id"] == self.patientid]
 
     def _format_col_headers(self):
         self.df = self.df.apply(lambda x: x.astype(str).str.lower())

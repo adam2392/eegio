@@ -49,22 +49,22 @@ class Patient(object):
     """
 
     def __init__(
-            self,
-            patientid: str,
-            datadir: os.PathLike,
-            managing_user: str = None,
-            datasetids=None,
-            modality: str = "ieeg",
-            samplerate: float = None,
-            wm_channels=None,
-            bad_channels=None,
-            metadata=None,
-            rz_contacts=None,
-            soz_contacts=None,
-            spread_contacts=None,
-            brain_region_hypo: str = None,
-            resected_region: str = None,
-            lesion_present: bool = False,
+        self,
+        patientid: str,
+        datadir: os.PathLike,
+        managing_user: str = None,
+        datasetids=None,
+        modality: str = "ieeg",
+        samplerate: float = None,
+        wm_channels=None,
+        bad_channels=None,
+        metadata=None,
+        rz_contacts=None,
+        soz_contacts=None,
+        spread_contacts=None,
+        brain_region_hypo: str = None,
+        resected_region: str = None,
+        lesion_present: bool = False,
     ):
         if spread_contacts is None:
             spread_contacts = []

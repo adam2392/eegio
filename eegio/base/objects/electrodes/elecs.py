@@ -1,12 +1,10 @@
 import collections
 import re
 import warnings
-from typing import List
 
 import numpy as np
 from natsort import natsorted, order_by_index, index_natsorted
-
-from eegio.base.objects.electrode import Electrode
+from eegio.base.objects.electrodes.electrode import Electrode
 
 
 def reinitialize_datastructure(f):
@@ -17,12 +15,26 @@ def reinitialize_datastructure(f):
 
 class Contacts(object):
     """
-    Class wrapper for a set of contacts.
+    Class wrapper for a full set of contacts for a patient.
+    If:
+     - ECoG/SEEG, then each contact corresponds to a certain electrode, with
+     many electrodes being part of the EEG for this patient.
+     - scalp EEG, then each contact corresponds to a full electrode.
 
     Allows the user to:
      - load contacts and if available, their corresponding T1 brain xyz coordinates.
      - mask contacts that we don't want to consider
      - set a reference scheme (monopolar, common_average, bipolar, customized)
+
+    Main internal attributes:
+    - mask_contacts/mask_indices = set of indices to mask (union set of bad, wm and out)
+    - bad_contacts/bad_indices = set of the bad contacts/indices to mask (union of bad, wm, out)
+    - wm_contacts/wm_indices = set of the wm contacts/indices to mask
+    - out_contacts/out_indices = set of the out contacts/indices to mask
+    - electrodes = dictionary of each contact index and the corresponding electrode
+    - contacts_list = List of all contacts used
+    - cached_contacts_list = List of original contacts list passed in. To allow reversal of any masking.
+    - contacts_xyz
 
     Note that if user sets a reference scheme, then it only simply relabels the channels and applies some metadata. Any
     dataset relying on these specific ordering of contacts, should apply a reference function to their dataset.
@@ -61,12 +73,12 @@ class Contacts(object):
     )
 
     def __init__(
-            self,
-            contacts_list=None,
-            contacts_xyz=None,
-            referencespace: str = None,
-            scale: str = None,
-            require_matching: bool = True,
+        self,
+        contacts_list=None,
+        contacts_xyz=None,
+        referencespace: str = None,
+        scale: str = None,
+        require_matching: bool = True,
     ):
         if contacts_list is None:
             contacts_list = []
@@ -116,7 +128,7 @@ class Contacts(object):
         if isinstance(given, slice):
             # do your handling for a slice object:
             # print(given.start, given.stop, given.step)
-            return self.chanlabels[given.start: given.stop: given.step]
+            return self.chanlabels[given.start : given.stop : given.step]
         else:
             # Do your handling for a plain index
             # print(given)
@@ -145,9 +157,36 @@ class Contacts(object):
                     continue
 
             elec_name, _ = match.groups()
-            if elec_name not in self.electrodes:
-                self.electrodes[elec_name] = []
             self.electrodes[elec_name].append(i)
+
+    def _initialize_datastructs_dev(self):
+        """
+        Helper function to initialize an electrodes dictionary for storing contacts belonging to the same electrode.
+
+        Assumes that all different electrodes have a starting different lettering (e.g. A1, A2, A3 are all from the same
+        electrode).
+
+        :return:
+        """
+        self.electrodes_dict = collections.defaultdict(list)
+        for i, name in enumerate(self.chanlabels):
+            match = self.contact_single_regex.match(name)
+            if match is None:
+                if self.require_matching:
+                    raise ValueError(
+                        f"Unexpected contact name {name}. "
+                        f"If you are using scalp electrodes, then pass 'require_matching=False' "
+                        f"to prevent regular expression checking."
+                    )
+                else:
+                    continue
+
+            elec_name, _ = match.groups()
+            self.electrodes_dict[elec_name].append(i)
+
+        self.electrodes = dict()
+        for elec_name, contact_list in self.electrodes_dict.items():
+            self.electrodes[elec_name] = Electrode(contact_list, elec_type="seeg")
 
     def _initialize_contacts_xyz_dict(self):
         self.name_to_xyz = dict(zip(self.chanlabels, self.xyz))
@@ -164,7 +203,6 @@ class Contacts(object):
                 "No referencespace passed in. It is set as None. This is ideally passed in "
                 "to allow user to determine where the contacts were localized."
             )
-
         self.xyz = contacts_xyz
         self.referencespace = referencespace
         self.scale = scale

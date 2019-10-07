@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 import os
 import warnings
 from abc import ABC, abstractmethod
@@ -105,10 +106,10 @@ class AbstractClinical(ABC):
         return df
 
 
-class DataSheet(AbstractClinical):
+class DataSheetLoader(AbstractClinical):
     def __init__(self, fpath: os.PathLike = None):
         if fpath != None:
-            super(DataSheet, self).__init__(fpath=fpath)
+            super(DataSheetLoader, self).__init__(fpath=fpath)
             self.load(fpath)
 
     def load(self, fpath: os.PathLike):
@@ -132,6 +133,14 @@ class DataSheet(AbstractClinical):
         pprint(summary_str)
         return summary_str
 
+    def _process_electrodelayout_row(self, row, contacts_dict, contactnums):
+        PROBLEMATIC_CONTACT_LABELS = ["out", "wm", "csf", "ventricle"]
+
+        # go through each item in each row
+        for jdx, region in enumerate(row):
+            if any(x in region for x in PROBLEMATIC_CONTACT_LABELS):
+                contacts_dict[region].append(row.name + str(contactnums[jdx]))
+
     def load_elec_layout_sheet(self, fpath: Union[str, os.PathLike]):
         """
         Loads an electrode layout sheet that is contact number on the column headers, and electrode name on the row
@@ -142,9 +151,12 @@ class DataSheet(AbstractClinical):
         B
         C
 
+        It returns problematic contacts found. To add additional markers to look for, add conditions to
+        _process_electrodelayout_row().
+
         Parameters
         ----------
-        fpath : os.PathLike
+        fpath :
 
         Returns
         -------
@@ -157,15 +169,24 @@ class DataSheet(AbstractClinical):
             chs = [x.replace("’", "'") for x in chs]
             return chs
 
-        wm_contacts = []
-        out_contacts = []
+        if str(fpath).endswith(".xlsx"):
+            elec_layout_df = pd.read_excel(fpath, header=None, index_col=0, names=None)
+        elif str(fpath).endswith(".csv"):
+            elec_layout_df = pd.read_csv(fpath, header=None, index_col=0, names=None)
+        else:
+            raise RuntimeError(
+                "Electrode layout file should be in either .xlsx or .csv format. "
+                f"Your file passed in is {fpath}."
+            )
 
-        elec_layout_df = pd.read_excel(fpath, header=None, index_col=0, names=None)
         # convert entire dataframe to upper case
         elec_layout_df = elec_layout_df.apply(lambda x: x.astype(str).str.lower())
         elec_layout_df.iloc[0].apply(int)  # convert first row to integers
 
         assert len(elec_layout_df.iloc[0]) <= 16
+
+        # "bad contacts" to look for
+        problem_contacts = collections.defaultdict(list)
 
         # loop over rows and search for 'wm', or 'out' labeled chs
         for idx, (index, row) in enumerate(elec_layout_df.iterrows()):
@@ -173,14 +194,10 @@ class DataSheet(AbstractClinical):
             if idx == 0:
                 contactnums = row.astype(int).tolist()
 
-            # go through each item in each row
-            for jdx, region in enumerate(row):
-                if region == "out":
-                    out_contacts.append(row.name + str(contactnums[jdx]))
-                if region == "wm":
-                    wm_contacts.append(row.name + str(contactnums[jdx]))
+            self._process_electrodelayout_row(row, problem_contacts, contactnums)
 
-        out_contacts = scrub_chs(out_contacts)
-        wm_contacts = scrub_chs(wm_contacts)
+        # scrub the contacts list in each one found
+        for key, problem_list in problem_contacts.items():
+            problem_contacts[key] = scrub_chs(problem_list)
 
-        return wm_contacts, out_contacts
+        return problem_contacts

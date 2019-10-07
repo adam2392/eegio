@@ -3,7 +3,7 @@ import random
 import numpy as np
 import pytest
 
-from eegio.base.objects.elecs import Contacts
+from eegio.base.objects.electrodes.elecs import Contacts
 
 
 class TestContacts:

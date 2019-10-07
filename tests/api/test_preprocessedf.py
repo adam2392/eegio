@@ -4,13 +4,13 @@ import tempfile
 
 import mne
 import numpy as np
-import pandas as pd
 import pytest
 
 import eegio
+from eegio.base.config import COLS_TO_REGEXP_EXPAND
 from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
-from eegio.base.objects.elecs import Contacts
-from eegio.loaders.loader import Loader
+from eegio.base.objects.electrodes.elecs import Contacts
+from eegio.loaders import Loader, DataSheetLoader
 from eegio.writers import DataWriter
 
 
@@ -54,7 +54,7 @@ def test_preprocess_edf(edf_fpath):
 
     # get matching montage and a list of bad channels
     montage = eegts.get_best_matching_montage(chlabels)
-    bad_chans_list = eegts.get_bad_chs()
+    bad_chans_list = eegts.bad_contacts
 
     """
     Third, save as fif file
@@ -94,26 +94,40 @@ def test_preprocess_format_api(edf_fpath, clinical_fpath):
     -------
 
     """
-    writer = DataWriter()
+    eleclayout_fpath = os.path.join(
+        os.getcwd(),
+        "./data/clinical_examples/electrode_layouts/",
+        "test_electrode_layout.xlsx",
+    )
+    patid = "pat01"
 
+    """ Clinical data loading """
+    # instantiate datasheet loader
+    clinloader = DataSheetLoader()
+    # load in patient specific dataframe and get bad/wm/out contacts
+    clinical_metadata = eegio.format_clinical_sheet(
+        clinical_fpath, cols_to_reg_expand=COLS_TO_REGEXP_EXPAND, patientid=patid
+    )
+    bad_contacts = clinical_metadata["bad_contacts"]
+    wm_contacts = clinical_metadata["wm_contacts"]
+    out_contacts = clinical_metadata["out_contacts"]
+    bad_contacts = list(set(bad_contacts).union(wm_contacts).union(out_contacts))
+
+    # get electrode layout - get wm/out/csf/ventricle contacts to augment manually labeling
+    problem_contacts_dict = clinloader.load_elec_layout_sheet(eleclayout_fpath)
+    bad_contacts = [set(bad_contacts).union(x) for x in problem_contacts_dict.values()]
+    clinical_metadata["bad_contacts"] = bad_contacts
+
+    """ Process EDF File """
     with tempfile.TemporaryDirectory() as fdir:
         temp_outfpath = os.path.join(fdir, "test_raw.fif")
         temp_jsonfpath = os.path.join(fdir, "test_raw.json")
-        raw, metadata = eegio.format_eegdata(edf_fpath, temp_outfpath, temp_jsonfpath)
+        raw, metadata = eegio.run_formatting_eeg(
+            edf_fpath, temp_outfpath, temp_jsonfpath, bad_contacts, clinical_metadata
+        )
 
         # assert saved mne file and json file can load in
         raw = mne.io.read_raw_fif(temp_outfpath, preload=True)
         with open(temp_jsonfpath, "r", encoding="utf8") as fp:
             metadata = json.load(fp)
-
         assert isinstance(metadata, dict)
-
-        temp_outfpath = os.path.join(fdir, "test_clinical.csv")
-        formatted_clinsheet = eegio.format_clinical_sheet(
-            clinical_fpath, cols_to_reg_expand=["bad_channels"]
-        )
-
-        # assert saved mne file and json file can load in
-        formatted_clinsheet.to_csv(temp_outfpath, index=None)
-
-        test_csv = pd.read_csv(temp_outfpath, index_col=None)

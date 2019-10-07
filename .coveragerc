@@ -1,5 +1,5 @@
 [run]
-omit=./eegio/writers/database/*,eegio/writers/pickle/*,eegio/writers/ppt/*,eegio/base/utils/*,eegio/dataset_test/*,*__init__.py,eegio/*config*,eegio/format/baseadapter.py
+omit=./eegio/writers/database/*,eegio/writers/pickle/*,eegio/writers/ppt/*,eegio/base/utils/*,eegio/dataset_test/*,*__init__.py,eegio/*config*,eegio/format/baseadapter.py,*electrode.py
 
 [report]
 exclude_lines =

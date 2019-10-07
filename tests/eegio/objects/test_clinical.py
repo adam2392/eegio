@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from eegio.base.objects.clinical import PatientClinical, DatasetClinical
-from eegio.loaders import DataSheet
+from eegio.loaders import DataSheetLoader
 
 
 class TestClinical:
@@ -35,7 +35,7 @@ class TestClinical:
         clinical_csv_fpath = pathlib.Path(self.clinical_csv_fpath)
 
         # instantiate datasheet loader
-        clinloader = DataSheet()
+        clinloader = DataSheetLoader()
 
         # load excel file
         excel_df = clinloader.load(fpath=clinical_excel_fpath)
@@ -69,7 +69,7 @@ class TestClinical:
         clinical_csv_fpath = pathlib.Path(self.clinical_csv_fpath)
 
         # instantiate datasheet loader
-        clinloader = DataSheet()
+        clinloader = DataSheetLoader()
 
         # load excel file
         csv_df = clinloader.load(fpath=clinical_csv_fpath)
@@ -104,7 +104,7 @@ class TestClinical:
         clinical_csv_fpath = pathlib.Path(self.clinical_csv_fpath)
 
         # instantiate datasheet loader
-        clinloader = DataSheet()
+        clinloader = DataSheetLoader()
 
         # load csv file
         csv_df = clinloader.load(fpath=clinical_csv_fpath)

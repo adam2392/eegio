@@ -96,7 +96,9 @@ class Loader(BaseLoader):
         contacts = Contacts(chlabels, require_matching=False)
 
         # create EEG TS object
-        eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+        eegts = EEGTimeSeries(
+            rawdata, times, contacts, samplerate, modality, metadata=self.metadata_dict
+        )
         eegts.update_metadata(raw_annotations=annotations)
         return eegts
 

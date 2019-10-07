@@ -92,7 +92,7 @@ will provide additional functionality in terms of:
 
     fpath = "./data/clinical_examples/test_clinicaldata.csv"
     # instantiate datasheet loader
-    clinloader = DataSheet()
+    clinloader = DataSheetLoader()
 
     # load csv file
     csv_df = clinloader.load(fpath=clinical_csv_fpath)
@@ -153,7 +153,7 @@ If you have an idea for an improvement not listed there, please [make an issue](
     black tests/*
     pylint ./eegio/
     pre-commit run black --all-files
-    pytest --cov-config=.coveragerc --cov=./eegio/ tests/ --cov-report annotate
+    pytest --cov-config=.coveragerc --cov=./eegio/ tests/ 
     coverage-badge -f -o coverage.svg
 
 Tests is organized into two directories right now: 

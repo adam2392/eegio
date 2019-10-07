@@ -1,6 +1,5 @@
 import copy
 import warnings
-import deprecated
 from abc import ABC, abstractmethod
 from typing import List, Dict, Union
 
@@ -9,7 +8,7 @@ import numpy as np
 from mne.selection import _divide_to_regions
 from natsort import order_by_index
 
-from eegio.base.objects.elecs import Contacts
+from eegio.base.objects.electrodes.elecs import Contacts
 
 
 class BaseDataset(ABC):

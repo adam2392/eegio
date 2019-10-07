@@ -8,7 +8,7 @@ from deprecated import deprecated
 
 from eegio.base import config
 from eegio.base.objects.dataset.basedataobject import BaseDataset
-from eegio.base.objects.elecs import Contacts
+from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.base.utils.data_structures_utils import compute_samplepoints, ensure_list
 from eegio.format.scrubber import ChannelScrub
 
@@ -56,6 +56,7 @@ class EEGTimeSeries(BaseDataset):
         model_attributes: Dict = None,
         wm_contacts: List = None,
         out_contacts: List = None,
+        bad_contacts: List = None,
         metadata: Dict = None,
     ):
         super(EEGTimeSeries, self).__init__(
@@ -71,6 +72,8 @@ class EEGTimeSeries(BaseDataset):
             wm_contacts = []
         if out_contacts is None:
             out_contacts = []
+        if bad_contacts is None:
+            bad_contacts = []
         if mat.ndim > 2:
             raise ValueError(
                 "Time series can not have > 2 dimensions right now."
@@ -87,6 +90,9 @@ class EEGTimeSeries(BaseDataset):
         self.modality = modality
         self.wm_contacts = wm_contacts
         self.out_contacts = out_contacts
+        self.bad_contacts = bad_contacts
+        self._check_for_bad_chs()  # check for bad contact names with regular expression
+        self._create_bad_contacts_set()
         self._create_info()
 
         # initialize referencing if not set as monopolar
@@ -135,9 +141,14 @@ class EEGTimeSeries(BaseDataset):
         eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
         return eegts
 
-    def get_bad_chs(self):
+    def _check_for_bad_chs(self):
         badchs = ChannelScrub.look_for_bad_channels(self.chanlabels)
-        return badchs
+        self.bad_contacts = list(set(self.bad_contacts).union(badchs))
+
+    def _create_bad_contacts_set(self):
+        self.bad_contacts = list(
+            set(self.bad_contacts).union(self.wm_contacts).union(self.out_contacts)
+        )
 
     def summary(self):
         pass

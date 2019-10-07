@@ -5,27 +5,27 @@ import pandas as pd
 import pytest
 
 from eegio.base.objects.clinical import PatientClinical, DatasetClinical
-from eegio.loaders import DataSheet
+from eegio.loaders import DataSheetLoader
+
+clinical_excel_fpath = os.path.join(
+    os.getcwd(), "./data/clinical_examples/test_clinicaldata.xlsx"
+)
+clinical_csv_fpath = os.path.join(
+    os.getcwd(), "./data/clinical_examples/test_clinicaldata.csv"
+)
+clinical_patient_excel_fpath = os.path.join(
+    os.getcwd(), "./data/clinical_examples/test_clinical_singlepatient_data.xlsx"
+)
+clinical_snapshot_excel_fpath = os.path.join(
+    os.getcwd(), "./data/clinical_examples/test_clinical_singlepatient_data.xlsx"
+)
+
+clinical_eleclayout_excel_fpath = os.path.join(
+    os.getcwd(), "./data/clinical_examples/electrode_layouts/test_electrode_layout.xlsx"
+)
 
 
 class TestClinical:
-    clinical_excel_fpath = os.path.join(
-        os.getcwd(), "./data/clinical_examples/test_clinicaldata.xlsx"
-    )
-    clinical_csv_fpath = os.path.join(
-        os.getcwd(), "./data/clinical_examples/test_clinicaldata.csv"
-    )
-    clinical_patient_excel_fpath = os.path.join(
-        os.getcwd(), "./data/clinical_examples/test_clinical_singlepatient_data.xlsx"
-    )
-    clinical_snapshot_excel_fpath = os.path.join(
-        os.getcwd(), "./data/clinical_examples/test_clinical_singlepatient_data.xlsx"
-    )
-
-    clinical_eleclayout_excel_fpath = os.path.join(
-        os.getcwd(), "./data/clinical_examples/electrode_layout.xlsx"
-    )
-
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def test_clinical_objects(self):
         """
@@ -34,12 +34,12 @@ class TestClinical:
         :param clinical_sheet:
         :return:
         """
-        pat_fpath = pathlib.Path(self.clinical_patient_excel_fpath)
-        snapshot_fpath = pathlib.Path(self.clinical_snapshot_excel_fpath)
+        pat_fpath = pathlib.Path(clinical_patient_excel_fpath)
+        snapshot_fpath = pathlib.Path(clinical_snapshot_excel_fpath)
 
         patid = "pat01"
 
-        loader = DataSheet()
+        loader = DataSheetLoader()
 
         # instantiate datasheet loader
         df = loader.load(pat_fpath)
@@ -54,10 +54,13 @@ class TestClinical:
         assert snaploader.summary()
 
     def test_datasheet_loading(self):
-        fpath = pathlib.Path(self.clinical_eleclayout_excel_fpath)
+        fpath = pathlib.Path(clinical_eleclayout_excel_fpath)
 
-        loader = DataSheet()
-        wm_contacts, out_contacts = loader.load_elec_layout_sheet(fpath)
+        loader = DataSheetLoader()
+        problem_contacts = loader.load_elec_layout_sheet(fpath)
+
+        wm_contacts = problem_contacts["wm"]
+        out_contacts = problem_contacts["out"]
 
         assert len(set(wm_contacts).intersection(out_contacts)) == 0
         assert wm_contacts

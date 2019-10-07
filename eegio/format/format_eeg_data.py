@@ -1,63 +1,59 @@
+from typing import List, Dict
 import json
 
+from eegio.base.utils.data_structures_utils import NumpyEncoder
 from eegio.loaders.loader import Loader
 from eegio.writers.saveas import DataWriter
-from eegio.base.utils.data_structures_utils import NumpyEncoder
 
 
-class FormatEEGData:
-    def __init__(self, in_fpath, out_fpath, json_fpath):
-        self.in_fpath = in_fpath
-        self.out_fpath = out_fpath
-        self.json_fpath = json_fpath
+def run_formatting_eeg(
+    in_fpath: str,
+    out_fpath: str,
+    json_fpath: str,
+    bad_contacts: List = None,
+    clinical_metadata: Dict = None,
+):
+    if bad_contacts is None:
+        bad_contacts = []
+    if clinical_metadata is None:
+        clinical_metadata = dict()
 
-        # load in the file
-        loader = Loader(in_fpath)
-        eegts = loader.load_file(in_fpath)
+    # load in the file
+    loader = Loader(in_fpath, clinical_metadata)
+    eegts = loader.load_file(in_fpath)
 
-        self.raw = self._format_fif_file(eegts)
-        self.metadata = self._format_json_file(eegts)
+    # get the formatted fif and json files
+    raw = _save_fif_file(eegts, out_fpath)
+    metadata = _save_json_file(eegts, json_fpath)
 
-    def __new__(cls, in_fpath, out_fpath, json_fpath):
-        cls.in_fpath = in_fpath
-        cls.out_fpath = out_fpath
-        cls.json_fpath = json_fpath
+    return raw, metadata
 
-        # load in the file
-        loader = Loader(in_fpath)
-        eegts = loader.load_file(in_fpath)
 
-        raw = cls._format_fif_file(cls, eegts)
-        metadata = cls._format_json_file(cls, eegts)
-        return raw, metadata
+def _save_fif_file(eegts, out_fpath):
+    writer = DataWriter(out_fpath)
 
-    def __repr__(self):
-        return self.raw, self.metadata
+    # get the corresponding data
+    rawdata = eegts.get_data()
+    info = eegts.info
+    bad_chans = eegts.bad_contacts
+    montage = eegts.get_montage()
 
-    def _format_fif_file(self, eegts):
-        writer = DataWriter(self.out_fpath)
+    raw = writer.saveas_fif(out_fpath, rawdata, info, bad_chans, montage)
+    return raw
 
-        # get the corresponding data
-        rawdata = eegts.get_data()
-        info = eegts.info
-        bad_chans = eegts.get_bad_chs()
-        montage = eegts.get_montage()
 
-        raw = writer.saveas_fif(self.out_fpath, rawdata, info, bad_chans, montage)
-        return raw
+def _save_json_file(eegts, json_fpath):
+    metadata = eegts.get_metadata()
 
-    def _format_json_file(self, eegts):
-        metadata = eegts.get_metadata()
-
-        # save the formatted metadata json object
-        with open(self.json_fpath, "w") as fp:
-            json.dump(
-                metadata,
-                fp,
-                indent=4,
-                sort_keys=True,
-                cls=NumpyEncoder,
-                separators=(",", ": "),
-                ensure_ascii=False,
-            )
-        return metadata
+    # save the formatted metadata json object
+    with open(json_fpath, "w") as fp:
+        json.dump(
+            metadata,
+            fp,
+            indent=4,
+            sort_keys=True,
+            cls=NumpyEncoder,
+            separators=(",", ": "),
+            ensure_ascii=False,
+        )
+    return metadata

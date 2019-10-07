@@ -5,7 +5,7 @@ import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=PendingDeprecationWarning)
 
-from .format.format_eeg_data import FormatEEGData as format_eegdata
+from .format.format_eeg_data import run_formatting_eeg
 from .format.format_clinical_sheet import format_clinical_sheet
 import eegio.base.objects as objects
 

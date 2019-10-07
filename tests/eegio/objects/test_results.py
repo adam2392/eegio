@@ -1,7 +1,7 @@
 import pytest
 
 from eegio.base.objects.dataset.result_object import Result
-from eegio.base.objects.elecs import Contacts
+from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.loaders import ResultLoader
 
 

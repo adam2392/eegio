@@ -14,7 +14,7 @@ def contacts():
     :return:
     """
     import numpy as np
-    from eegio.base.objects.elecs import Contacts
+    from eegio.base.objects.electrodes.elecs import Contacts
 
     contactlist = np.hstack(
         (
@@ -38,7 +38,7 @@ def eegts():
     :return:
     """
     import numpy as np
-    from eegio.base.objects.elecs import Contacts
+    from eegio.base.objects.electrodes.elecs import Contacts
     from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 
     contactlist = np.hstack(

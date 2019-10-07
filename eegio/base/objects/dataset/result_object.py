@@ -3,7 +3,7 @@ from typing import Dict
 import numpy as np
 
 from eegio.base.objects.dataset.basedataobject import BaseDataset
-from eegio.base.objects.elecs import Contacts
+from eegio.base.objects.electrodes.elecs import Contacts
 
 
 def _findtimewins(time, timepoints):
