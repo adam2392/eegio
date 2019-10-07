@@ -1,5 +1,6 @@
-from typing import List, Dict
 import json
+import os
+from typing import List, Dict
 
 from eegio.base.utils.data_structures_utils import NumpyEncoder
 from eegio.loaders.loader import Loader
@@ -7,11 +8,11 @@ from eegio.writers.saveas import DataWriter
 
 
 def run_formatting_eeg(
-    in_fpath: str,
-    out_fpath: str,
-    json_fpath: str,
-    bad_contacts: List = None,
-    clinical_metadata: Dict = None,
+        in_fpath: str,
+        out_fpath: str,
+        json_fpath: str,
+        bad_contacts: List = None,
+        clinical_metadata: Dict = None,
 ):
     if bad_contacts is None:
         bad_contacts = []
@@ -21,6 +22,9 @@ def run_formatting_eeg(
     # load in the file
     loader = Loader(in_fpath, clinical_metadata)
     eegts = loader.load_file(in_fpath)
+
+    eegts.update_metadata(**clinical_metadata)
+    eegts.update_metadata(fif_filename=os.path.basename(out_fpath))
 
     # get the formatted fif and json files
     raw = _save_fif_file(eegts, out_fpath)

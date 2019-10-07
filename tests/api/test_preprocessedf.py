@@ -115,7 +115,8 @@ def test_preprocess_format_api(edf_fpath, clinical_fpath):
 
     # get electrode layout - get wm/out/csf/ventricle contacts to augment manually labeling
     problem_contacts_dict = clinloader.load_elec_layout_sheet(eleclayout_fpath)
-    bad_contacts = [set(bad_contacts).union(x) for x in problem_contacts_dict.values()]
+    for x in problem_contacts_dict.values():
+        bad_contacts = list(set(bad_contacts).union(x))
     clinical_metadata["bad_contacts"] = bad_contacts
 
     """ Process EDF File """
