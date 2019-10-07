@@ -210,6 +210,19 @@ class Loader(BaseLoader):
                 onset_time=seizure_onset_sec,
             )
 
+            onsetind = (
+                int(np.multiply(seizure_onset_sec, samplerate))
+                if seizure_onset_sec != None
+                else None
+            )
+            offsetind = (
+                int(np.multiply(seizure_offset_sec, samplerate))
+                if seizure_offset_sec != None
+                else None
+            )
+            self.update_metadata(onset=seizure_onset_sec, onsetind=onsetind)
+            self.update_metadata(offset=seizure_offset_sec, offsetind=offsetind)
+
         elif backend == "pyedflib":
             # raw = pyedflib.
             raw = pyedflib.EdfReader(fname)

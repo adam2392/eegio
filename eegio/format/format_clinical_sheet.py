@@ -73,7 +73,7 @@ def format_clinical_sheet(
     # return_bad_contacts: bool = True,
 ):
     formatter = FormatClinicalSheet(fpath, cols_to_reg_expand, patientid)
-    return formatter.df.to_dict()
+    return formatter.df.to_dict(orient="list")
 
 
 class FormatClinicalSheet:
@@ -110,6 +110,9 @@ class FormatClinicalSheet:
         # if patient id passed in, only get row w/ that patient id
         if self.patientid != None:
             self.df = self.df[self.df["patient_id"] == self.patientid]
+
+        # remove dataframes
+        self.df = self.df.loc[:, ~df.columns.str.contains("^Unnamed")]
 
     def _format_col_headers(self):
         self.df = self.df.apply(lambda x: x.astype(str).str.lower())

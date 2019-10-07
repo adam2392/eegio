@@ -9,11 +9,11 @@ from eegio.writers.saveas import DataWriter
 
 
 def run_formatting_eeg(
-        in_fpath: str,
-        out_fpath: str,
-        json_fpath: str,
-        bad_contacts: List = None,
-        clinical_metadata: Dict = None,
+    in_fpath: str,
+    out_fpath: str,
+    json_fpath: str,
+    bad_contacts: List = None,
+    clinical_metadata: Dict = None,
 ):
     if bad_contacts is None:
         bad_contacts = []
