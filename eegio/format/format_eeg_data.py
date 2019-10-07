@@ -14,6 +14,8 @@ def run_formatting_eeg(
     json_fpath: str,
     bad_contacts: List = None,
     clinical_metadata: Dict = None,
+    save_fif: bool = True,
+        save_json: bool = True,
 ):
     if bad_contacts is None:
         bad_contacts = []
@@ -30,8 +32,14 @@ def run_formatting_eeg(
     eegts.update_metadata(preprocessed_date=datetime.datetime.now())
 
     # get the formatted fif and json files
-    raw = _save_fif_file(eegts, out_fpath)
-    metadata = _save_json_file(eegts, json_fpath)
+    if save_fif:
+        raw = _save_fif_file(eegts, out_fpath)
+    else:
+        raw = None
+    if save_json:
+        metadata = _save_json_file(eegts, json_fpath)
+    else:
+        metadata = None
 
     return raw, metadata
 
