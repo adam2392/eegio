@@ -91,9 +91,9 @@ class FormatClinicalSheet:
 
     def read_file(self, fpath):
         if fpath.endswith(".csv"):
-            df = pd.read_csv(fpath, header=0)
+            df = pd.read_csv(fpath, header=0, index_col=False)
         elif fpath.endswith(".xlsx"):
-            df = pd.read_excel(fpath, header=0)
+            df = pd.read_excel(fpath, header=0, index_col=False)
         else:
             raise RuntimeError(
                 f"Can't read in files not with ending: csv, or xlsx."

@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 from typing import List, Dict
@@ -23,8 +24,10 @@ def run_formatting_eeg(
     loader = Loader(in_fpath, clinical_metadata)
     eegts = loader.load_file(in_fpath)
 
+    # add all this additional metadata
     eegts.update_metadata(**clinical_metadata)
     eegts.update_metadata(fif_filename=os.path.basename(out_fpath))
+    eegts.update_metadata(preprocessed_date=datetime.datetime.now())
 
     # get the formatted fif and json files
     raw = _save_fif_file(eegts, out_fpath)
