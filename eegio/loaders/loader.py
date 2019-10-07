@@ -72,8 +72,9 @@ class Loader(BaseLoader):
         rawdata, times = raw_mne.get_data(return_times=True)
 
         # create EEG TS object
-        eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+        eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality, bad_contacts=badchs)
         eegts.update_metadata(raw_annotations=annotations)
+        eegts.update_metadata(bad_contacts=badchs)
         return eegts
 
     def _wrap_mat_in_obj(self, datastruct, modality: str, annotations: List):
