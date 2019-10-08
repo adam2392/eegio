@@ -18,5 +18,4 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
-#  - pylint ./eegio/
   - pytest ./tests/
