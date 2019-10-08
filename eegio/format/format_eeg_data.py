@@ -15,7 +15,7 @@ def run_formatting_eeg(
     bad_contacts: List = None,
     clinical_metadata: Dict = None,
     save_fif: bool = True,
-        save_json: bool = True,
+    save_json: bool = True,
 ):
     if bad_contacts is None:
         bad_contacts = []
@@ -27,7 +27,9 @@ def run_formatting_eeg(
     eegts = loader.load_file(in_fpath)
     bad_contacts_found = eegts.bad_contacts
     if clinical_metadata:
-        clinical_metadata["bad_contacts"] = list(set(clinical_metadata["bad_contacts"]).union(bad_contacts_found))
+        clinical_metadata["bad_contacts"] = list(
+            set(clinical_metadata["bad_contacts"]).union(bad_contacts_found)
+        )
 
     # add all this additional metadata
     eegts.update_metadata(**clinical_metadata)

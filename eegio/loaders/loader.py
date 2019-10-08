@@ -55,13 +55,13 @@ class Loader(BaseLoader):
         raw_mne.load_data()
 
         # scrub channels
-        raw_mne = ChannelScrub.channel_text_scrub(raw_mne)
         chlabels = raw_mne.ch_names
         # look for bad channels
         badchs = ChannelScrub.look_for_bad_channels(chlabels)
+        raw_mne = ChannelScrub.channel_text_scrub(raw_mne)
         # goodinds = [i for i, ch in enumerate(chlabels) if ch not in badchs]
         # drop the bad channels
-        raw_mne.drop_channels(badchs)
+        # raw_mne.drop_channels(badchs)
         chlabels = raw_mne.ch_names
         # label channels
         labels_of_ch = ChannelScrub.label_channel_types(chlabels)
@@ -72,7 +72,9 @@ class Loader(BaseLoader):
         rawdata, times = raw_mne.get_data(return_times=True)
 
         # create EEG TS object
-        eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality, bad_contacts=badchs)
+        eegts = EEGTimeSeries(
+            rawdata, times, contacts, samplerate, modality, bad_contacts=badchs
+        )
         eegts.update_metadata(raw_annotations=annotations)
         eegts.update_metadata(bad_contacts=badchs)
         return eegts
