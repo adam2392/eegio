@@ -19,6 +19,7 @@ NON_EEG_MARKERS = [
     "sti014",
     "stim",
     "sti",
+    "rfc"
 ]
 
 """ Clinical excel sheet configuration """

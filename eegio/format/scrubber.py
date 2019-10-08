@@ -54,6 +54,8 @@ class ChannelScrub:
         :param ch_names: (list) a list of str channel labels
         :return: bad_channels (list) of string labels
         """
+        ch_names = [c.lower() for c in ch_names]
+
         # initialize a list to store channel label strings
         bad_channels = []
 
