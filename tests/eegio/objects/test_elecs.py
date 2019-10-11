@@ -5,6 +5,8 @@ import pytest
 
 from eegio.base.objects.electrodes.elecs import Contacts
 
+from eegio.base.utils import ContactsHelper
+
 
 class TestContacts:
     @pytest.mark.usefixture("contacts")
@@ -62,11 +64,11 @@ class TestContacts:
         assert len(contacts.electrodes) == 6
 
         contacts.natsort_contacts()
-        contacts.mask_contact_indices(random_mask)
+        contacts.mask_indices(random_mask)
 
         # generate random mask to get rid of
         random_ch_mask = np.random.choice(contacts.chanlabels, 6)
-        contacts.mask_contacts(random_ch_mask)
+        contacts.mask_chs(random_ch_mask)
 
         contact = contacts.chanlabels[0]
         seeg_nghbrs, seeg_nghbrinds = contacts.get_seeg_ngbhrs(contact)
@@ -97,6 +99,6 @@ class TestContacts:
         ablated_list = ch_list[0:4]
         onset_labels = ch_list[2:]
 
-        bip_chs = Contacts().expand_bipolar_chans(ch_list)
-        ablated_list = Contacts().expand_ablated_chans(ch_list)
-        onset_labels = Contacts().make_onset_labels_bipolar(ch_list)
+        bip_chs = ContactsHelper.expand_bipolar_chans(ch_list)
+        ablated_list = ContactsHelper.expand_ablated_chans(ch_list)
+        onset_labels = ContactsHelper.make_onset_labels_bipolar(ch_list)

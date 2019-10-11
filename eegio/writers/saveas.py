@@ -28,7 +28,24 @@ class TempWriter(BaseWrite):
         self.tempdir = tempdir
 
     @classmethod
-    def save_npz_file(cls, fdir: os.PathLike, index: int, compress=False, **kwds):
+    def save_npz_file(
+        cls, fdir: os.PathLike, index: int, compress=False, **kwds
+    ) -> str:
+        """
+        Temporary writer to a .npz binary file. Fix_imports is set as False, so
+        there is no compatability with Python2.
+
+        Parameters
+        ----------
+        fdir :
+        index :
+        compress :
+        kwds :
+
+        Returns
+        -------
+
+        """
         if index == None:
             raise RuntimeError(
                 "Need to pass in a filepath to save, or an index "
@@ -44,20 +61,21 @@ class TempWriter(BaseWrite):
         return tempfilename
 
     @classmethod
-    def save_npy_file(cls, fdir: os.PathLike, index: int, arr: np.ndarray):
+    def save_npy_file(cls, fdir: os.PathLike, index: int, arr: np.ndarray) -> str:
         """
         Temporary writer to a .npy binary file. This provides fast loading/saving of the arrays, since
         we don't need to save multiple keyword arguments to a .npz file. Fix_imports is set as False, so
         there is no compatability with Python2.
 
-        :param fdir:
-        :type fdir:
-        :param index:
-        :type index:
-        :param arr:
-        :type arr:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        fdir :
+        index :
+        arr :
+
+        Returns
+        -------
+
         """
         if index == None:
             raise RuntimeError(
@@ -104,18 +122,17 @@ class DataWriter(BaseWrite):
 
         If data is computed result, pass in corresponding metadata in dictionary format.
 
-        :param fpath:
-        :type fpath:
-        :param data:
-        :type data:
-        :param metadata:
-        :type metadata:
-        :param name:
-        :type name:
-        :param group:
-        :type group:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        fpath :
+        data :
+        metadata :
+        name :
+        group :
+
+        Returns
+        -------
+
         """
         h5py = _check_hd5py()
 
@@ -148,12 +165,23 @@ class DataWriter(BaseWrite):
         file will be handled in the convert_metadata() function.
 
         data.edf -> .fif
+        Parameters
+        ----------
+        fpath :
+            the file path for the converted fif data
+        rawdata : np.ndarray
+            The raw data (C x T) to be saved
+        info : mne.Info
+            The mne.Info data structure
+        bad_chans_list : List
+            a list of the bad channels string
+        montage :
 
-        :param bad_chans_list: (optional; list) a list of the bad channels string
-        :param fpath: (optional; os.PathLike) the file path for the converted fif data
-        :param save: (optional; bool) to save the output fif dataset or not
+        Returns
+        -------
+        formatted_raw : mne.io.Raw
+            The raw data in MNE format.
 
-        :return: formatted_raw (mne.Raw) the raw fif dataset
         """
         # perform check on the metadata data struct
         self._check_info(info)
@@ -281,6 +309,21 @@ class DataWriter(BaseWrite):
     def merge_npy_arrays(
         self, outputfpath: str, fpathlist: List, metadata: Dict, resname: str = "result"
     ):
+        """
+        Merges array files in .npy format into one array.
+
+        Parameters
+        ----------
+        outputfpath :
+        fpathlist :
+        metadata :
+        resname :
+
+        Returns
+        -------
+
+        """
+
         def check_equal(arr1, arr2):
             pass
 
