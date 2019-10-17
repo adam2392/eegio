@@ -8,6 +8,7 @@ from pprint import pprint
 from sys import getsizeof
 from typing import Union
 
+import numpy as np
 import pandas as pd
 
 from eegio.base.config import MB
@@ -178,13 +179,15 @@ class DataSheetLoader(AbstractClinical):
                 "Electrode layout file should be in either .xlsx or .csv format. "
                 f"Your file passed in is {fpath}."
             )
-
         # convert entire dataframe to upper case
         elec_layout_df = elec_layout_df.apply(lambda x: x.astype(str).str.lower())
         elec_layout_df.iloc[0].apply(int)  # convert first row to integers
 
         assert len(elec_layout_df.iloc[0]) <= 16
+        
 
+        nans = ''
+        
         # "bad contacts" to look for
         problem_contacts = collections.defaultdict(list)
 
@@ -193,9 +196,13 @@ class DataSheetLoader(AbstractClinical):
             # get the contact numbers
             if idx == 0:
                 contactnums = row.astype(int).tolist()
-
-            self._process_electrodelayout_row(row, problem_contacts, contactnums)
-
+            else:
+                self._process_electrodelayout_row(row, problem_contacts, contactnums)
+                for jdx, region in enumerate(row):
+                    if(region=='nan'):
+                        nans = nans + row.name + str(contactnums[jdx]) + ', '
+        if (len(nans)>1):
+            warnings.warn('Please fill in the contacts %s' % nans)
         # scrub the contacts list in each one found
         for key, problem_list in problem_contacts.items():
             problem_contacts[key] = scrub_chs(problem_list)
