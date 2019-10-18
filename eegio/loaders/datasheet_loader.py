@@ -185,8 +185,8 @@ class DataSheetLoader(AbstractClinical):
 
         assert len(elec_layout_df.iloc[0]) <= 16
         
-
-        nans = ''
+        # Look for channels with no annotation
+        nans = []
         
         # "bad contacts" to look for
         problem_contacts = collections.defaultdict(list)
@@ -200,9 +200,9 @@ class DataSheetLoader(AbstractClinical):
                 self._process_electrodelayout_row(row, problem_contacts, contactnums)
                 for jdx, region in enumerate(row):
                     if(region=='nan'):
-                        nans = nans + row.name + str(contactnums[jdx]) + ', '
+                        nans.append(row.name + str(contactnums[jdx]))
         if (len(nans)>1):
-            warnings.warn('Please fill in the contacts %s' % nans)
+            warnings.warn('Please fill in the contacts %s' % str(nans))
         # scrub the contacts list in each one found
         for key, problem_list in problem_contacts.items():
             problem_contacts[key] = scrub_chs(problem_list)

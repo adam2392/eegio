@@ -174,7 +174,8 @@ class Loader(BaseLoader):
                 verbose="ERROR",
                 exclude=excluded_contacts,
                 montage=montage,
-                eog=eog,
+         
+         eog=eog,
                 misc=misc,
             )
             samplerate = raw.info["sfreq"]
