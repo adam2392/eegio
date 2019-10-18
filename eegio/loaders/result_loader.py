@@ -21,12 +21,14 @@ class ResultLoader(BaseLoader):
         Helps wrap a dictionary returned result data in the form of np.ndarrays, along with
         corresponding metadata into a Result object.
 
-        :param datastruct:
-        :type datastruct:
-        :param metadata:
-        :type metadata:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        datastruct :
+        metadata :
+
+        Returns
+        -------
+
         """
         # ensure data quality
         pertmats = datastruct["pertmats"]
@@ -91,18 +93,21 @@ class ResultLoader(BaseLoader):
     def read_npzjson(
         self,
         jsonfpath: Union[str, os.PathLike],
-        npzfpath: Union[os.PathLike, str] = None,
-        return_struct=False,
-    ):
+        npzfpath: Union[str, os.PathLike] = None,
+        return_struct: bool = False,
+    ) -> object:
         """
         Reads a numpy stored as npz+json file combination.
 
-        :param jsonfpath:
-        :type jsonfpath:
-        :param npzfpath:
-        :type npzfpath:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        jsonfpath :
+        npzfpath :
+        return_struct :
+
+        Returns
+        -------
+
         """
         filedir = os.path.dirname(jsonfpath)
         # load in json file
@@ -124,17 +129,20 @@ class ResultLoader(BaseLoader):
         self,
         jsonfpath: Union[str, os.PathLike],
         npyfpath: Union[str, os.PathLike] = None,
-        return_struct=False,
+        return_struct: bool = False,
     ):
         """
         Reads a numpy stored as npy+json file combination.
 
-        :param jsonfpath:
-        :type jsonfpath:
-        :param npyfpath:
-        :type npyfpath:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        jsonfpath :
+        npyfpath :
+        return_struct :
+
+        Returns
+        -------
+
         """
         filedir = os.path.dirname(jsonfpath)
         # load in json file

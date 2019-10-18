@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from pprint import pprint
 from sys import getsizeof
-from typing import Union
+from typing import Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -142,7 +142,7 @@ class DataSheetLoader(AbstractClinical):
             if any(x in region for x in PROBLEMATIC_CONTACT_LABELS):
                 contacts_dict[region].append(row.name + str(contactnums[jdx]))
 
-    def load_elec_layout_sheet(self, fpath: Union[str, os.PathLike]):
+    def load_elec_layout_sheet(self, fpath: Union[str, os.PathLike]) -> Dict:
         """
         Loads an electrode layout sheet that is contact number on the column headers, and electrode name on the row
         index. For example:

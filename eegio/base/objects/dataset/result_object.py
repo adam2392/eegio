@@ -89,26 +89,6 @@ class Result(BaseDataset):
     def record_filename(self):
         return self.metadata["filename"]
 
-    def mask_channels(self, badchannels):
-        """
-        Function to apply mask to channel labels based on if they are denoted as:
-
-            - bad
-            - non_eeg
-
-        Applies the mask to the object's mat and contacts data structure.
-
-        :return: None
-        """
-        # badchannels = self.metadata["bad_channels"]
-        # noneegchannels = self.metadata["non_eeg_channels"]
-
-        maskinds = []
-        for chlist in badchannels:
-            removeinds = self.remove_channels(chlist)
-            maskinds.extend(removeinds)
-        return maskinds
-
     @property
     def winsize(self):
         return self.model_attributes["winsize"]
@@ -125,10 +105,36 @@ class Result(BaseDataset):
     def timepoints(self):
         return np.divide(self.times, self.samplerate)
 
-    def compute_onsetwin(self, onsetind):
+    def compute_onsetwin(self, onsetind: int) -> int:
+        """
+
+        Parameters
+        ----------
+        onsetind : int
+            index that event onset occurs (e.g. seizure) in raw data time
+
+        Returns
+        -------
+        onsetwin : int
+            index that event onset occurs in the resulting data transformation
+
+        """
         offsetwin = _findtimewins(onsetind, self.samplepoints)
         return offsetwin
 
-    def compute_offsetwin(self, offsetind):
+    def compute_offsetwin(self, offsetind: int) -> int:
+        """
+
+        Parameters
+        ----------
+        offsetind :  int
+            index that event offset occurs (e.g. seizure ends) in raw data time
+
+        Returns
+        -------
+        offsetwin : int
+            index that event offset occurs in the resulting data transformation
+
+        """
         offsetwin = _findtimewins(offsetind, self.samplepoints)
         return offsetwin

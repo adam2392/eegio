@@ -1,14 +1,13 @@
 import copy
 import warnings
 from abc import ABC, abstractmethod
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 
-import mne
 import numpy as np
-from mne.selection import _divide_to_regions
 from natsort import order_by_index
 
 from eegio.base.objects.electrodes.elecs import Contacts
+from eegio.base.utils.data_structures_utils import ensure_list
 
 
 class BaseDataset(ABC):
@@ -45,6 +44,15 @@ class BaseDataset(ABC):
     model_attributes: (dict)
         model attributes of model applied to the data.
 
+    cache_data: (bool)
+        whether or not to store a copy of the original data passed in.
+
+    metadata: (Dict)
+        accompanying metadata related to this dataset
+
+    montage: (List)
+        list of xyz coordinates for every contact.
+
     Notes
     -----
 
@@ -60,7 +68,7 @@ class BaseDataset(ABC):
         model_attributes: Dict = None,
         cache_data: bool = True,
         metadata: Dict = None,
-        montage: List = None,
+        montage: Union[List, str] = None,
     ):
         if metadata is None:
             metadata = dict()
@@ -107,15 +115,17 @@ class BaseDataset(ABC):
     def summary(self):
         pass
 
-    def get_metadata(self):
+    def get_metadata(self) -> Dict:
         """
         Getter method for the dictionary metadata.
 
-        :return: metadata (dict)
+        Returns
+        -------
+
         """
         return self.metadata
 
-    def get_montage(self):
+    def get_montage(self) -> str:
         """
         Get's the EEG dataset montage (i.e. xyz coordinates) based on a specific coordinate system. For scalp EEG
         these can be obtained from the a list of set montages in MNE-Python.
@@ -146,72 +156,13 @@ class BaseDataset(ABC):
     def remove_element_from_metadata(self, key):
         self.metadata.pop(key)
 
-    def get_model_attributes(self):
+    def get_model_attributes(self) -> Dict:
         """
         Getter method for returning the model attributes applied to get this resulting data.
 
         :return:
         """
         return self.model_attributes
-
-    def get_best_matching_montage(self, chanlabels: Union[List, np.ndarray]):
-        """
-        Get the best matching montage with respect to this montage in MNE-Python.
-
-        Parameters
-        ----------
-        chanlabels : np.ndarray, List
-            list of electrode labels to match against fixed montages.
-
-        Returns
-        -------
-
-        """
-        montages = mne.channels.get_builtin_montages()
-        best_montage = None
-        best_montage_score = 0
-
-        for montage_name in montages:
-            # read in standardized montage
-            montage = mne.channels.make_standard_montage(montage_name)
-
-            # get the channels and score for this montage wrt channels
-            montage_score = 0
-            montage_chs = [ch.lower() for ch in montage.ch_names]
-
-            # score this montage
-            montage_score = len([ch for ch in chanlabels if ch in montage_chs])
-
-            if montage_score > best_montage_score:
-                best_montage = montage_name
-                best_montage_score = montage_score
-
-        return best_montage
-
-    def get_montage_channel_indices(
-        self, montage_name: str, chanlabels: Union[List, np.ndarray]
-    ):
-        """
-        Helper function to get the channel indices corresponding to a certain montage
-        hardcoded in the MNE-Python framework. For scalp EEG.
-
-        Parameters
-        ----------
-        montage_name :
-        chanlabels :
-
-        Returns
-        -------
-
-        """
-        # read in montage and strip channel labels not in montage
-        montage = mne.channels.make_standard_montage(montage_name)
-        montage_chs = [ch.lower() for ch in montage.ch_names]
-
-        # get indices to keep
-        to_keep_inds = [idx for idx, ch in enumerate(chanlabels) if ch in montage_chs]
-
-        return to_keep_inds
 
     def reset(self):
         """
@@ -233,28 +184,28 @@ class BaseDataset(ABC):
             )
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple:
         return self.mat.shape
 
     @property
-    def contact_tuple_list(self):
+    def contact_tuple_list(self) -> List:
         return [str(a) + str(b) for a, b in self.contacts.chanlabels]
 
     @property
-    def electrodes(self):
+    def electrodes(self) -> Dict:
         # use a dictionary to store all electrodes
         return self.contacts.electrodes
 
     @property
-    def chanlabels(self):
+    def chanlabels(self) -> np.ndarray:
         return np.array(self.contacts.chanlabels)
 
     @property
-    def xyz_coords(self):
+    def xyz_coords(self) -> List:
         return self.contacts.xyz
 
     @property
-    def ncontacts(self):
+    def ncontacts(self) -> int:
         return len(self.chanlabels)
 
     def natsort_contacts(self):
@@ -273,30 +224,47 @@ class BaseDataset(ABC):
         self.mat = np.array(order_by_index(self.mat, natinds))
         self.metadata["chanlabels"] = np.array(order_by_index(self.chanlabels, natinds))
 
-    def get_data(self):
+    def get_data(self) -> np.ndarray:
+        """
+        Getter function to get the data matrix stored in Dataset.
+
+        Returns
+        -------
+        mat : np.ndarray
+            The data matrix
+
+        """
         return self.mat
 
-    def get_channel_data(self, name, interval=(None, None)):
+    def get_channel_data(self, name, interval=(None, None)) -> np.ndarray:
         idx = list(self.chanlabels).index(name)
         tid1, tid2 = self._interval_to_index(interval)
         return self.mat[idx, tid1:tid2]
 
-    def remove_channels(self, toremovechans):
+    def remove_channels(self, toremovechans) -> List:
         removeinds = [
             ind for ind, ch in enumerate(self.chanlabels) if ch in toremovechans
         ]
-        self.contacts.mask_contact_indices(removeinds)
+        self.contacts.mask_indices(removeinds)
         self.mat = np.delete(self.mat, removeinds, axis=0)
         return removeinds
 
-    def trim_dataset(self, interval=(None, None)):
+    def trim_dataset(self, interval=(None, None)) -> np.ndarray:
         """
         Trims dataset to have (seconds) before/after onset/offset.
 
         If there is no offset, then just takes it offset after onset.
 
-        :param offset:
-        :return:
+        Parameters
+        ----------
+        interval : (tuple)
+            A specified interval to trim dataset to E.g. (0, 100) will return first 100 time samples of the data.
+
+        Returns
+        -------
+        mat: (np.ndarray)
+            The trimmed data matrix.
+
         """
         tid1, tid2 = self._interval_to_index(interval)
         mat = self.mat[..., tid1:tid2]
@@ -317,23 +285,37 @@ class BaseDataset(ABC):
                 tid2 = np.argmax(self.times >= interval[1])
         return (tid1, tid2)
 
-    def compute_montage_groups(self, rawinfo: mne.Info):
+    def mask_indices(self, mask_inds: Union[List, np.ndarray, int]):
         """
-        Compute the montage groups for a raw data.
+        Function to keep delete certain rows (i.e. channels) of the matrix time series data
+        and the labels corresponding to those masked indices.
 
         Parameters
         ----------
-        rawinfo :
+        mask_inds : np.ndarray
+            The indices which we will delete rows from the data matrix and the list of contacts.
 
         Returns
         -------
 
         """
-        # get channel groups - hashmap of channel indices
-        ch_groups = _divide_to_regions(rawinfo, add_stim=False)
+        self.mat = np.delete(self.mat, mask_inds, axis=0)
+        self.contacts.mask_indices(mask_inds)
 
-        # add this to class object but with lower-cased keys
-        self.ch_groups = {}
-        for k, v in ch_groups.items():
-            self.ch_groups[k.lower()] = v
-        return self.ch_groups
+    def mask_chs(self, chs: Union[List, np.ndarray, str]):
+        """
+        Function to keep delete certain rows (i.e. channels) of the matrix time series data
+        and the labels corresponding to those masked names.
+
+        Parameters
+        ----------
+        chs : (list, np.ndarray)
+            The set of contact labels to delete from data matrix and list of contacts.
+
+        Returns
+        -------
+
+        """
+        # chs = [x.upper() for x in chs]
+        keepinds = self.contacts.mask_chs(ensure_list(chs))
+        self.mat = self.mat[keepinds, ...]

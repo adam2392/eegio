@@ -84,7 +84,7 @@ class TestResult:
 
         # drop certain channels
         beforelen = len(contacts)
-        resultobj.mask_channels(contacts[0:3])
+        resultobj.mask_chs(contacts[0:3])
         assert resultobj.ncontacts == beforelen - 3
 
         # reset and things should be back to normal
@@ -122,7 +122,7 @@ class TestResult:
 
         # drop certain channels
         beforelen = len(contacts)
-        resultobj.mask_channels(contacts[0:3])
+        resultobj.mask_chs(contacts[0:3])
         assert resultobj.ncontacts == beforelen - 3
 
         # reset and things should be back to normal

@@ -5,6 +5,7 @@ import pytest
 import datetime
 
 from eegio.base.objects import EEGTimeSeries, Contacts
+from eegio.base.utils import ScalpMontageHelper
 
 
 @pytest.mark.usefixture("eegts")
@@ -61,7 +62,7 @@ class TestEEGTimeSeries:
         assert prevlen == eegts.n_contacts + 3
 
         rawinfo = eegts.info
-        montage_groups = eegts.compute_montage_groups(rawinfo)
+        montage_groups = ScalpMontageHelper.compute_montage_groups(rawinfo)
 
     def test_eegts_errors(self, eegts):
         """

@@ -13,6 +13,8 @@ from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.loaders import Loader, DataSheetLoader
 from eegio.writers import DataWriter
 
+from eegio.base.utils import ScalpMontageHelper
+
 
 @pytest.mark.usefixture("edf_fpath")
 def test_preprocess_edf(edf_fpath):
@@ -53,7 +55,7 @@ def test_preprocess_edf(edf_fpath):
     eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
 
     # get matching montage and a list of bad channels
-    montage = eegts.get_best_matching_montage(chlabels)
+    montage = ScalpMontageHelper.get_best_matching_montage(chlabels)
     bad_chans_list = eegts.bad_contacts
 
     """

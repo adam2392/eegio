@@ -9,7 +9,7 @@ from deprecated import deprecated
 from eegio.base import config
 from eegio.base.objects.dataset.basedataobject import BaseDataset
 from eegio.base.objects.electrodes.elecs import Contacts
-from eegio.base.utils.data_structures_utils import compute_samplepoints, ensure_list
+from eegio.base.utils.data_structures_utils import compute_samplepoints
 from eegio.format.scrubber import ChannelScrub
 
 
@@ -161,8 +161,9 @@ class EEGTimeSeries(BaseDataset):
             modality = "seeg"
         else:  # if self.modality == 'scalp' or self.modality == 'ieeg':
             modality = "eeg"
+        chlist = self.chanlabels.tolist()
         self.info = mne.create_info(
-            ch_names=self.chanlabels.tolist(),
+            ch_names=chlist,
             ch_types=[modality] * self.n_contacts,
             sfreq=self.samplerate,
         )
@@ -193,19 +194,25 @@ class EEGTimeSeries(BaseDataset):
         """
         Set a common average referencing scheme.
 
-        :return: None
+        Returns
+        -------
         """
         self.ref_signal = np.mean(self.mat, axis=0)
         self.mat = self.mat - self.ref_signal
         self.reference = "common_avg"
 
-    def set_reference_signal(self, ref_signal):
+    def set_reference_signal(self, ref_signal: np.ndarray):
         """
         Set a custom reference signal to reference all signals by.
 
-        :param ref_signal: (np.ndarray) [Tx1] vector that is subtracted from all signals
-        in our timeseries.
-        :return: None
+        Parameters
+        ----------
+        ref_signal : np.ndarray
+            1xT reference signal time series.
+
+        Returns
+        -------
+
         """
         if len(ref_signal) != self.length_of_recording:
             raise ValueError(
@@ -220,10 +227,11 @@ class EEGTimeSeries(BaseDataset):
 
     def set_bipolar(self):
         """
-        Set bipolar montage for the eeg data time series.
+        Set bipolar reference for the eeg data time series.
 
-        :param chanlabels:
-        :return:
+        Returns
+        -------
+
         """
         # extract bipolar reference scheme from contacts data structure
         self._bipolar_inds, self.remaining_labels = self.contacts.set_bipolar()
@@ -271,9 +279,17 @@ class EEGTimeSeries(BaseDataset):
         Filters the time series data according to the line frequency (notch) and
         sampling rate (band pass filter).
 
-        :param linefreq:
-        :param samplerate:
-        :return:
+        Parameters
+        ----------
+        linefreq : (int, float)
+            The frequency at which line noise is to be rejected. The default is 60 Hz in USA. 50Hz sometimes in EU.
+
+        bandpass_freq : (tuple, list[float])
+            The bandpass frequency that is used to low pass and highpass filter the data. Defaults to [0.5, sfreq//2].
+
+        Returns
+        -------
+
         """
         # the notch filter to apply at line freqs
         linefreq = int(linefreq)  # LINE NOISE OF HZ
@@ -310,40 +326,24 @@ class EEGTimeSeries(BaseDataset):
             self.mat, Fs=samplerate, freqs=freqs, verbose=False
         )
 
-    def mask_indices(self, mask_inds):
-        """
-        Function to keep delete certain rows (i.e. channels) of the matrix time series data
-        and the labels corresponding to those masked indices.
-
-        :param mask_inds:
-        :type mask_inds:
-        :return:
-        :rtype:
-        """
-        self.mat = np.delete(self.mat, mask_inds, axis=0)
-        self.contacts.mask_contact_indices(mask_inds)
-
-    def mask_chs(self, chs):
-        """
-        Function wrapper to get rid of certain rows (i.e. channels) explicitly by name.
-
-        :param chs:
-        :type chs:
-        :return:
-        :rtype:
-        """
-        # chs = [x.upper() for x in chs]
-        keepinds = self.contacts.mask_contacts(ensure_list(chs))
-        self.mat = self.mat[keepinds, ...]
-
-    def partition_into_windows(self, winsize, stepsize):
+    def partition_into_windows(self, winsize: int, stepsize: int) -> List[np.ndarray]:
         """
         Helper function to partition data into overlapping windows of data
         with a possible step size.
 
-        :param winsize: (int) step size
-        :param stepsize: (int) step size
-        :return:
+        Parameters
+        ----------
+        winsize : (int)
+            The window size of the sliding window.
+
+        stepsize : (int)
+            The stepsize between each slide of the window.
+
+        Returns
+        -------
+        windowed_data : List[np.ndarray]
+            A list of np.ndarrays corresponding to the data in the sliding windows over the entire data matrix.
+
         """
         if stepsize > winsize:
             warnings.warn("Step size is greater then window size.")
@@ -352,7 +352,7 @@ class EEGTimeSeries(BaseDataset):
         samplepoints = compute_samplepoints(winsize, stepsize, self.length_of_recording)
 
         # partition the time series data into windows
-        formatted_data = []
+        windowed_data = []
 
         # loop through and format data into chunks of windows
         for i in range(len(samplepoints)):
@@ -362,6 +362,6 @@ class EEGTimeSeries(BaseDataset):
             # swap the time and channel axis
             data_win = np.moveaxis(data_win, 0, 1)
             # append result
-            formatted_data.append(data_win)
+            windowed_data.append(data_win)
 
-        return formatted_data
+        return windowed_data
