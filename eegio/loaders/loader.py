@@ -206,7 +206,7 @@ class Loader(BaseLoader):
 
             # get the annotations
             annotations = mne.events_from_annotations(
-                raw, use_rounding=True, chunk_duration=None
+                raw, use_rounding=True, chunk_duration=None, verbose=False
             )
             event_times, event_ids = annotations
 
