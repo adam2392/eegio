@@ -4,6 +4,7 @@ import pytest
 
 from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 from eegio.base.objects.electrodes.elecs import Contacts
+from eegio.base.utils import ScalpMontageHelper
 from eegio.format.scrubber import ChannelScrub
 from eegio.loaders.loader import Loader
 
@@ -160,9 +161,11 @@ class Test_Loader:
         # test getting the "best montage" wrapping MNE
         testchs = eegts.chanlabels.copy()
         print(testchs)
-        best_montage = eegts.get_best_matching_montage(testchs)
+        best_montage = ScalpMontageHelper.get_best_matching_montage(testchs)
         # get the indices that fit a montage in scalp EEG
-        montage_inds = eegts.get_montage_channel_indices(best_montage, testchs)
+        montage_inds = ScalpMontageHelper.get_montage_channel_indices(
+            best_montage, testchs
+        )
 
         assert len(montage_inds) > 0
 

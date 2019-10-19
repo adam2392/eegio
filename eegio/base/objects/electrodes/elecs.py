@@ -1,6 +1,7 @@
 import collections
 import re
 import warnings
+from typing import List, Dict, Union, Tuple
 
 import numpy as np
 from natsort import natsorted, order_by_index, index_natsorted
@@ -27,7 +28,7 @@ class Contacts(object):
      - set a reference scheme (monopolar, common_average, bipolar, customized)
 
     Main internal attributes:
-    - mask_contacts/mask_indices = set of indices to mask (union set of bad, wm and out)
+    - mask_chs/mask_indices = set of indices to mask (union set of bad, wm and out)
     - bad_contacts/bad_indices = set of the bad contacts/indices to mask (union of bad, wm, out)
     - wm_contacts/wm_indices = set of the wm contacts/indices to mask
     - out_contacts/out_indices = set of the out contacts/indices to mask
@@ -58,7 +59,7 @@ class Contacts(object):
 
     Examples
     --------
-    >>> from eegio.base.objects.elecs import Contacts
+    >>> from eegio.base.objects import Contacts
     >>> contacts_list = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3']
     >>> chan_xyz = [[0,0,0], [0,0,1], [0,0,2], [0,1,0], [0,2,0], [0,3, 0]]
     >>> contacts = Contacts(contacts_list, chan_xyz)
@@ -141,7 +142,9 @@ class Contacts(object):
         Assumes that all different electrodes have a starting different lettering (e.g. A1, A2, A3 are all from the same
         electrode).
 
-        :return:
+        Returns
+        -------
+
         """
         self.electrodes = collections.defaultdict(list)
         for i, name in enumerate(self.chanlabels):
@@ -191,12 +194,26 @@ class Contacts(object):
     def _initialize_contacts_xyz_dict(self):
         self.name_to_xyz = dict(zip(self.chanlabels, self.xyz))
 
-    def load_contacts_xyz(self, contacts_xyz, referencespace=None, scale="mm"):
+    def load_contacts_xyz(
+        self, contacts_xyz: List, referencespace: str = None, scale: str = "mm"
+    ):
         """
-        Function to help load in contact coordinates.
+        Function to help load in contact xyz coordinates.
 
-        :param contacts_xyz:
-        :return:
+        Parameters
+        ----------
+        contacts_xyz : List
+            list of the xyz coordinates for every contact
+
+        referencespace : str
+            the name of the reference space that the contacts are in (e.g. scalp, T1, CT)
+
+        scale : str
+            the scale at which the xyz coordinates are measured (e.g. mm, or m)
+
+        Returns
+        -------
+
         """
         if referencespace == None:
             warnings.warn(
@@ -208,12 +225,13 @@ class Contacts(object):
         self.scale = scale
         self._initialize_contacts_xyz_dict()
 
-    def get_contacts_xyz(self):
+    def get_contacts_xyz(self) -> Union[Dict, None]:
         """
         Helper function to return the contacts and their xyz coordinates.
 
-        :return: (dict) contacts and their xyz tuples or
-                (None) if no xyz
+        Returns
+        -------
+
         """
         if self.xyz and (len(self.xyz) == len(self.chanlabels)):
             return {chanlabel: xyz for chanlabel, xyz in zip(self.chanlabels, self.xyz)}
@@ -224,11 +242,13 @@ class Contacts(object):
         )
         return None
 
-    def natsort_contacts(self):
+    def natsort_contacts(self) -> Tuple:
         """
         Naturally sort the contacts. Keeps the applied indices in self.natinds
 
-        :return:
+        Returns
+        -------
+
         """
         if self.natinds == None:
             self.natinds = index_natsorted(self.chanlabels)
@@ -240,12 +260,19 @@ class Contacts(object):
             )
         return self.natinds
 
-    def mask_contact_indices(self, mask_inds):
+    def mask_indices(self, mask_inds: List) -> List:
         """
-        Helper function to mask out certain indices.
+        Function to keep delete certain rows (i.e. channels) of the matrix time series data
+        and the labels corresponding to those masked indices.
 
-        :param mask_inds:
-        :return:
+        Parameters
+        ----------
+        mask_inds : np.ndarray
+            The indices which we will delete rows from the data matrix and the list of contacts.
+
+        Returns
+        -------
+
         """
         if max(mask_inds) > len(self.chanlabels):
             warnings.warn(
@@ -259,14 +286,19 @@ class Contacts(object):
             self.xyz = [self.xyz[i] for i in keepinds]
         return keepinds
 
-    def mask_contacts(self, contacts):
+    def mask_chs(self, contacts):
         """
-        Helper function to make out certain contacts by name.
+        Function to keep delete certain rows (i.e. channels) of the matrix time series data
+        and the labels corresponding to those masked names.
 
-        :param contacts:
-        :type contacts:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        contacts : (list, np.ndarray)
+            The set of contact labels to delete from data matrix and list of contacts.
+
+        Returns
+        -------
+
         """
         if any(x not in self.chanlabels for x in contacts):
             raise ValueError(
@@ -280,99 +312,13 @@ class Contacts(object):
             self.xyz = [self.xyz[i] for i in keepinds]
         return keepinds
 
-    def get_seeg_ngbhrs(self, contact: str):
-        """
-        Helper function to get neighboring contacts for SEEG contacts.
-
-        :param contact:
-        :param chanlist:
-        :return:
-        """
-        # initialize empty data structures to return
-        nghbrcontacts, nghbrinds = [], []
-
-        # get the electrode, and the number for each channel
-        elecname, num = re.match("^([A-Za-z]+[']?)([0-9]+)$", contact).groups()
-
-        # find the elecname in rest of electrodes
-        elecmaxnum = 0
-        elec_numstoinds = dict()
-        for jdx in range(len(self.chanlabels)):
-            _elecname, _num = re.match(
-                "^([A-Za-z]+[']?)([0-9]+)$", self.chanlabels[jdx]
-            ).groups()
-            if elecname == _elecname:
-                elecmaxnum = max(elecmaxnum, int(_num))
-                elec_numstoinds[_num] = jdx
-
-        # find keys with number above and below number
-        elecnumkeys = natsorted(elec_numstoinds.keys())
-        elecnumkeys = np.arange(1, elecmaxnum).astype(str).tolist()
-
-        # print(elecnumkeys)
-
-        if num in elecnumkeys:
-            currnumind = elecnumkeys.index(num)
-            lowerind = max(0, currnumind - 2)
-            upperind = min(int(elecnumkeys[-1]), currnumind + 2)
-
-            # print(num, currnumind, lowerind, upperind)
-
-            if lowerind == currnumind:
-                lower_nghbrs = np.array([currnumind])
-            else:
-                lower_nghbrs = np.arange(lowerind, currnumind)
-
-            if currnumind + 1 == upperind:
-                upper_nghbrs = np.array([currnumind + 1])
-            else:
-                upper_nghbrs = np.arange(currnumind + 1, upperind)
-
-            # print(lower_ngbhrs, upper_ngbhrs)
-            nghbrinds = np.vstack((lower_nghbrs, upper_nghbrs))
-            nghbrcontacts = self.chanlabels[nghbrinds]
-
-        return nghbrcontacts, nghbrinds
-
-    def get_contact_ngbhrs(self, contact_name):
-        """
-        Helper function to return the neighbor contact names, and also the indices in our data structure.
-
-        :param contact_name: (str) the contact name (e.g. A1, A2)
-        :return: (list of str) contact neighbors (e.g. A1, A3), and
-                (list of int) contact neighbor indices
-        """
-        # initialize empty data structures to return
-        nghbrcontacts, nghbrinds = [], []
-
-        match = self.contact_single_regex.match(contact_name)
-        if match is None:
-            return None
-        electrode = match.groups()[0]
-        electrodecontacts = self.electrodes[electrode]
-
-        if contact_name in electrodecontacts:
-            contact_index = electrodecontacts.index(contact_name)
-
-            # get the corresponding neighbor indices
-            _lowerind = max(contact_index - 1, 0)
-            _upperind = min(contact_index + 1, 0)
-            nghbrinds = np.vstack(
-                (
-                    np.arange(_lowerind, contact_index),
-                    np.arange(contact_index + 1, _upperind + 1),
-                )
-            )
-            nghbrcontacts = electrodecontacts[nghbrinds]
-
-        return nghbrcontacts, nghbrinds
-
     def set_bipolar(self):
         """
         Create bipolar pairing from channel labeling.
 
-        :return: (list) bipolar indices
-            or   (list, list) bipolar indices and any remaining labels that weren't found.
+        Returns
+        -------
+
         """
         # set list to hold new labeling and the corresponding bipolar indices
         self.chanlabels_bipolar = []
@@ -453,58 +399,97 @@ class Contacts(object):
             "Given name '%s' does not follow any expected pattern." % contact_name
         )
 
-    @classmethod
-    def expand_bipolar_chans(self, ch_list):
-        if ch_list == []:
+    def get_seeg_ngbhrs(self, contact: str):
+        """
+        Helper function to get neighboring contacts for SEEG contacts using regex.
+
+        Parameters
+        ----------
+        contact : str
+
+        Returns
+        -------
+
+        """
+        # initialize empty data structures to return
+        nghbrcontacts, nghbrinds = [], []
+
+        # get the electrode, and the number for each channel
+        elecname, num = re.match("^([A-Za-z]+[']?)([0-9]+)$", contact).groups()
+
+        # find the elecname in rest of electrodes
+        elecmaxnum = 0
+        elec_numstoinds = dict()
+        for jdx in range(len(self.chanlabels)):
+            _elecname, _num = re.match(
+                "^([A-Za-z]+[']?)([0-9]+)$", self.chanlabels[jdx]
+            ).groups()
+            if elecname == _elecname:
+                elecmaxnum = max(elecmaxnum, int(_num))
+                elec_numstoinds[_num] = jdx
+
+        # find keys with number above and below number
+        elecnumkeys = natsorted(elec_numstoinds.keys())
+        elecnumkeys = np.arange(1, elecmaxnum).astype(str).tolist()
+
+        # print(elecnumkeys)
+
+        if num in elecnumkeys:
+            currnumind = elecnumkeys.index(num)
+            lowerind = max(0, currnumind - 2)
+            upperind = min(int(elecnumkeys[-1]), currnumind + 2)
+
+            # print(num, currnumind, lowerind, upperind)
+
+            if lowerind == currnumind:
+                lower_nghbrs = np.array([currnumind])
+            else:
+                lower_nghbrs = np.arange(lowerind, currnumind)
+
+            if currnumind + 1 == upperind:
+                upper_nghbrs = np.array([currnumind + 1])
+            else:
+                upper_nghbrs = np.arange(currnumind + 1, upperind)
+
+            # print(lower_ngbhrs, upper_ngbhrs)
+            nghbrinds = np.vstack((lower_nghbrs, upper_nghbrs))
+            nghbrcontacts = self.chanlabels[nghbrinds]
+
+        return nghbrcontacts, nghbrinds
+
+    def get_contact_ngbhrs(self, contact_name):
+        """
+        Helper function to return the neighbor contact names, and also the indices in our data structure.
+
+        Parameters
+        ----------
+        contact_name :
+
+        Returns
+        -------
+
+        """
+        # initialize empty data structures to return
+        nghbrcontacts, nghbrinds = [], []
+
+        match = self.contact_single_regex.match(contact_name)
+        if match is None:
             return None
+        electrode = match.groups()[0]
+        electrodecontacts = self.electrodes[electrode]
 
-        ch_list = [a.replace("’", "'") for a in ch_list]
-        new_list = []
-        for string in ch_list:
-            if not string.strip():
-                continue
+        if contact_name in electrodecontacts:
+            contact_index = electrodecontacts.index(contact_name)
 
-            # A1-10
-            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
-            if match:
-                name, fst_idx, last_idx = match.groups()
+            # get the corresponding neighbor indices
+            _lowerind = max(contact_index - 1, 0)
+            _upperind = min(contact_index + 1, 0)
+            nghbrinds = np.vstack(
+                (
+                    np.arange(_lowerind, contact_index),
+                    np.arange(contact_index + 1, _upperind + 1),
+                )
+            )
+            nghbrcontacts = electrodecontacts[nghbrinds]
 
-                new_list.extend([name + str(fst_idx), name + str(last_idx)])
-
-        return new_list
-
-    @classmethod
-    def expand_ablated_chans(self, ch_list):
-        if ch_list == []:
-            return None
-
-        ch_list = [a.replace("’", "'") for a in ch_list]
-        new_list = []
-        for string in ch_list:
-            if not string.strip():
-                continue
-
-            # A1-10
-            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
-            if match:
-                name, fst_idx, last_idx = match.groups()
-
-                new_list.extend([name + str(fst_idx), name + str(last_idx)])
-
-        return new_list
-
-    @classmethod
-    def make_onset_labels_bipolar(self, clinonsetlabels):
-        clinonsetlabels = list(clinonsetlabels)
-
-        added_ch_names = []
-        for ch in clinonsetlabels:
-            # A1-10
-            match = re.match("^([a-z]+)([0-9]+)$", ch)
-            if match:
-                name, fst_idx = match.groups()
-            added_ch_names.append(name + str(int(fst_idx) + 1))
-
-        clinonsetlabels.extend(added_ch_names)
-        clinonsetlabels = list(set(clinonsetlabels))
-        return clinonsetlabels
+        return nghbrcontacts, nghbrinds

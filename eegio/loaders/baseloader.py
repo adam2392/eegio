@@ -41,11 +41,30 @@ class BaseLoader(ABC):
         Abstract method for loading a file. Needs to be implemented by any data converters that will
         load a file to convert.
 
-        :return: None
+        Parameters
+        ----------
+        filepath : os.PathLike
+            filepath for the dataset to load.
+
+        Returns
+        -------
+
         """
         raise NotImplementedError(
             "Implement function for loading in file for starting conversion!"
         )
 
     def update_metadata(self, **update_kws):
+        """
+        Keyword argument update function for the metadata_dict property.
+
+        Parameters
+        ----------
+        update_kws : Dict
+            keyword arguments to update metadata_dict with.
+
+        Returns
+        -------
+
+        """
         self.metadata_dict.update(**update_kws)

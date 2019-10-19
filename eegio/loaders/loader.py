@@ -1,9 +1,9 @@
 import os
 from typing import Union, List, Tuple, Dict
 
+import deprecated
 import mne
 import numpy as np
-import deprecated
 import pyedflib
 
 from eegio.base.objects import EEGTimeSeries, Contacts
@@ -21,7 +21,7 @@ class Loader(BaseLoader):
             metadata = {}
         self.update_metadata(**metadata)
 
-    def load_file(self, filepath: Union[str, os.PathLike]):
+    def load_file(self, filepath: Union[str, os.PathLike]) -> object:
         filepath = str(filepath)
         if filepath.endswith(".fif"):
             res = self.read_fif(filepath)
@@ -39,17 +39,25 @@ class Loader(BaseLoader):
 
     def _wrap_raw_in_obj(
         self, raw_mne: mne.io.BaseRaw, modality: str, annotations: List
-    ):
+    ) -> EEGTimeSeries:
         """
         Helps wrap a MNE.io.Raw object into a light-weight wrapper object representing
         the EEG time series, adds additional metadata.
 
-        :param raw_mne:
-        :type raw_mne:
-        :param modality:
-        :type modality:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        raw_mne : mne.io.Raw
+            The mne.io.Raw object containing the EEG data.
+        modality : str
+            the modality name (e.g. eeg, ecog, seeg, scalp, etc.)
+        annotations : List
+            the list of annotations that are present in the raw EEG snapshot passed.
+
+        Returns
+        -------
+        eegts : EEGTimeSeries
+            the EEG data wrapped in an EEGTimeSeries data object.
+
         """
         # load data into RAM
         raw_mne.load_data()
@@ -79,7 +87,9 @@ class Loader(BaseLoader):
         eegts.update_metadata(bad_contacts=badchs)
         return eegts
 
-    def _wrap_mat_in_obj(self, datastruct, modality: str, annotations: List):
+    def _wrap_mat_in_obj(
+        self, datastruct, modality: str, annotations: List
+    ) -> EEGTimeSeries:
         chlabels = datastruct["chlabels"]
         rawdata = datastruct["data"]
         samplerate = datastruct["sfreq"]
@@ -109,20 +119,27 @@ class Loader(BaseLoader):
         """
         Function to read from a Nihon-Kohden based EEG system file.
 
-        :param fname:
-        :type fname:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        fname :
+
+        Returns
+        -------
+
         """
         pass
 
     def read_Natus(self, fname: os.PathLike):
         """
         Function to read from a Natus based EEG system file.
-        :param fname:
-        :type fname:
-        :return:
-        :rtype:
+
+        Parameters
+        ----------
+        fname :
+
+        Returns
+        -------
+
         """
         pass
 
@@ -130,31 +147,39 @@ class Loader(BaseLoader):
         self,
         fname,
         backend: str = "mne",
-        montage=None,
+        montage: str = None,
         eog: Union[List, Tuple] = None,
         misc: Union[List, Tuple] = None,
         linefreq: float = 60,
         modality: str = "eeg",
         return_mne: bool = False,
-    ):
+    ) -> Union[Union[mne.io.Raw, List], EEGTimeSeries]:
         """
         Function to read in edf file either using MNE, or PyEDFLib. Recommended to use
         MNE.
 
-        :param fname:
-        :type fname:
-        :param backend:
-        :type backend:
-        :param montage:
-        :type montage:
-        :param eog:
-        :type eog:
-        :param misc:
-        :type misc:
-        :param linefreq:
-        :type linefreq:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        fname : (str, os.PathLike)
+            The filepath to the .fif dataset
+        backend : str
+            The backend EDF reader, defaults to MNE. Can also use pyedflib, although it is outdated it seems.
+        montage : str
+            montage name
+        eog : (List, Tuple)
+            list of eog channels
+        misc : (List, Tuple)
+            list of miscellaneous channels
+        linefreq : (int,float)
+            The line noise frequency setting. Defaults to 60 Hz.
+        modality : str
+            The modality of the data you are loading. Defaults to "eeg". e.g. You can pass in ECoG, or SEEG, or scalp
+        return_mne : bool
+            Whether or not to return the MNE.io.Raw object, or return an EEGTimeSeries object.
+
+        Returns
+        -------
+
         """
         if linefreq not in [50, 60]:
             raise ValueError(
@@ -181,7 +206,7 @@ class Loader(BaseLoader):
 
             # get the annotations
             annotations = mne.events_from_annotations(
-                raw, use_rounding=True, chunk_duration=None
+                raw, use_rounding=True, chunk_duration=None, verbose=False
             )
             event_times, event_ids = annotations
 
@@ -259,20 +284,31 @@ class Loader(BaseLoader):
 
     def read_fif(
         self,
-        fname,
-        linefreq: float = 60,
+        fname: Union[str, os.PathLike],
+        linefreq: Union[int, float] = 60,
         modality: str = "eeg",
         return_mne: bool = False,
-    ):
+    ) -> Union[Union[mne.io.Raw, List], EEGTimeSeries]:
         """
         Function to read in a .fif type file using MNE.
 
-        :param fname:
-        :type fname:
-        :param linefreq:
-        :type linefreq:
-        :return:
-        :rtype:
+        Parameters
+        ----------
+        fname : (str, os.PathLike)
+            The filepath to the .fif dataset
+
+        linefreq : (int,float)
+            The line noise frequency setting. Defaults to 60 Hz.
+
+        modality : str
+            The modality of the data you are loading. Defaults to "eeg". e.g. You can pass in ECoG, or SEEG, or scalp
+
+        return_mne : bool
+            Whether or not to return the MNE.io.Raw object, or return an EEGTimeSeries object.
+
+        Returns
+        -------
+
         """
         if linefreq not in [50, 60]:
             raise ValueError(

@@ -6,8 +6,9 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from pprint import pprint
 from sys import getsizeof
-from typing import Union
+from typing import Union, Dict
 
+import numpy as np
 import pandas as pd
 
 from eegio.base.config import MB
@@ -141,7 +142,7 @@ class DataSheetLoader(AbstractClinical):
             if any(x in region for x in PROBLEMATIC_CONTACT_LABELS):
                 contacts_dict[region].append(row.name + str(contactnums[jdx]))
 
-    def load_elec_layout_sheet(self, fpath: Union[str, os.PathLike]):
+    def load_elec_layout_sheet(self, fpath: Union[str, os.PathLike]) -> Dict:
         """
         Loads an electrode layout sheet that is contact number on the column headers, and electrode name on the row
         index. For example:
@@ -178,12 +179,14 @@ class DataSheetLoader(AbstractClinical):
                 "Electrode layout file should be in either .xlsx or .csv format. "
                 f"Your file passed in is {fpath}."
             )
-
         # convert entire dataframe to upper case
         elec_layout_df = elec_layout_df.apply(lambda x: x.astype(str).str.lower())
         elec_layout_df.iloc[0].apply(int)  # convert first row to integers
 
         assert len(elec_layout_df.iloc[0]) <= 16
+
+        # Look for channels with no annotation
+        nans = []
 
         # "bad contacts" to look for
         problem_contacts = collections.defaultdict(list)
@@ -193,9 +196,13 @@ class DataSheetLoader(AbstractClinical):
             # get the contact numbers
             if idx == 0:
                 contactnums = row.astype(int).tolist()
-
-            self._process_electrodelayout_row(row, problem_contacts, contactnums)
-
+            else:
+                self._process_electrodelayout_row(row, problem_contacts, contactnums)
+                for jdx, region in enumerate(row):
+                    if region == "nan":
+                        nans.append(row.name + str(contactnums[jdx]))
+        if len(nans) > 1:
+            warnings.warn("Please fill in the contacts %s" % str(nans))
         # scrub the contacts list in each one found
         for key, problem_list in problem_contacts.items():
             problem_contacts[key] = scrub_chs(problem_list)
