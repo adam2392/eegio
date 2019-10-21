@@ -316,6 +316,13 @@ class BaseDataset(ABC):
         -------
 
         """
+        chs_to_remove = set(self.chanlabels).intersection(chs)
+        extra_chs = set(self.chanlabels).difference(chs)
+
+        if extra_chs:
+            warnings.warn(f"You passed in extra channels to remove. But they were "
+                          f"not in dataset. {extra_chs}")
+
         # chs = [x.upper() for x in chs]
-        keepinds = self.contacts.mask_chs(ensure_list(chs))
+        keepinds = self.contacts.mask_chs(ensure_list(chs_to_remove))
         self.mat = self.mat[keepinds, ...]
