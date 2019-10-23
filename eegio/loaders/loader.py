@@ -76,6 +76,7 @@ class Loader(BaseLoader):
 
         # load in the cleaned ch labels
         contacts = Contacts(chlabels, require_matching=False)
+        info = raw_mne.info
         samplerate = raw_mne.info["sfreq"]
         rawdata, times = raw_mne.get_data(return_times=True)
 
@@ -84,6 +85,7 @@ class Loader(BaseLoader):
             rawdata, times, contacts, samplerate, modality, bad_contacts=badchs
         )
         eegts.update_metadata(raw_annotations=annotations)
+        eegts.update_metadata(**info)
         eegts.update_metadata(bad_contacts=badchs)
         return eegts
 

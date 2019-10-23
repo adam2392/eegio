@@ -345,6 +345,8 @@ class Contacts(object):
         # convert to numpy arrays and convert the raw data
         self.bipolar_inds = np.array(self.bipolar_inds, dtype=int)
 
+        self.chanlabels = self.chanlabels_bipolar
+
         if remaining_labels.size == 0:
             return self.bipolar_inds, remaining_labels
         else:

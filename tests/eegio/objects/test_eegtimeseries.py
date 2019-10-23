@@ -56,8 +56,8 @@ class TestEEGTimeSeries:
             eegts.remove_element_from_metadata("test_date")
 
         prevlen = eegts.n_contacts
-        eegts.mask_chs("a1")
-        assert prevlen == eegts.n_contacts + 1
+        eegts.mask_chs(["a1"])
+        assert "a1" not in eegts.chanlabels
         eegts.mask_indices([1, 3])
         assert prevlen == eegts.n_contacts + 3
 
