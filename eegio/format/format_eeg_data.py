@@ -8,14 +8,68 @@ from eegio.loaders.loader import Loader
 from eegio.writers.saveas import DataWriter
 
 
+def run_formatting_eeg_directory(
+        datadir: str,
+        subject_id: str,
+        raw_file,
+        events,
+        output_path,
+        clinical_center: str,
+        task: str,
+        study_name: str = "database",
+        modality: str = "eeg"
+):
+    import mne_bids
+    from mne_bids import write_raw_bids, make_bids_basename
+    from mne_bids.utils import print_dir_tree
+
+    # create study path
+    study_path = os.path.join(datadir, study_name)
+    if not os.path.exists(study_path):
+        os.makedirs(study_path)
+
+    # create mne bids directory structure
+    mne_bids.make_bids_folders(subject_id,
+                               kind=modality,
+                               session=clinical_center,
+                               output_path=output_path
+                               )
+
+    # make dataset description
+    AUTHOR_LIST = ["Adam Li"]
+    FUNDING_SOURCES = ["NSF-GRFP"]
+    dataset_description = {
+            "name": "",
+            "data_license": None,
+            "authors": AUTHOR_LIST,
+            "acknowledgements": None,
+            "how_to_acknowledge": None,
+            "funding": FUNDING_SOURCES,
+            "references_and_links": None,
+            "doi": None,
+    }
+    mne_bids.make_dataset_description(output_path,
+                                      **dataset_description)
+
+    # Now convert our data to be in a new BIDS dataset.
+    bids_basename = make_bids_basename(subject=subject_id, task=task)
+    write_raw_bids(raw_file, bids_basename,
+                   output_path,
+                   # event_id=trial_type,
+                   events_data=events,
+                   overwrite=False
+                   )
+    return 1
+
+
 def run_formatting_eeg(
-    in_fpath: str,
-    out_fpath: str,
-    json_fpath: str,
-    bad_contacts: List = None,
-    clinical_metadata: Dict = None,
-    save_fif: bool = True,
-    save_json: bool = True,
+        in_fpath: str,
+        out_fpath: str,
+        json_fpath: str,
+        bad_contacts: List = None,
+        clinical_metadata: Dict = None,
+        save_fif: bool = True,
+        save_json: bool = True,
 ):
     if bad_contacts is None:
         bad_contacts = []
