@@ -88,7 +88,7 @@ class FormatClinicalSheet:
         self.cols_to_expand = cols_to_reg_expand
 
         self.read_file(self.fpath)
-
+        
     def read_file(self, fpath):
         if fpath.endswith(".csv"):
             df = pd.read_csv(fpath, header=0, index_col=False)

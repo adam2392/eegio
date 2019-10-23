@@ -80,10 +80,13 @@ def run_formatting_eeg(
     loader = Loader(in_fpath, clinical_metadata)
     eegts = loader.load_file(in_fpath)
     bad_contacts_found = eegts.bad_contacts
+    if type(bad_contacts[0]) is list:
+        bad_contacts = [val for sublist in bad_contacts for val in sublist]
     if clinical_metadata:
         clinical_metadata["bad_contacts"] = list(
-            set(clinical_metadata["bad_contacts"]).union(bad_contacts_found)
+            set(bad_contacts).union(set(bad_contacts_found))
         )
+
 
     # add all this additional metadata
     eegts.update_metadata(**clinical_metadata)
