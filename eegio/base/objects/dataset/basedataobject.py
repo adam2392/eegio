@@ -317,8 +317,6 @@ class BaseDataset(ABC):
 
         """
         chs = np.sort(chs)
-        #[print(c, 'remove', type(c)) for c in chs]
-        #[print(c, 'full', type(c)) for c in self.chanlabels]
         chs_to_remove = set(self.chanlabels).intersection(chs)
         extra_chs = set(self.chanlabels).difference(chs)
 
