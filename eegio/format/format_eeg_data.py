@@ -9,15 +9,15 @@ from eegio.writers.saveas import DataWriter
 
 
 def run_formatting_eeg_directory(
-        datadir: str,
-        subject_id: str,
-        raw_file,
-        events,
-        output_path,
-        clinical_center: str,
-        task: str,
-        study_name: str = "database",
-        modality: str = "eeg"
+    datadir: str,
+    subject_id: str,
+    raw_file,
+    events,
+    output_path,
+    clinical_center: str,
+    task: str,
+    study_name: str = "database",
+    modality: str = "eeg",
 ):
     import mne_bids
     from mne_bids import write_raw_bids, make_bids_basename
@@ -29,47 +29,46 @@ def run_formatting_eeg_directory(
         os.makedirs(study_path)
 
     # create mne bids directory structure
-    mne_bids.make_bids_folders(subject_id,
-                               kind=modality,
-                               session=clinical_center,
-                               output_path=output_path
-                               )
+    mne_bids.make_bids_folders(
+        subject_id, kind=modality, session=clinical_center, output_path=output_path
+    )
 
     # make dataset description
     AUTHOR_LIST = ["Adam Li"]
     FUNDING_SOURCES = ["NSF-GRFP"]
     dataset_description = {
-            "name": "",
-            "data_license": None,
-            "authors": AUTHOR_LIST,
-            "acknowledgements": None,
-            "how_to_acknowledge": None,
-            "funding": FUNDING_SOURCES,
-            "references_and_links": None,
-            "doi": None,
+        "name": "",
+        "data_license": None,
+        "authors": AUTHOR_LIST,
+        "acknowledgements": None,
+        "how_to_acknowledge": None,
+        "funding": FUNDING_SOURCES,
+        "references_and_links": None,
+        "doi": None,
     }
-    mne_bids.make_dataset_description(output_path,
-                                      **dataset_description)
+    mne_bids.make_dataset_description(output_path, **dataset_description)
 
     # Now convert our data to be in a new BIDS dataset.
     bids_basename = make_bids_basename(subject=subject_id, task=task)
-    write_raw_bids(raw_file, bids_basename,
-                   output_path,
-                   # event_id=trial_type,
-                   events_data=events,
-                   overwrite=False
-                   )
+    write_raw_bids(
+        raw_file,
+        bids_basename,
+        output_path,
+        # event_id=trial_type,
+        events_data=events,
+        overwrite=False,
+    )
     return 1
 
 
 def run_formatting_eeg(
-        in_fpath: str,
-        out_fpath: str,
-        json_fpath: str,
-        bad_contacts: List = None,
-        clinical_metadata: Dict = None,
-        save_fif: bool = True,
-        save_json: bool = True,
+    in_fpath: str,
+    out_fpath: str,
+    json_fpath: str,
+    bad_contacts: List = None,
+    clinical_metadata: Dict = None,
+    save_fif: bool = True,
+    save_json: bool = True,
 ):
     if bad_contacts is None:
         bad_contacts = []
@@ -80,13 +79,13 @@ def run_formatting_eeg(
     loader = Loader(in_fpath, clinical_metadata)
     eegts = loader.load_file(in_fpath)
     bad_contacts_found = eegts.bad_contacts
-    if type(bad_contacts[0]) is list:
-        bad_contacts = [val for sublist in bad_contacts for val in sublist]
+    if len(bad_contacts) > 0:
+        if isinstance(bad_contacts[0], list):
+            bad_contacts = [val for sublist in bad_contacts for val in sublist]
     if clinical_metadata:
         clinical_metadata["bad_contacts"] = list(
             set(bad_contacts).union(set(bad_contacts_found))
         )
-
 
     # add all this additional metadata
     eegts.update_metadata(**clinical_metadata)
