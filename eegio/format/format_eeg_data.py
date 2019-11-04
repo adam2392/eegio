@@ -87,6 +87,7 @@ def run_formatting_eeg(
             set(bad_contacts).union(set(bad_contacts_found))
         )
 
+
     # add all this additional metadata
     eegts.update_metadata(**clinical_metadata)
     eegts.update_metadata(fif_filename=os.path.basename(out_fpath))
