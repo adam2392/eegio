@@ -1,3 +1,5 @@
+import os
+
 ACCEPTED_EEG_MODALITIES = [
     "scalp",
     "ecog",
@@ -33,3 +35,6 @@ COLS_TO_REGEXP_EXPAND = [
 # basic storage units in bytes
 MB = 1e6
 GB = 1e9
+
+
+EEGIO_DIR = os.path.normpath(os.path.join(os.getcwd(),'../..'))
