@@ -1,6 +1,4 @@
 import os
-import sys
-import warnings
 import pickle
 import shutil as sh
 
@@ -11,13 +9,11 @@ from mne_bids.utils import print_dir_tree
 
 from typing import List, Dict
 
-parentdir = os.path.join(os.getcwd(),'..')
-sys.path.append(parentdir)
-from config import EEGIO_DIR
+from eegio.base.config import EEGIO_DIR
+from eegio.base.object.basebids import BaseBids
 
 
-
-class BidsPatient(object):
+class BidsPatient(BaseBids):
     """
     The class for our patient data that inherits basic dataset functionality and follows Bids
     format. The additional components for this are related to the fact that each Patient can
@@ -25,39 +21,38 @@ class BidsPatient(object):
 
     Attributes
     ----------
-        :param patientid: patient identifier for this BidsPatient
-        :type patientid: str
-        :param datadir: The base directory for storing BidsPatient data
-        :type datadir: os.PathLike
-        :param managing_user: managing user that is tied to this BidsPatient. E.g. a clinical center, specific researcher, or specific doctor
-        :type managing_user: str
-        :param datasetids: List of filepaths of recording snapshots tied to this BidsPatient.
-        :type datasetids: List[str]
-        :param fifids: List of filepaths of preprocessed recording snapshots tied to this BidsPatient.
-        :type fifids: List[str]
-        :param modality: modality of recording done to this patient. E.g. ecog, seeg, scalp, ieeg.
-        :type modality: str
-        :param samplerate: sampling rate for recordings. E.g. 1000 Hz
-        :type samplerate: float
-        :param wm_channels: List of recording channels placed on white matter
-        :type wm_channels: List[str]
-        :param bad_channels: List of recording channels not recording relevant signal.
-        :type bad_channels: List[str]
-        :param metadata:
-        :type metadata:
-        :param rz_contacts: List of annotated contacts included in the surgically resected zone.
-        :type rz_contacts: List[str]
-        :param soz_contacts: List of annotated contacts thought to be the seizure onset zone.
-        :type soz_contacts: List[str]
-        :param spread_contacts: 
-        :type spread_contacts:
-        :param brain_region_hypo:
-        :type brain_region_hypo:
-        :param resected_region:
-        :type resected_region:
-        :param lesion_present:
-        :type lesion_present:
-
+    patientid: str
+        patient identifier for this BidsPatient
+    datadir: os.PathLike
+        The base directory for storing BidsPatient data
+    managing_user: str
+        managing user that is tied to this BidsPatient. E.g. a clinical center, specific researcher, or specific doctor
+    datasetids: List[str]
+        List of filepaths of recording snapshots tied to this BidsPatient.
+    fifids: List[str]
+        List of filepaths of preprocessed recording snapshots tied to this BidsPatient.
+    modality: str
+        Modality of recording done to this patient. E.g. ecog, seeg, scalp, ieeg.
+    samplerate: float
+        sampling rate of recordings. E.g. 1000 Hz
+    wm_channels: List[str]
+        List of recording channels placed on white matter.
+    bad_channels: List[str]
+        List of recording channels not recording relevant signal. Excluded from analysis.
+    metadata:
+        TODO
+    rz_contacts: List[str]
+        List of annotated contacts included in the surgically resected zone.
+    soz_contacts: List[str]
+        List of annotated contacts thought to be the seizure onset zone.
+    spread_contacts:
+        TODO
+    brain_region_hypo:
+        TODO
+    resected_region:
+        TODO
+    lesion_present: bool
+        Whether the patient has a lesion present
     Notes
     -----
 
@@ -85,6 +80,11 @@ class BidsPatient(object):
         resected_region: str = None,
         lesion_present: bool = False,
     ):
+        if datadir is None:
+            datadir = os.path.join(EEGIO_DIR, 'BIDS_Subjects')
+        
+        super(BaseModel, self).__init__(patientid=patientid, datadir=datadir, modality=modality)
+        
         if spread_contacts is None:
             spread_contacts = []
         if soz_contacts is None:
@@ -101,16 +101,11 @@ class BidsPatient(object):
             datasetids = []
         if fifids is None:
             fifids = []
-        if datadir is None:
-            datadir = os.path.join(EEGIO_DIR, 'BIDS_Subjects')
         
-        self.patientid = patientid
-        self.datadir = datadir
         self.managing_user = managing_user
         self.center = center
         self.datasetids = datasetids
         self.fifids = fifids
-        self.modality = modality
         self.samplerate = samplerate
 
         self.wm_channels = wm_channels
@@ -125,16 +120,32 @@ class BidsPatient(object):
         self.resected_region = resected_region
         self.lesion_present = lesion_present
 
-        if (not os.path.exists(os.path.join(self.datadir, self.patientid))):
-            self.make_bids_folder_struct()
-            bids_basename = make_bids_basename(subject=patientid, session='one')
-            self.bids_basename = bids_basename
-
         self.pickle_results()
+
+        # store parameters
+        self._store_params()
 
     def __str__(self):
         return "{} Patient with {} Dataset Recordings " "totaling {} seconds".format(
             self.patientid, self.numdatasets, self.total_length_seconds
+        )
+
+    def _store_params(self):
+        self.parameter_dict.update(
+            managing_user=self.managing_user,
+            center=self.center,
+            datasetids=self.datasetids,
+            fifids=self.fifids,
+            samplerate=self.samplerate,
+            wm_channels=self.wm_channels,
+            bad_channels=self.bad_channels,
+            metadata=self.metadata,
+            rz_contacts=self.rz_contacts,
+            soz_contacts=self.soz_contact
+            spread_contacts=self.spread_contacts,
+            brain_region_hypo=self.brain_region_hypo,
+            resected_region=self.resected_region,
+            lesion_present=self.legion_present
         )
 
     @classmethod
@@ -150,6 +161,12 @@ class BidsPatient(object):
 
     @property
     def numdatasets(self):
+        """
+
+        Returns
+        -------
+            Number of datasets in the patient
+        """
         return len(self.datasetsids)
     
     @property
@@ -170,13 +187,6 @@ class BidsPatient(object):
             size += os.path.getsize(f)
         return size
 
-    def summary(self):
-        """
-        Print a summary of the BidsPatient in the form of a directory tree showing
-        all available data
-        """
-        basepath = os.path.join(self.datadir, self.patientid)
-        print_dir_tree(basepath)
 
     def pickle_results(self):
         """
@@ -188,14 +198,6 @@ class BidsPatient(object):
         pickle.dump(patient, file_patient)
 
 
-    def make_bids_folder_struct(self):
-        """
-        Creates the empty folder structure for a new BidsPatient according to the Bids format.
-        Session is assumed to be 'one' for now.
-        """
-        make_bids_folders(subject=self.patientid, kind=self.modality, session='one',
-            output_path = self.datadir, make_dir=True)
-    
     def load_metadata(self, metadata: dict):
         self.metadata = metadata
 
@@ -209,6 +211,7 @@ class BidsPatient(object):
             The list of new bad channels
         """
         self.bad_channels = bad_channels
+        self._store_params()
 
     def add_wm_channels(self, wm_channels: List[str]):
         """
@@ -220,6 +223,7 @@ class BidsPatient(object):
             The list of new white matter channels
         """
         self.wm_channels = wm_channels
+        self._store_params()
 
     def add_datasets_to_patient(self, datasetids: List[str]):
         """
@@ -241,6 +245,7 @@ class BidsPatient(object):
             filename = os.path.join(basedir, 'eeg', basename)
             self.datasetids.extend(filename)
             self.convert_to_bids(data, filename)
+        self._store_params()
 
     def add_fif_to_patient(self, fifids: List[str]):
         """
@@ -264,57 +269,81 @@ class BidsPatient(object):
             filename = os.path.join(basedir, 'preprocessed', basename)
             sh.move(fif, filename)
             self.fifids.extend(filename)
+        self._store_params()
 
-    def convert_to_bids(self, data, filename):
+    def load_dataset(self, dataset_num):
         """
-        Helper function to convert an edf file into bids format and create all 
-        necessary metadata files corresponding to this data from Bids format.
+        Loads a specified edf file into an EEGTimeSeries object.
 
         Parameters
         ----------
-        data: os.PathLike
-            The path of the edf file to be loded
-        filename: os.PathLike
-            The path to save the resulting edf file. Named with Bids convention
-        """
-        excluded_contacts = ["-", ""]
-        raw = io.read_raw_edf(
-            data,
-            preload=False,
-            verbose="ERROR",
-            exclude=excluded_contacts,
-            eog=None,
-            misc=None,
-        )
-        samplerate = raw.info["sfreq"]
-        annotations = mne.events_from_annotations(
-            raw, use_rounding=True, chunk_duration=None, verbose=False
-        )
-        outfile = filename.split('_eeg')
-        outfile = outfile[0]
-        write_raw_bids(raw, outfile, output_path = self.datadir)
+        dataset_num: int
+            The number of the dataset in the BidsPatient's datasetids to be loaded
 
-    def make_preprocessed_folder(self):
+        Returns
+        -------
+        An EEGTimeSeries object containing the eeg data
         """
-        Creates the preprocessed data folder in the correct location if it does
-        not already exist. Assumes session is 'one'
+        # TODO: Adam
+        #return eegts
+    
+    def load_fif(self, fif_num):
         """
-        basedir = os.path.join(self.datadir, 'sub-' + self.patientid, 'ses-one')
-        preprocessed_dir = os.path.join(basedir, 'preprocessed')
-        if os.path.exists(preprocessed_dir):
-            return 1
-        else:
-            os.mkdir(preprocessed_dir)
+        Loads a specified fif file into an EEGTimeSeries object.
 
-    def make_results_folder(self):
+        Parameters
+        ----------
+        fif_num: int
+            The number of the fif file in the BidsPatient's fifids to be loaded
+
+        Returns
+        -------
+        An EEGTimeSeries object containing the eeg data
         """
-        Creates the results folder in the correct location if it does not already
-        exist. Assumes session is 'one'
+        # TODO: Adam
+        #return eegts
+
+    def add_to_participants(self, formatted_sheet_path):
         """
-        basedir = os.path.join(self.datadir, 'sub-' + self.patientid, 'ses-one')
-        results_dir = os.path.join(basedir, 'results')
-        if os.path.exists(results_dir):
-            return 1
-        else:
-            os.mkdir(preprocessed_dir)
+        Adds the data from the input formatted sheet and adds it to the Bids format
+        participants.tsv file
+
+        Parameters
+        ----------
+        formatted_sheet_path: os.PathLike
+            The location of the formatted sheet to add
+
+        """
+        # TODO: Patrick
+        pass
+
+    def update_subject_channels(self):
+        """
+        The bids format has a tsv file per run to store all electrode channel information. 
+        This function updates that file with the correct information about the signal type
+        at each channel (e.g. eeg, eog, ecg...) and the status of each channel (e.g. good,
+        wm, bad...)
+        """
+        basedir = os.path.join(self.datadir, 'sub-'+self.patientid, 'ses-one')
+        eegdir = os.path.join(basedir,'eeg')
+        channelFiles = []
+        for file in os.listdir(eegdir):
+            if file.endswith("channels.tsv"):
+                channelFiles.append(os.path.join(eegdir, file))
+        for f in channelFiles:
+            # TODO: Patrick
+
+    def update_subject_json(self):
+        """
+        The bids format has a json file per run to store all metadata information. 
+        This function updates that file with the correct information about the recording
+        """
+        basedir = os.path.join(self.datadir, 'sub-'+self.patientid, 'ses-one')
+        eegdir = os.path.join(basedir,'eeg')
+        jsonFiles = []
+        for file in os.listdir(eegdir):
+            if file.endswith("eeg.json"):
+                jsonFiles.append(os.path.join(eegdir, file))
+        for f in jsonFiles:
+            # TODO: Patrick
 
