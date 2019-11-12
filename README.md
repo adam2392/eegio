@@ -15,7 +15,6 @@ This module stores the code for IO of EEG data for human patients, and pipelinin
 ## Dev Process - TODO
 
 - [ ] Add documentation
-- [ ] Create fully-functional tests
 - [ ] Add support for adding structural context via neuroimaging processed data (e.g. FreeSurfer)
 
 # Installation Guide
@@ -97,19 +96,6 @@ will provide additional functionality in terms of:
 2. preprocessing column names
 3. caching/storing data in a Python object
 
-
-    fpath = "./data/clinical_examples/test_clinicaldata.csv"
-    # instantiate datasheet loader
-    clinloader = DataSheetLoader()
-
-    # load csv file
-    csv_df = clinloader.load(fpath=clinical_csv_fpath)
-
-    # clean up the column names
-    csv_df = clinloader.clean_columns(csv_df)
-    
-    # show input data
-    display(csv_df.head())
     
 ### Reading EEG Data From EDF/FiF
 These are just lightweight wrappers of MNE/pyedflib reading to load in EDF/FiF data

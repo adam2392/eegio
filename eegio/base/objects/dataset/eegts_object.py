@@ -119,6 +119,15 @@ class EEGTimeSeries(BaseDataset):
             self.patientid, self.datasetid, self.mat.shape, self.len_secs
         )
 
+    def get_mne_raw(self):
+        # create the raw object
+        raw = mne.io.RawArray(data=self.get_data(), info=self.info)
+
+        # read in a standardized montage and set it
+        if self.montage is not None:
+            raw.set_montage(montage=self.montage, raise_if_subset=False)
+        return raw
+
     @classmethod
     def create_fake_example(self):
         contactlist = np.hstack(

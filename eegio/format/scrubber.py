@@ -54,6 +54,8 @@ class ChannelScrub:
         :param ch_names: (list) a list of str channel labels
         :return: bad_channels (list) of string labels
         """
+        orig_chdict = {ch.upper(): ch for ch in ch_names}
+
         ch_names = [c.upper() for c in ch_names]
 
         # initialize a list to store channel label strings
@@ -89,6 +91,7 @@ class ChannelScrub:
         non_eeg_channels.extend([ch for ch in ch_names if ch == "E"])
         bad_channels.extend(non_eeg_channels)
 
+        bad_channels = [orig_chdict[ch] for ch in bad_channels]
         return bad_channels
 
     @classmethod

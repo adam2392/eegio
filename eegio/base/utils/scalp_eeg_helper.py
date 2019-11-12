@@ -28,7 +28,7 @@ class ScalpMontageHelper:
         # add this to class object but with lower-cased keys
         eeg_ch_groups = {}
         for k, v in ch_groups.items():
-            eeg_ch_groups[k.lower()] = v
+            eeg_ch_groups[k.upper()] = v
         return eeg_ch_groups
 
     @staticmethod
@@ -45,6 +45,7 @@ class ScalpMontageHelper:
         -------
 
         """
+
         montages = mne.channels.get_builtin_montages()
         best_montage = None
         best_montage_score = 0
@@ -58,7 +59,7 @@ class ScalpMontageHelper:
             montage_chs = [ch.lower() for ch in montage.ch_names]
 
             # score this montage
-            montage_score = len([ch for ch in chanlabels if ch in montage_chs])
+            montage_score = len([ch for ch in chanlabels if ch.lower() in montage_chs])
 
             if montage_score > best_montage_score:
                 best_montage = montage_name
@@ -90,7 +91,7 @@ class ScalpMontageHelper:
         """
         # read in montage and strip channel labels not in montage
         montage = mne.channels.make_standard_montage(montage_name)
-        montage_chs = [ch.lower() for ch in montage.ch_names]
+        montage_chs = [ch.upper() for ch in montage.ch_names]
 
         # get indices to keep
         to_keep_inds = [idx for idx, ch in enumerate(chanlabels) if ch in montage_chs]

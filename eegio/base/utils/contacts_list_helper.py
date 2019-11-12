@@ -17,7 +17,7 @@ class ContactsHelper:
                 continue
 
             # A1-10
-            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
+            match = re.match("^([A-Z]+)([0-9]+)-([0-9]+)$", string)
             if match:
                 name, fst_idx, last_idx = match.groups()
 
@@ -37,7 +37,7 @@ class ContactsHelper:
                 continue
 
             # A1-10
-            match = re.match("^([a-z]+)([0-9]+)-([0-9]+)$", string)
+            match = re.match("^([A-Z]+)([0-9]+)-([0-9]+)$", string)
             if match:
                 name, fst_idx, last_idx = match.groups()
 
@@ -52,7 +52,7 @@ class ContactsHelper:
         added_ch_names = []
         for ch in clinonsetlabels:
             # A1-10
-            match = re.match("^([a-z]+)([0-9]+)$", ch)
+            match = re.match("^([A-Z]+)([0-9]+)$", ch)
             if match:
                 name, fst_idx = match.groups()
             added_ch_names.append(name + str(int(fst_idx) + 1))

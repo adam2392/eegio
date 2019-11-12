@@ -3,11 +3,13 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import List, Dict, Union, Tuple
 
+import mne
 import numpy as np
 from natsort import order_by_index
 
 from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.base.utils.data_structures_utils import ensure_list
+from eegio.base.utils.scalp_eeg_helper import ScalpMontageHelper
 
 
 class BaseDataset(ABC):
@@ -68,7 +70,7 @@ class BaseDataset(ABC):
         model_attributes: Dict = None,
         cache_data: bool = True,
         metadata: Dict = None,
-        montage: Union[List, str] = None,
+        montage: Union[mne.channels.DigMontage, str] = None,
     ):
         if metadata is None:
             metadata = dict()
@@ -135,6 +137,22 @@ class BaseDataset(ABC):
 
         """
         return self.montage
+
+    def set_scalp_montage(self, montage: Union[str, mne.channels.DigMontage]):
+        if isinstance(montage, str):
+            best_montage = ScalpMontageHelper.get_best_matching_montage(self.chanlabels)
+            montage_inst = mne.channels.make_standard_montage(best_montage)
+            montage_inst.ch_names = [ch.upper() for ch in montage_inst.ch_names]
+            self.montage = montage_inst
+        else:
+            self.montage = montage
+    # def set_invasive_montage(self, montage: Union[mne.channels.DigMontage, Dict]):
+    #     if isinstance(montage, Dict):
+    #         montage_inst = mne.channels.make_dig_montage(montage, coord_frame="head")
+    #         montage_inst.ch_names = [ch.upper() for ch in montage_inst.ch_names]
+    #         self.montage = montage_inst
+    #     else:
+    #         self.montage = montage
 
     def update_metadata(self, **kwargs):
         """
