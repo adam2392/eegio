@@ -86,7 +86,7 @@ class Contacts(object):
         if contacts_xyz is None:
             contacts_xyz = []
         self.require_matching = require_matching
-        self.chanlabels = np.array([x.lower() for x in contacts_list])
+        self.chanlabels = np.array([x.upper() for x in contacts_list])
 
         if contacts_xyz != [] and referencespace == None:
             warnings.warn(
