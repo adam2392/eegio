@@ -49,7 +49,14 @@ To install, run this command inside your virtual environment:
 Epilepsy researchers dealing with EEG data. Anyone with human patient EEG data. The main data workflow is to maintain a running Excel sheet with variables related to your patient population. 
 See example and docs for info on how to format this.
 
+https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
+
 ## Formatting
+User can create BIDS directory structure to house all the data
+
+    # create file directory structure if not already made
+    eegio.create_bids_struct(bidsdir, patids=['pat01', 'pat02'])
+    
 User can run:
 
     formatted_df = eegio.format_clinical_sheet(excelfilepath,
@@ -65,19 +72,20 @@ User can run preprocessing on .edf files to create .fif + .json files:
 User can then load datasets, or patient (i.e. grouped datasets) data:
     
     # create a patient object that looks through hard coded directory
-    patientobj = eegio.get_patients(patientdir)
+    patientobj = eegio.get_patients(bidsdir)
     
     # actually load an EEG Time series from .fif/.edf,etc.
-    datasetobj = eegio.load_file(datasetfilepath)
+    datasetobj = eegio.load_file(patid, snapshotid)
     
     # read in metadata related from an excel file
-    clin_dict = eegio.load_clinicalmetadata(formatted_df)
+    clin_dict = eegio.load_clinicalmetadata(patid)
     
     # attach clinical data to metadata for EEG TimeSeries
     datasetobj.update_metadata(**clin_dict)
     
     print(datasetobj)
     print(patientobj)
+    print(clin_dict
     
 ### Reading Clinical Data From Excel
 Most clinical data is stored in excel format. And changing between these two is ideal. We provide examples of

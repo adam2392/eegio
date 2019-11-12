@@ -23,15 +23,15 @@ class ChannelScrub:
             :return: label (str) the reformatted string that is lowercase and w/o spaces
             """
             # hard coded replacement rules
-            label = str(label).replace("pol", "").replace(" ", "").lower()
-            label = label.replace("eeg", "").replace("-ref", "")
+            label = str(label).replace("POL", "").replace(" ", "").lower()
+            label = label.replace("EEG", "").replace("-REF", "")
 
             # replace "Grid" with 'G' label
-            label = label.replace("grid", "g")
+            label = label.replace("GRID", "G")
             return label
 
         # apply channel scrubbing
-        raw.rename_channels(lambda x: x.lower())
+        raw.rename_channels(lambda x: x.upper())
         raw.rename_channels(lambda x: x.strip("."))  # remove dots from channel names
         raw.rename_channels(lambda x: x.strip("-"))  # remove dashes from channel names
         raw.rename_channels(
@@ -46,7 +46,7 @@ class ChannelScrub:
 
     @classmethod
     def look_for_bad_channels(
-        self, ch_names, bad_markers: List[str] = ["$", "fz", "gz", "dc", "sti"]
+        self, ch_names, bad_markers: List[str] = ["$", "FZ", "GZ", "DC", "STI"]
     ):
         """
         Helper function to allow hardcoding of what are "bad channels"
@@ -54,7 +54,7 @@ class ChannelScrub:
         :param ch_names: (list) a list of str channel labels
         :return: bad_channels (list) of string labels
         """
-        ch_names = [c.lower() for c in ch_names]
+        ch_names = [c.upper() for c in ch_names]
 
         # initialize a list to store channel label strings
         bad_channels = []
@@ -68,17 +68,17 @@ class ChannelScrub:
         if "$" in bad_markers:
             # look for channels with '$'
             bad_channels.extend([ch for ch in ch_names if re.search("[$]", ch)])
-        if "fz" in bad_markers:
-            badname = "fz"
+        if "FZ" in bad_markers:
+            badname = "FZ"
             bad_channels.extend([ch for ch in ch_names if ch == badname])
-        if "gz" in bad_markers:
-            badname = "gz"
+        if "GZ" in bad_markers:
+            badname = "GZ"
             bad_channels.extend([ch for ch in ch_names if ch == badname])
-        if "dc" in bad_markers:
-            badname = "dc"
+        if "DC" in bad_markers:
+            badname = "DC"
             bad_channels.extend([ch for ch in ch_names if badname in ch])
-        if "sti" in bad_markers:
-            badname = "sti"
+        if "STI" in bad_markers:
+            badname = "STI"
             bad_channels.extend([ch for ch in ch_names if badname in ch])
 
         # extract non eeg channels based on some rules we set
@@ -86,7 +86,7 @@ class ChannelScrub:
             chan for chan in ch_names if any(x in chan for x in NON_EEG_MARKERS)
         ]
         # get rid of these channels == 'e'
-        non_eeg_channels.extend([ch for ch in ch_names if ch == "e"])
+        non_eeg_channels.extend([ch for ch in ch_names if ch == "E"])
         bad_channels.extend(non_eeg_channels)
 
         return bad_channels
@@ -137,7 +137,7 @@ class ChannelScrub:
 
             if elec_contacts_nums == []:
                 channeltypes[chanlabel] = "bad-non"
-            elif eleclabel == "g":
+            elif eleclabel == "G":
                 channeltypes[chanlabel] = "grid"
             elif max(elec_contacts_nums) <= 6:
                 channeltypes[chanlabel] = "strip"
