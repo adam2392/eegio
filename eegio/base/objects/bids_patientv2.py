@@ -1,6 +1,8 @@
 import os
-from typing import Union
+import pickle
 import warnings
+from typing import Union
+
 import mne_bids
 from mne_bids import make_bids_basename
 from mne_bids.utils import print_dir_tree
@@ -95,6 +97,10 @@ class BidsPatient(BaseBids):
     def numfifs(self):
         return len([x for x in self.dataset_fpaths if x.endswith(".fif")])
 
+    @property
+    def numedfs(self):
+        return len([x for x in self.edf_fpaths if x.endswith(".edf")])
+
     def _get_all_datasets(self):
         edffiles = self.query.get(extension='.edf', return_type='file')
         fiffiles = self.query.get(extension='.fif', return_type='file')
@@ -104,9 +110,9 @@ class BidsPatient(BaseBids):
     @classmethod
     def create_fake_example(self):
         import tempfile
-        #from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+        # from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 
-        #eegts = EEGTimeSeries.create_fake_example()
+        # eegts = EEGTimeSeries.create_fake_example()
         patientid = "testid"
         with tempfile.TemporaryDirectory() as datadir:
             patient = BidsPatient(patientid, datadir)
@@ -161,34 +167,66 @@ class BidsPatient(BaseBids):
         # TODO: Included in dict are name as key, then type and status to change
 
 
+    def load_dataset(self, session_id, run_id):
+        """
+        Loads in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure
+
+        Parameters
+        ----------
+        session_id :
+        run_id :
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def _add_metadata(self, id, data):
+        """
+        Helper function to add patient metadata. Requires column ID and then data source to be passed in.
+
+        Parameters
+        ----------
+        id :
+        data :
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def _add_scandata(self, filename, acq_time, **scan_kwargs):
+        pass
+
+    def get_filesizes(self):
+        """
+        Get the total filesize of all the files attached for this patient.
+
+        Returns
+        -------
+        int
+            size of all files
+        """
+        size = 0
+        for f in self.dataset_fpaths():
+            size += os.path.getsize(f)
+        return size
+
+    def pickle_results(self):
+        """
+        Save the BidsPatient object via pickling. Stored at the subject level.
+        """
+        patient = self
+        patient_pickle = os.path.join(self.datadir, 'sub-' + self.patientid, 'patient_object.obj')
+        file_patient = open(patient_pickle, 'wb+')
+        pickle.dump(patient, file_patient)
+
+    def load_metadata(self, metadata: dict):
+        self.metadata = metadata
 
 
-    # def get_filesizes(self):
-    #     """
-    #     Get the total filesize of all the files attached for this patient.
-    #
-    #     Returns
-    #     -------
-    #     int
-    #         size of all files
-    #     """
-    #     size = 0
-    #     for f in self.get_all_filepaths():
-    #         size += os.path.getsize(f)
-    #     return size
-    #
-    # def pickle_results(self):
-    #     """
-    #     Save the BidsPatient object via pickling. Stored at the subject level.
-    #     """
-    #     patient = self
-    #     patient_pickle = os.path.join(self.datadir, 'sub-' + self.patientid, 'patient_object.obj')
-    #     file_patient = open(patient_pickle, 'wb+')
-    #     pickle.dump(patient, file_patient)
-    #
-    # def load_metadata(self, metadata: dict):
-    #     self.metadata = metadata
-    #
     # def add_bad_channels(self, bad_channels: List[str]):
     #     """
     #     Helper setter function to load additional bad_channels
