@@ -1,21 +1,9 @@
-import copy
 import json
 import os
 from datetime import datetime
 
+import pandas as pd
 from mne_bids import make_bids_basename
-
-
-def write_dataset(dataset, output_dir, move=False):
-    dataset = copy.deepcopy(dataset)
-    dataset.set_path(os.path.abspath(output_dir))
-    dataset.update(move=move)
-    return dataset
-
-
-def make_dirs(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
 
 
 def write_tsv(data_dict, out_file, first_colum="id"):
@@ -79,8 +67,8 @@ class BidsIO():
     kind :
 
     """
-    def __init__(self, bidsdir, subject_id, session_id, run_id, kind):
 
+    def __init__(self, bidsdir, subject_id, session_id, run_id, kind, datatype="edf"):
         self.rootdir = bidsdir
         self.subjdir = os.path.join(bidsdir, make_bids_basename(subject=subject_id))
         self.sessiondir = os.path.join(self.subjdir, make_bids_basename(subject=subject_id,
@@ -90,6 +78,33 @@ class BidsIO():
         self.run_id = run_id
         self.session_id = session_id
         self.kind = kind
+        self.datatype = datatype
+
+        SUPPORTED_DATATYPES = ["edf", "fif", "nii", "nii.gz", "mgz"]
+        if datatype not in SUPPORTED_DATATYPES:
+            raise ValueError(f"Supported data file types are: {SUPPORTED_DATATYPES}")
+
+    @property
+    def participantsjson_fpath(self):
+        return os.path.join(self.datadir, "participants.json")
+
+    @property
+    def participantstsv_fpath(self):
+        return os.path.join(self.datadir, "participants.tsv")
+
+    @property
+    def eventstsv_fpath(self):
+        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
+                                                             session=self.session_id,
+                                                             run=self.run_id,
+                                                             suffix="events.tsv"))
+
+    @property
+    def datafile_fpath(self):
+        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
+                                                             session=self.session_id,
+                                                             run=self.run_id,
+                                                             suffix=f"{self.kind}.{self.datatype}"))
 
     @property
     def sidecarjson_fpath(self):
@@ -117,13 +132,41 @@ class BidsLoader(BidsIO):
         super(BidsLoader, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
 
     def load_sidecar_json(self):
-        pass
+        """
+        Helper method to load in the sidecar json associated with a recording file.
+
+        Returns
+        -------
+        A dict representation of the json
+        """
+        sidecar_fpath = self.sidecarjson_fpath
+        with open(sidecar_fpath) as file:
+            data = json.load(file)
+        return data
 
     def load_scans_tsv(self):
-        pass
+        """
+        Helper method to load in the tsv file containing information about a patient's scans
+
+        Returns
+        -------
+        A pandas DataFrame object of the tsv
+        """
+        scans_fpath = self.scanstsv_fpath
+        scans = pd.read_table(scans_fpath)
+        return scans
 
     def load_channels_tsv(self):
-        pass
+        """
+        Helper method to load in the tsv file containing information about a patient's recording channels
+
+        Returns
+        -------
+        A pandas DataFrame object of the tsv
+        """
+        channels_fpath = self.chanstsv_fpath
+        channels = pd.read_table(channels_fpath)
+        return channels
 
 
 class BidsWriter():
@@ -134,6 +177,7 @@ class BidsWriter():
         write_tsv(metadata, fpath, first_colum="")
 
     def write_sidecar_json(self):
+        # TODO: Add original file name field
         pass
 
     def write_scans_tsv(self):
@@ -142,5 +186,10 @@ class BidsWriter():
     def write_electrode_coords(self, coords_dict):
         pass
 
+    def write_electrode_type(self, ):
+        # TODO: Parse ECG, EMG, EOG and mark, but do not change status. Change status of only EEG with WM, or out
+        pass
+
     def write_electrode_status(self, ):
+        # TODO: Parse ECG, EMG, EOG and mark, but do not change status. Change status of only EEG with WM, or out
         pass

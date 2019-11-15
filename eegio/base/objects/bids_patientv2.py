@@ -1,7 +1,8 @@
 import os
-from typing import Union
-import warnings
 import pickle
+import warnings
+from typing import Union
+
 import mne_bids
 from mne_bids import make_bids_basename
 from mne_bids.utils import print_dir_tree
@@ -43,6 +44,7 @@ class BidsPatient(BaseBids):
             session_id: str = None,
             datadir: Union[str, os.PathLike] = None,
             managing_user: str = None,
+            original_subject_id: str = None,
             modality: str = "ieeg",
     ):
         super(BidsPatient, self).__init__(datadir=datadir, modality=modality)
@@ -50,6 +52,7 @@ class BidsPatient(BaseBids):
         self.subject_id = subject_id
         self.session_id = session_id
         self.managing_user = managing_user
+        self.original_subject_id = original_subject_id
         self.subjdir = os.path.join(self.datadir, self.subject_id)
 
         if not os.path.exists(self.subjdir):
@@ -94,6 +97,10 @@ class BidsPatient(BaseBids):
     def numfifs(self):
         return len([x for x in self.dataset_fpaths if x.endswith(".fif")])
 
+    @property
+    def numedfs(self):
+        return len([x for x in self.edf_fpaths if x.endswith(".edf")])
+
     def _get_all_datasets(self):
         edffiles = self.query.get(extension='.edf', return_type='file')
         fiffiles = self.query.get(extension='.fif', return_type='file')
@@ -103,9 +110,9 @@ class BidsPatient(BaseBids):
     @classmethod
     def create_fake_example(self):
         import tempfile
-        from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+        # from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 
-        eegts = EEGTimeSeries.create_fake_example()
+        # eegts = EEGTimeSeries.create_fake_example()
         patientid = "testid"
         with tempfile.TemporaryDirectory() as datadir:
             patient = BidsPatient(patientid, datadir)
@@ -128,15 +135,43 @@ class BidsPatient(BaseBids):
                 sidecardict["PowerLineFrequency"] = line_noise
                 self.writer.write_sidecar_json()
 
-            # parse channel names
-
-
-
-
             output_fpaths.append(bids_edf_fpath)
 
         # process these all into fif files
         return output_fpaths
+
+    def load_dataset(self, session_id, run_id):
+        """
+        Loads in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure
+
+        Parameters
+        ----------
+        session_id :
+        run_id :
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def _add_metadata(self, id, data):
+        """
+        Helper function to add patient metadata. Requires column ID and then data source to be passed in.
+
+        Parameters
+        ----------
+        id :
+        data :
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def _add_scandata(self, filename, acq_time, **scan_kwargs):
+        pass
 
     def get_filesizes(self):
         """
