@@ -165,7 +165,7 @@ def edf_fpath():
     :return:
     """
     # load in edf data
-    testdatadir = os.path.join(os.getcwd(), "./data/")
+    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/")
     filepath = os.path.join(testdatadir, "scalp_test.edf")
     return filepath
 

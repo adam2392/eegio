@@ -1,123 +1,109 @@
 import os
-from eegio.base.config import EEGIO_DIR
-
-import mne
-from mne import io
-
-from mne_bids import write_raw_bids, make_bids_basename, make_bids_folders
+from typing import Union
+import warnings
+import bids
+import bids.reports
+import mne_bids
 from mne_bids.utils import print_dir_tree
+
 
 class BaseBids(object):
     """
-    An instantiator class of the bids format to handle the logistics of creating
-    a bids format file structure
+    An instantiator class of the bids format that any BIDS derivative would use. It handles:
+     - the logistics of creating a bids format file structure
+     - extracting metadata from files stored in iEEG-BIDS format
+     - easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)
+
+    Only supports iEEG/scalp EEG data. We assume you store data as a BIDS with sub_<###> as the
+    identifiers.
+
+    TODO:
+    1. Add support for runs and acquisitions (https://mne.tools/mne-bids/generated/mne_bids.utils.get_entity_vals.html#mne_bids.utils.get_entity_vals)
+    2.
 
     Attributes
     ----------
-    patientid: str
-        patient identifier used to build the file structure
     datadir: os.PathLike
         The base directory for storing data
+    modality: str
+        The modality of data we are reading. For example, EEG, MRI, CT, etc.
+
     Notes
     -----
+    datadir should be named and formatted according to BIDS format. For example:
+
+    datadir = <study_name>/raw/
+
+    maybe it will be:
+
+    datadir = <study_name>/derivatives/<derivative_category_name>
 
     Examples
     --------
     """
-    def __init__(
-        self,
-        patientid: str,
-        datadir: os.PathLike,
-        modality: str,
-    ):
-        self.patientid=patientid
-        self.datadir=datadir
-        self.modality=modality
 
-        if (not os.path.exists(os.path.join(self.datadir, self.patientid)):
-            self.make_bids_folder_struct()
-            bids_basename = make_bids_basename(subject=patientid, session='one')
-            self.bids_basename = bids_basename
-        
+    def __init__(
+            self,
+            datadir: Union[os.PathLike, str],
+            modality: str,
+    ):
+        self.rootdir = datadir
+        self.datadir = datadir
+        self.modality = modality
+
+        # initialize a dictionary to store all of our paramters
+        self.parameter_dict = {}
+
         # store parameters
         self._store_params()
+
+        if not os.path.exists(self.description_fpath):
+            self.create_dataset_folder(self.datadir,
+                                       name="BIDS_DATASET")
+
+    @property
+    def description_fpath(self):
+        return os.path.join(self.datadir, "dataset_description.json")
+
+    @property
+    def query(self):
+        return bids.BIDSLayout(self.datadir)
 
     @property
     def parameters(self):
         return self.parameter_dict
 
+    @property
+    def data_types(self):
+        return mne_bids.utils.get_kinds(self.datadir)
+
+    @property
+    def subject_nums(self):
+        return mne_bids.utils.get_entity_vals(self.datadir, 'sub')
+
+    def print_dir_tree(self):
+        basepath = os.path.join(self.datadir)
+        print_dir_tree(basepath)
+
     def _store_params(self):
         self.parameter_dict.update(
-            patientid=self.patientid,
             datadir=self.datadir,
             modality=self.modality,
         )
 
-    def summary(self):
+    def create_dataset_folder(self, fpath, **dataset_description_kwargs):
+        # create dataset description
+        mne_bids.make_dataset_description(fpath, dataset_description_kwargs)
+
+    def print_summary(self):
         """
         Print a summary of the patient in the form of a directory tree showing
         all available data
         """
-        basepath = os.path.join(self.datadir, self.patientid)
-        print_dir_tree(basepath)
-
-    def make_bids_folder_struct(self):
-        """
-        Creates the empty folder structure for a new patient according to the Bids format.
-        Session is assumed to be 'one' for now.
-        """
-        make_bids_folders(subject=self.patientid, kind=self.modality, session='one',
-            output_path = self.datafir, make_dir=True)
-
-    def convert_to_bids(self, data, savePath, excluded_contacts=None):
-        """
-        Helper function to convert an edf file into bids format and create all 
-        necessary metadata files corresponding to this data from Bids format.
-
-        Parameters:
-        -----------
-        data: os.PathLike
-            The path of the edf file to be loaded
-        savePath: os.PathLike
-            The path to save the resulting edf file. Named with Bids convention
-        exluded_contacts: List[str]
-            The list of contacts to exclude from conversion
-        """
-        if excluded_contacts is None:
-            excluded_contacts = ["-", ""]
-        raw = io.read_raw_edf(
-            data,
-            preload=False,
-            verbose="ERROR",
-            exclude=excluded_contacts,
-            eog=None,
-            misc=None,
-        )
-        outfile = savePath.split('_eeg')
-        outfile = outfile[0]
-        write_raw_bids(raw, outfile, output_path = self.datadir)
-
-    def make_preprocessed_folder(self):
-        """
-        Creates the preproceesed data folder in the correct location if it does
-        not already exist. Assumes session is 'one'
-        """
-        basedir = os.path.join(self.datadir, 'sub-', + self.patientid, 'ses-one')
-        preprocessed_dir = os.path.join(basedir, 'preprocessed')
-        if os.path.exists(preprocessed_dir):
-            return 1
-        else
-            os.mkdir(preprocessed_dir)
-
-    def make_results_folder(self):
-        """
-        Creates the results folder in the correct location if it does not already
-        exist. Assumes session is 'one'
-        """
-        basedir = os.path.join(self.datadir, 'sub-' + self.patientid, 'ses-one')
-        results_dir = os.path.join(basedir, 'results')
-        if os.path.exists(results_dir):
-            return 1
-        else:
-            os.mkdir(results_dir)
-
+        if self.modality is not "MRI":
+            warnings.warn("Print summary only works for neuroimaging type datasets.")
+            return
+        report = bids.reports.BIDSReport(self.query)
+        counter = report.generate()
+        main_report = counter.most_common()
+        print(main_report)

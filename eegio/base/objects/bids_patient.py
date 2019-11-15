@@ -10,7 +10,7 @@ from mne_bids.utils import print_dir_tree
 from typing import List, Dict
 
 from eegio.base.config import EEGIO_DIR
-from eegio.base.object.basebids import BaseBids
+from eegio.base.objects.basebids import BaseBids
 
 
 class BidsPatient(BaseBids):
@@ -65,25 +65,25 @@ class BidsPatient(BaseBids):
         patientid: str,
         datadir: os.PathLike=None,
         managing_user: str=None,
-        center: str=None,
-        datasetids=None,
-        fifids=None,
+        # center: str=None,
+        # datasetids=None,
+        # fifids=None,
         modality: str = "ieeg",
-        samplerate: float = None,
-        wm_channels=None,
-        bad_channels=None,
-        metadata=None,
-        rz_contacts=None,
-        soz_contacts=None,
-        spread_contacts=None,
-        brain_region_hypo: str = None,
-        resected_region: str = None,
-        lesion_present: bool = False,
+        # samplerate: float = None,
+        # wm_channels=None,
+        # bad_channels=None,
+        # metadata=None,
+        # rz_contacts=None,
+        # soz_contacts=None,
+        # spread_contacts=None,
+        # brain_region_hypo: str = None,
+        # resected_region: str = None,
+        # lesion_present: bool = False,
     ):
         if datadir is None:
             datadir = os.path.join(EEGIO_DIR, 'BIDS_Subjects')
         
-        super(BaseModel, self).__init__(patientid=patientid, datadir=datadir, modality=modality)
+        super(BidsPatient, self).__init__(datadir=datadir, modality=modality)
         
         if spread_contacts is None:
             spread_contacts = []
@@ -125,6 +125,11 @@ class BidsPatient(BaseBids):
         # store parameters
         self._store_params()
 
+        if not os.path.exists(os.path.join(self.datadir)):
+            self.make_bids_folder_struct()
+            bids_basename = make_bids_basename(subject=patientid, session='one')
+            self.bids_basename = bids_basename
+
     def __str__(self):
         return "{} Patient with {} Dataset Recordings " "totaling {} seconds".format(
             self.patientid, self.numdatasets, self.total_length_seconds
@@ -148,6 +153,8 @@ class BidsPatient(BaseBids):
             lesion_present=self.legion_present
         )
 
+    def get_subject_sessions(self):
+        return mne_bids.utils.get_entity_vals(self.patdir, 'ses')
     @classmethod
     def create_fake_example(self):
         import tempfile
