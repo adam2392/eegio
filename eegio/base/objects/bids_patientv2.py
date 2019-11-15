@@ -1,20 +1,13 @@
 import os
 from typing import Union
-import pickle
-import shutil as sh
 import warnings
-import mne
-from mne import io
 import mne_bids
-from mne_bids import write_raw_bids, make_bids_basename, make_bids_folders
+from mne_bids import make_bids_basename
 from mne_bids.utils import print_dir_tree
 
-from typing import List, Dict
-
-from eegio.base.config import EEGIO_DIR
 from eegio.base.objects.basebids import BaseBids
-from eegio.base.objects.bids_helper import BidsBuilder
-from eegio.base.objects.bidsio import BidsWriter, BidsLoader
+from eegio.base.utils.bids_helper import BidsBuilder
+from eegio.loaders.bidsio import BidsWriter, BidsLoader
 
 
 class BidsPatient(BaseBids):
