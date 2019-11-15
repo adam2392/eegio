@@ -42,6 +42,7 @@ class BidsPatient(BaseBids):
             session_id: str = None,
             datadir: Union[str, os.PathLike] = None,
             managing_user: str = None,
+            original_subject_id: str = None,
             modality: str = "ieeg",
     ):
         super(BidsPatient, self).__init__(datadir=datadir, modality=modality)
@@ -49,6 +50,7 @@ class BidsPatient(BaseBids):
         self.subject_id = subject_id
         self.session_id = session_id
         self.managing_user = managing_user
+        self.original_subject_id = original_subject_id
         self.subjdir = os.path.join(self.datadir, self.subject_id)
 
         if not os.path.exists(self.subjdir):
@@ -102,9 +104,9 @@ class BidsPatient(BaseBids):
     @classmethod
     def create_fake_example(self):
         import tempfile
-        from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+        #from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 
-        eegts = EEGTimeSeries.create_fake_example()
+        #eegts = EEGTimeSeries.create_fake_example()
         patientid = "testid"
         with tempfile.TemporaryDirectory() as datadir:
             patient = BidsPatient(patientid, datadir)
@@ -123,9 +125,9 @@ class BidsPatient(BaseBids):
 
             # overwrite default line frequency noise in MNEBids
             if line_noise != 50:
-                sidecardict = self.loader.load_sidecarjson()
+                sidecardict = self.loader.load_sidecar_json()
                 sidecardict["PowerLineFrequency"] = line_noise
-                self.writer.write_sidecarjson()
+                self.writer.write_sidecar_json()
 
             output_fpaths.append(bids_edf_fpath)
 

@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import pandas as pd
 from datetime import datetime
 
 from mne_bids import make_bids_basename
@@ -116,13 +117,41 @@ class BidsLoader(BidsIO):
         super(BidsLoader, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
 
     def load_sidecar_json(self):
-        pass
+        """
+        Helper method to load in the sidecar json associated with a recording file.
+
+        Returns
+        -------
+        A dict representation of the json
+        """
+        sidecar_fpath = self.sidecarjson_fpath
+        with open(sidecar_fpath) as file:
+            data = json.load(file)
+        return data
 
     def load_scans_tsv(self):
-        pass
+        """
+        Helper method to load in the tsv file containing information about a patient's scans
+
+        Returns
+        -------
+        A pandas DataFrame object of the tsv
+        """
+        scans_fpath = self.scanstsv_fpath
+        scans = pd.read_table(scans_fpath)
+        return scans
 
     def load_channels_tsv(self):
-        pass
+        """
+        Helper method to load in the tsv file containing information about a patient's recording channels
+
+        Returns
+        -------
+        A pandas DataFrame object of the tsv
+        """
+        channels_fpath = self.chanstsv_fpath
+        channels = pd.read_table(channels_fpath)
+        return channels
 
 
 class BidsWriter():
@@ -133,6 +162,7 @@ class BidsWriter():
         write_tsv(metadata, fpath, first_colum="")
 
     def write_sidecar_json(self):
+        # TODO: Add original file name field
         pass
 
     def write_scans_tsv(self):
@@ -142,4 +172,5 @@ class BidsWriter():
         pass
 
     def write_electrode_status(self, ):
+        # TODO: Parse ECG, EMG, EOG and mark, but do not change status. Change status of only EEG with WM, or out
         pass
