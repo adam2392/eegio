@@ -123,6 +123,8 @@ class BidsPatient(BaseBids):
             bids_basename = make_bids_basename(self.subject_id, self.session_id, run=i)
             bids_edf_fpath = BidsBuilder.convert_to_bids(fpath, self.datadir, bids_basename, overwrite=True)
 
+            # TODO: Helper functions here
+
             # overwrite default line frequency noise in MNEBids
             if line_noise != 50:
                 sidecardict = self.loader.load_sidecar_json()
@@ -133,6 +135,33 @@ class BidsPatient(BaseBids):
 
         # process these all into fif files
         return output_fpaths
+
+    def _add_resected_contacts(self, resected_list):
+        participants_data = self.loader.load_participants_tsv()
+        participants_json = self.loader.load_participants_json()
+        if 'resected_contacts' not in participants_json.keys():
+            BidsBuilder.add_participant_field('resected_contacts', [], ['The list of contacts corresponding to '
+                                                                        'resected regions'])
+        # TODO: Add the resected_contacts into Dataframe and write to tsv
+
+    def _add_original_patient_name(self):
+        participants_data = self.loader.load_participants_tsv()
+        participants_json = self.loader.load_participants_json()
+        if 'original_subjectid' not in participants_json.keys():
+            BidsBuilder.add_participant_field('original_subjectid', [], ['The subjectid in the clinical data source'])
+        # TODO: Add the self.original_subject_id field into the DataFrame and write to tsv
+
+    def _add_original_scan_filename(self, original_filename):
+        scans_data = self.loader.load_scans_tsv()
+        # TODO: Add original_filename to DataFrame and write to tsv
+
+    def _modify_electrode_status(self, runid):
+        channels_data = self.loader.load_channels_tsv()
+        # TODO: Parse all channels from source. Create dictionary of values to change
+        # TODO: Included in dict are name as key, then type and status to change
+
+
+
 
     # def get_filesizes(self):
     #     """

@@ -114,3 +114,22 @@ class BidsBuilder(object):
             return 1
         else:
             os.mkdir(results_dir)
+
+    @staticmethod
+    def add_participant_field(new_field, labels=None, descriptors=None):
+        """
+        Adds a new field to the participants.json file
+
+        Parameters
+        ----------
+        new_field : str
+            The name of the new field
+        labels : List[str]
+            The name of subfields for the new field.
+        descriptors: List[str]
+            The values for each label. If labels empty, corresponds to the description of the new_field
+        Returns
+        -------
+
+        """
+        pass
