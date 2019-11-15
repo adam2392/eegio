@@ -1,6 +1,7 @@
 import os
 from typing import Union
 import warnings
+import pickle
 import mne_bids
 from mne_bids import make_bids_basename
 from mne_bids.utils import print_dir_tree
@@ -123,41 +124,46 @@ class BidsPatient(BaseBids):
 
             # overwrite default line frequency noise in MNEBids
             if line_noise != 50:
-                sidecardict = self.loader.load_sidecarjson()
+                sidecardict = self.loader.load_sidecar_json()
                 sidecardict["PowerLineFrequency"] = line_noise
-                self.writer.write_sidecarjson()
+                self.writer.write_sidecar_json()
+
+            # parse channel names
+
+
+
 
             output_fpaths.append(bids_edf_fpath)
 
         # process these all into fif files
         return output_fpaths
 
-    # def get_filesizes(self):
-    #     """
-    #     Get the total filesize of all the files attached for this patient.
-    #
-    #     Returns
-    #     -------
-    #     int
-    #         size of all files
-    #     """
-    #     size = 0
-    #     for f in self.get_all_filepaths():
-    #         size += os.path.getsize(f)
-    #     return size
-    #
-    # def pickle_results(self):
-    #     """
-    #     Save the BidsPatient object via pickling. Stored at the subject level.
-    #     """
-    #     patient = self
-    #     patient_pickle = os.path.join(self.datadir, 'sub-' + self.patientid, 'patient_object.obj')
-    #     file_patient = open(patient_pickle, 'wb+')
-    #     pickle.dump(patient, file_patient)
-    #
-    # def load_metadata(self, metadata: dict):
-    #     self.metadata = metadata
-    #
+    def get_filesizes(self):
+        """
+        Get the total filesize of all the files attached for this patient.
+
+        Returns
+        -------
+        int
+            size of all files
+        """
+        size = 0
+        for f in self.dataset_fpaths():
+            size += os.path.getsize(f)
+        return size
+
+    def pickle_results(self):
+        """
+        Save the BidsPatient object via pickling. Stored at the subject level.
+        """
+        patient = self
+        patient_pickle = os.path.join(self.datadir, 'sub-' + self.patientid, 'patient_object.obj')
+        file_patient = open(patient_pickle, 'wb+')
+        pickle.dump(patient, file_patient)
+
+    def load_metadata(self, metadata: dict):
+        self.metadata = metadata
+
     # def add_bad_channels(self, bad_channels: List[str]):
     #     """
     #     Helper setter function to load additional bad_channels

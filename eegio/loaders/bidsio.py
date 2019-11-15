@@ -77,6 +77,7 @@ class BidsIO():
     session_id :
     run_id :
     kind :
+
     """
     def __init__(self, bidsdir, subject_id, session_id, run_id, kind):
 
