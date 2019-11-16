@@ -116,12 +116,14 @@ class BidsBuilder(object):
             os.mkdir(results_dir)
 
     @staticmethod
-    def add_participant_field(new_field, labels=None, descriptors=None):
+    def add_participant_field(current_dict, new_field, labels=None, descriptors=None):
         """
         Adds a new field to the participants.json file
 
         Parameters
         ----------
+        current_dict : dict
+            The participants dictionary to add to
         new_field : str
             The name of the new field
         labels : List[str]
@@ -130,6 +132,21 @@ class BidsBuilder(object):
             The values for each label. If labels empty, corresponds to the description of the new_field
         Returns
         -------
-
+        The modified dict variable
         """
-        pass
+        if type(descriptors) is not list:
+            descriptors = [descriptors]
+        if labels is None:
+            if len(descriptors) != 1:
+                pass
+            else:
+                new_dict = {new_field: descriptors[0]}
+        else:
+            new_dict = {new_field: {}}
+            values = tuple(zip(labels, descriptors))
+            for lab, desc in values:
+                print(lab, desc)
+                new_dict[new_field][lab] = desc
+
+        current_dict.update(new_dict)
+        return current_dict

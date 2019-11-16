@@ -5,9 +5,8 @@ from typing import Union
 
 import mne_bids
 from mne_bids import make_bids_basename
-from mne_bids.utils import print_dir_tree
 
-from eegio.base.objects.basebids import BaseBids
+from eegio.base.objects.bids.basebids import BaseBids
 from eegio.base.utils.bids_helper import BidsBuilder
 from eegio.loaders.bidsio import BidsWriter, BidsLoader
 
@@ -70,8 +69,12 @@ class BidsPatient(BaseBids):
         self._store_params()
 
         # instantiate a loader/writer
-        self.loader = BidsLoader()
-        self.writer = BidsWriter()
+        self.loader = BidsLoader(datadir, subject_id, session_id)
+        self.writer = BidsWriter(datadir, subject_id, session_id)
+
+        # automatically update patient metadata
+        self._add_resected_contacts()
+        self._add_original_patient_name()
 
     def __str__(self):
         return "{} Patient with {} Dataset Recordings ".format(
@@ -142,32 +145,7 @@ class BidsPatient(BaseBids):
         # process these all into fif files
         return output_fpaths
 
-    def _add_resected_contacts(self, resected_list):
-        participants_data = self.loader.load_participants_tsv()
-        participants_json = self.loader.load_participants_json()
-        if 'resected_contacts' not in participants_json.keys():
-            BidsBuilder.add_participant_field('resected_contacts', [], ['The list of contacts corresponding to '
-                                                                        'resected regions'])
-        # TODO: Add the resected_contacts into Dataframe and write to tsv
-
-    def _add_original_patient_name(self):
-        participants_data = self.loader.load_participants_tsv()
-        participants_json = self.loader.load_participants_json()
-        if 'original_subjectid' not in participants_json.keys():
-            BidsBuilder.add_participant_field('original_subjectid', [], ['The subjectid in the clinical data source'])
-        # TODO: Add the self.original_subject_id field into the DataFrame and write to tsv
-
-    def _add_original_scan_filename(self, original_filename):
-        scans_data = self.loader.load_scans_tsv()
-        # TODO: Add original_filename to DataFrame and write to tsv
-
-    def _modify_electrode_status(self, runid):
-        channels_data = self.loader.load_channels_tsv()
-        # TODO: Parse all channels from source. Create dictionary of values to change
-        # TODO: Included in dict are name as key, then type and status to change
-
-
-    def load_dataset(self, session_id, run_id):
+    def load_dataset(self, session_id, run_id, kind):
         """
         Loads in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure
 
@@ -180,25 +158,26 @@ class BidsPatient(BaseBids):
         -------
 
         """
-        pass
+        dataset = self.loader.load_dataset(session_id, run_id)
+        metadata = self.loader.load_sidecar_json()
 
-    def _add_metadata(self, id, data):
-        """
-        Helper function to add patient metadata. Requires column ID and then data source to be passed in.
+    def _add_resected_contacts(self, resected_list):
+        participants_data = self.loader.load_participants_tsv()
+        participants_json = self.loader.load_participants_json()
+        if 'resected_contacts' not in participants_json.keys():
+            BidsBuilder.add_participant_field('resected_contacts', [], ['The list of contacts corresponding to '
+                                                                        'resected regions'])
+        # TODO: Add the resected_contacts into Dataframe and write to tsv
 
-        Parameters
-        ----------
-        id :
-        data :
+    def _add_original_patient_name(self):
+        participants_data = self.loader.load_participants_tsv()
+        participants_json = self.loader.load_participants_json()
+        if 'original_subjectid' not in participants_json.keys():
+            participants_json = BidsBuilder.add_participant_field(participants_json, 'original_subjectid', [],
+                                              ['The subjectid in the clinical data source'])
+            self.writer.write_participants_json(participants_json)
+        # TODO: Add the self.original_subject_id field into the DataFrame and write to tsv
 
-        Returns
-        -------
-
-        """
-        pass
-
-    def _add_scandata(self, filename, acq_time, **scan_kwargs):
-        pass
 
     def get_filesizes(self):
         """

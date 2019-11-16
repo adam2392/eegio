@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 import pandas as pd
+import mne
 from mne_bids import make_bids_basename
 
 
@@ -68,7 +69,7 @@ class BidsIO():
 
     """
 
-    def __init__(self, bidsdir, subject_id, session_id, run_id, kind, datatype="edf"):
+    def __init__(self, bidsdir, subject_id, session_id, kind, run_id = None, datatype="edf"):
         self.rootdir = bidsdir
         self.subjdir = os.path.join(bidsdir, make_bids_basename(subject=subject_id))
         self.sessiondir = os.path.join(self.subjdir, make_bids_basename(subject=subject_id,
@@ -125,16 +126,10 @@ class BidsIO():
         return os.path.join(self.sessiondir, make_bids_basename(subject=self.subject_id,
                                                                 session=self.session_id,
                                                                 suffix="scans.tsv"))
-    @property
-    def participantstsv_fpath(self):
-        return os.path.join(self.rootdir, 'participants.tsv')
 
-    @property
-    def participantsjson_fpath(self):
-        return os.path.join(self.rootdir, 'participants.json')
 
 class BidsLoader(BidsIO):
-    def __init__(self, bidsdir, subject_id, session_id, run_id, kind="eeg"):
+    def __init__(self, bidsdir, subject_id, session_id, run_id = None, kind="eeg"):
         super(BidsLoader, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
 
     def load_sidecar_json(self):
@@ -200,9 +195,31 @@ class BidsLoader(BidsIO):
             data = json.load(file)
         return data
 
+    def load_dataset(self, sessionid, runid, kind):
+        """
+        Helper method to load in mne.io.Raw dataset based on the sessionid and runid of the dataset
 
-class BidsWriter():
-    def __init__(self, bidsdir, subject_id, session_id, run_id, kind="eeg"):
+        Parameters
+        ----------
+        sessionid : str
+            The id of the dataset's session
+        runid : str
+            The id of the dataset's run number
+
+        Returns
+        -------
+        The mne.io.Raw dataset
+        """
+        datafile_fpath = self.datafile_fpath
+        if 'fif' in datafile_fpath:
+            raw = mne.read_raw_fif(datafile_fpath)
+        elif 'edf' in datafile_fpath:
+            raw = mne.read_raw_edf(datafile_fpath)
+        return raw
+
+
+class BidsWriter(BidsIO):
+    def __init__(self, bidsdir, subject_id, session_id, run_id=None, kind="eeg"):
         super(BidsWriter, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
 
     def write_channels_tsv(self, metadata, fpath, overwrite=True):
@@ -217,11 +234,15 @@ class BidsWriter():
     def write_electrode_coords(self, coords_dict):
         pass
 
-
     def write_electrode_status(self, status_dict):
         pass
 
     def write_participants_tsv(self):
+        pass
+
+    def write_participants_json(self, new_dict):
+        outfile = self.participantsjson_fpath
+        write_json(new_dict, outfile)
 
     def write_electrode_type(self, ):
         pass

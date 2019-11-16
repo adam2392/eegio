@@ -2,15 +2,12 @@ import os
 import pickle
 import shutil as sh
 
-import mne
-from mne import io
-from mne_bids import write_raw_bids, make_bids_basename, make_bids_folders
-from mne_bids.utils import print_dir_tree
+from mne_bids import make_bids_basename
 
-from typing import List, Dict
+from typing import List
 
 from eegio.base.config import EEGIO_DIR
-from eegio.base.objects.basebids import BaseBids
+from eegio.base.objects.bids.basebids import BaseBids
 
 
 class BidsPatient(BaseBids):

@@ -2,8 +2,8 @@ import pytest
 import os
 import tempfile
 
-from eegio.base.objects.basebids import BaseBids
-from eegio.base.objects.bids_patientv2 import BidsPatient
+from eegio.base.objects.bids.basebids import BaseBids
+from eegio.base.objects.bids.bids_patientv2 import BidsPatient
 
 test_fpath = os.path.join(os.getcwd(), "./data/bids_layout/")
 
