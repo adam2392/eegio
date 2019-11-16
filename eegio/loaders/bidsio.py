@@ -195,9 +195,13 @@ class BidsLoader(BidsIO):
             data = json.load(file)
         return data
 
-    def load_dataset(self, sessionid, runid, kind):
+    def load_dataset(self):
         """
         Helper method to load in mne.io.Raw dataset based on the sessionid and runid of the dataset
+
+        TODO:
+        1. Allow exotic return types in the form of easy to use data structures? or keep as MNE.io.Raw.
+        TBD.
 
         Parameters
         ----------
@@ -212,9 +216,9 @@ class BidsLoader(BidsIO):
         """
         datafile_fpath = self.datafile_fpath
         if 'fif' in datafile_fpath:
-            raw = mne.read_raw_fif(datafile_fpath)
+            raw = mne.io.read_raw_fif(datafile_fpath)
         elif 'edf' in datafile_fpath:
-            raw = mne.read_raw_edf(datafile_fpath)
+            raw = mne.io.read_raw_edf(datafile_fpath)
         return raw
 
 
