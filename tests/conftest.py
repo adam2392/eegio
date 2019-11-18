@@ -1,6 +1,7 @@
 """ Define fixtures available for eegio tests. """
 import os
 import os.path
+import tempfile
 
 import numpy as np
 import pytest
@@ -75,26 +76,62 @@ def ieegts():
 
 
 @pytest.fixture(scope="class")
-def patient():
+def basebids():
     """
-    Creating a pytest fixture for a fake Patient data object.
+    Creating a pytest fixture for the base bids class
+    Returns
+    -------
+
+    """
+    from eegio.base.objects.bids.basebids import BaseBids
+    modality = "ieeg"
+    with tempfile.TemporaryDirectory() as datadir:
+        base = BaseBids(datadir=datadir, modality=modality)
+    return base
+
+
+@pytest.fixture(scope="class")
+def bidspatient():
+    """
+    Creating a pytest fixture for a fake bidsPatient data object.
 
     :return:
     """
-    from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
-    from eegio.base.objects.patient import Patient
-
-    eegts = EEGTimeSeries.create_fake_example()
-
-    patientid = "test_patient_01"
-    datasetids = [f"test_sz{i}" for i in range(5)]
+    from eegio.base.objects.bids.bids_patient import BidsPatient
+    subject_id = "01"
+    session_id = "seizure"
     managing_user = "EZTrack"
     datadir = os.path.join("./")
-    patient = Patient(
-        patientid, datadir=datadir, managing_user=managing_user, datasetids=datasetids
+    original_subject_id = 'test_patient_01'
+    modality = 'ieeg'
+    patient = BidsPatient(
+        subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
+        original_subject_id=original_subject_id, modality=modality
     )
+    patient = patient.create_fake_example()
 
     return patient
+
+
+@pytest.fixture(scope="class")
+def bidsrun():
+    """
+    Creating a pytest fixture for a fake bidsRun data object
+    Returns
+    -------
+
+    """
+    from eegio.base.objects.bids.bids_run import BidsRun
+    subject_id = "01"
+    session_id = "seizure"
+    run_id = "00"
+    modality = "ieeg"
+    original_filename = "test_"
+    with tempfile.TemporaryDirectory() as datadir:
+        run = BidsRun(subject_id=subject_id, session_id=session_id, run_id=run_id, datadir=datadir, modality=modality,
+                      original_filename=original_filename)
+    return run
+
 
 
 @pytest.fixture(scope="class")

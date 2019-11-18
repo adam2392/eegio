@@ -2,63 +2,96 @@ import sys
 
 import pytest
 
+import pandas as pd
+
 from eegio.base.config import MB
 
-@pytest.mark.usefixture("bidsPatient")
+@pytest.mark.usefixture("bidspatient")
 class TestBidsPatient:
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-    def test_bidsPatient(self, bidsPatient):
+    def test_bidspatient(self, bidspatient):
         """
         Test to test BidsPatient object.
 
         Parameters
         ----------
-        bidsPatient: BidsPatient
+        bidspatient: Bidspatient
             The class object to test
 
         Returns
         -------
         """
-        bidspatient = bidspatient.create_fake_example()
 
-        assert bidspatient.numdatasets >= 0
+        # check for no datasets
+        assert bidspatient.numdatasets == 0
 
-        fpaths = bidspatient.get_all_filepaths()
-        assert len(fpaths) == length(bidspatient.datasetids)
+        # check that resected contacts and original subject id have been added to the participants tsv
+        participants_json = bidspatient.loader.load_participants_json
+        participants_tsv = bidspatient.loader.load_participants_tsv
 
-    def test_bidsPatient_channelfunc(self, bidsPatient):
-        assert len(bidsPatient.wm_channels) >= 0
-        assert len(bidsPatient.bad_channels) >= 0
+        participants_keys = participants_json.keys()
+        resect = 'resected_contacts' in participants_keys
+        assert resect
+        original = 'original_subjectid' in participants_keys
+        assert original
+
+        participants_columns = participants_tsv.columns
+        resect_col = 'resected_contacts' in participants_columns
+        assert resect_col
+        original_col = 'original_subjectid' in participants_columns
+        assert original_col
+
+        if resect_col:
+            for ind, row in participants_tsv.iterrows():
+                if (row['participant_id'] == bidspatient.subject_id):
+                    resected_contacts = row['resected_contacts']
+                    assert resected_contacts ==  " ".join(bidspatient.resected_contacts)
+        if original_col:
+            for ind, row in participants_tsv.iterrows():
+                if (row['participant_id'] == bidspatient.subject_id):
+                    original_subjectid = row['original_subjectid']
+                    assert original_subjectid == bidspatient.original_subject_id
+
+        # check that the derivate folders have been created
+
+
+
+
+    def test_bidspatient_channelfunc(self, bidspatient):
+
+        assert len(bidspatient.wm_channels) >= 0
+        assert len(bidspatient.bad_channels) >= 0
 
         # test working w/ channels
         test_bad_ch = ["a1", "a2", "a3"]
         test_wm_ch = ["b1", "b3"]
         
-        bidsPatient.add_bad_channels(test_bad_ch)
-        bidsPatient.add_wm_channels(test_wm_channels)
+        bidspatient.add_bad_channels(test_bad_ch)
+        bidspatient.add_wm_channels(test_wm_ch)
 
-        assert len(bidsPatient.wm_channels) == len(test_wm_ch)
-        assert len(bidsPatient.bad_channels) == len(test_bad_ch)
+        assert len(bidspatient.wm_channels) == len(test_wm_ch)
+        assert len(bidspatient.bad_channels) == len(test_bad_ch)
 
         # make sure that bidspatient object isnt loading in any explicit data
         # into the object
         assert sys.getsizeof(bidspatient) < 5 * MB
 
-    def test_bidsPatient_errors(self, bidsPatient):
+    def test_bidspatient_errors(self, bidspatient):
         """
         Test error and warnings raised by patient class.
 
         Parameters
         ----------
-        bidsPatient: BidsPatient
+        bidspatient: BidsPatient
             The class object to test
 
         Returns
         -------
         """
+
         # partition data into windows
         with pytest.warns(RuntimeWarning):
-            fpaths = bidsPatient.get_all_filepaths()
+            fpaths = bidspatient.get_all_filepaths()
 
 
         

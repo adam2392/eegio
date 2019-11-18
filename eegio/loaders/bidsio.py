@@ -203,13 +203,6 @@ class BidsLoader(BidsIO):
         1. Allow exotic return types in the form of easy to use data structures? or keep as MNE.io.Raw.
         TBD.
 
-        Parameters
-        ----------
-        sessionid : str
-            The id of the dataset's session
-        runid : str
-            The id of the dataset's run number
-
         Returns
         -------
         The mne.io.Raw dataset
@@ -219,6 +212,8 @@ class BidsLoader(BidsIO):
             raw = mne.io.read_raw_fif(datafile_fpath)
         elif 'edf' in datafile_fpath:
             raw = mne.io.read_raw_edf(datafile_fpath)
+        #else:
+        #    DatasetTypeError('Passed dataset must be of type')
         return raw
 
 
@@ -226,7 +221,7 @@ class BidsWriter(BidsIO):
     def __init__(self, bidsdir, subject_id, session_id, run_id=None, kind="eeg"):
         super(BidsWriter, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
 
-    def write_channels_tsv(self, metadata, fpath, overwrite=True):
+    def write_channels_tsv(self, metadata, fpath=self.chanstsv_fpath, overwrite=True):
         write_tsv(metadata, fpath, first_colum="")
 
     def write_sidecar_json(self):
@@ -241,8 +236,9 @@ class BidsWriter(BidsIO):
     def write_electrode_status(self, status_dict):
         pass
 
-    def write_participants_tsv(self):
-        pass
+    def write_participants_tsv(self, new_df):
+        outfile = self.participantstsv_fpath
+        write_tsv(new_df, outfile, 'participant_id')
 
     def write_participants_json(self, new_dict):
         outfile = self.participantsjson_fpath

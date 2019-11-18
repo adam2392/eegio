@@ -5,7 +5,28 @@ from eegio.base.objects.bids.basebids import BaseBids
 from eegio.loaders.bidsio import BidsIO, BidsWriter, BidsLoader
 
 class BidsRun(BaseBids):
+    """
+    The class for a specific run of
 
+    Attributes
+    ----------
+    patientid: str
+        patient identifier for this BidsPatient
+    datadir: os.PathLike
+        The base directory for storing BidsPatient data
+    managing_user: str
+        managing user that is tied to this BidsPatient. E.g. a clinical center, specific researcher, or specific doctor
+    modality: str
+        Modality of recording done to this patient. E.g. ecog, seeg, scalp, ieeg.
+    metadata:
+        TODO
+
+    Notes
+    -----
+
+    Examples
+    --------
+    """
     def __init__(
             self,
             subject_id: str,
@@ -24,6 +45,7 @@ class BidsRun(BaseBids):
         # instantiate a loader/writer
         self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
+        self._add_original_scan_filename()
 
     @property
     def fpath(self):
@@ -42,8 +64,9 @@ class BidsRun(BaseBids):
             if row['filename'] == self.fpath:
                 row['original_filename'] = self.original_filename
 
-    def _modify_electrode_status(self, runid):
+    def _modify_electrode_status(self):
         channels_data = self.loader.load_channels_tsv()
+
         # TODO: Parse all channels from source. Create dictionary of values to change
         # TODO: Included in dict are name as key, then type and status to change
 
