@@ -143,7 +143,7 @@ class Test_Loader:
         # create intermediate data structures
         raw_mne.load_data()
         raw_mne = ChannelScrub.channel_text_scrub(raw_mne)
-        chlabels = raw_mne.ch_names
+        chlabels = [ch for ch in raw_mne.ch_names]
         badchs = ChannelScrub.look_for_bad_channels(chlabels)
         goodinds = [i for i, ch in enumerate(chlabels) if ch not in badchs]
         raw_mne.drop_channels(badchs)
@@ -174,7 +174,7 @@ class Test_Loader:
         eegts.natsort_contacts()
 
         # trim dataset in time and by electrode
-        test_getch = "fp1"
+        test_getch = "FP1"
         trimmed_rawdata_time = eegts.trim_dataset()
         trimmed_rawdata_chs = eegts.get_channel_data(test_getch)
 
@@ -182,7 +182,7 @@ class Test_Loader:
         assert trimmed_rawdata_time.ndim == 2
 
         # remove channels
-        test_remove = "fp1"
+        test_remove = "FP1"
         eegts.remove_channels(test_remove)
         assert len(eegts.chanlabels) == len(testchs) - 1
         assert eegts.mat.shape[0] == eegts.ncontacts
@@ -192,3 +192,9 @@ class Test_Loader:
 
         assert eegts.mat.shape[0] == eegts.ncontacts
         assert eegts.ncontacts == len(testchs)
+
+        # test adding a montage
+        best_montage = ScalpMontageHelper.get_best_matching_montage(eegts.chanlabels)
+        montage_inst = mne.channels.make_standard_montage(best_montage)
+        montage_inst.ch_names = [ch.upper() for ch in montage_inst.ch_names]
+        eegts.set_scalp_montage(montage_inst)

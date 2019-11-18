@@ -15,7 +15,6 @@ This module stores the code for IO of EEG data for human patients, and pipelinin
 ## Dev Process - TODO
 
 - [ ] Add documentation
-- [ ] Create fully-functional tests
 - [ ] Add support for adding structural context via neuroimaging processed data (e.g. FreeSurfer)
 
 # Installation Guide
@@ -49,7 +48,14 @@ To install, run this command inside your virtual environment:
 Epilepsy researchers dealing with EEG data. Anyone with human patient EEG data. The main data workflow is to maintain a running Excel sheet with variables related to your patient population. 
 See example and docs for info on how to format this.
 
+https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
+
 ## Formatting
+User can create BIDS directory structure to house all the data
+
+    # create file directory structure if not already made
+    eegio.create_bids_struct(bidsdir, patids=['pat01', 'pat02'])
+    
 User can run:
 
     formatted_df = eegio.format_clinical_sheet(excelfilepath,
@@ -65,19 +71,20 @@ User can run preprocessing on .edf files to create .fif + .json files:
 User can then load datasets, or patient (i.e. grouped datasets) data:
     
     # create a patient object that looks through hard coded directory
-    patientobj = eegio.get_patients(patientdir)
+    patientobj = eegio.get_patients(bidsdir)
     
     # actually load an EEG Time series from .fif/.edf,etc.
-    datasetobj = eegio.load_file(datasetfilepath)
+    datasetobj = eegio.load_file(patid, snapshotid)
     
     # read in metadata related from an excel file
-    clin_dict = eegio.load_clinicalmetadata(formatted_df)
+    clin_dict = eegio.load_clinicalmetadata(patid)
     
     # attach clinical data to metadata for EEG TimeSeries
     datasetobj.update_metadata(**clin_dict)
     
     print(datasetobj)
     print(patientobj)
+    print(clin_dict
     
 ### Reading Clinical Data From Excel
 Most clinical data is stored in excel format. And changing between these two is ideal. We provide examples of
@@ -89,19 +96,6 @@ will provide additional functionality in terms of:
 2. preprocessing column names
 3. caching/storing data in a Python object
 
-
-    fpath = "./data/clinical_examples/test_clinicaldata.csv"
-    # instantiate datasheet loader
-    clinloader = DataSheetLoader()
-
-    # load csv file
-    csv_df = clinloader.load(fpath=clinical_csv_fpath)
-
-    # clean up the column names
-    csv_df = clinloader.clean_columns(csv_df)
-    
-    # show input data
-    display(csv_df.head())
     
 ### Reading EEG Data From EDF/FiF
 These are just lightweight wrappers of MNE/pyedflib reading to load in EDF/FiF data
