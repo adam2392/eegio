@@ -33,7 +33,6 @@ class BidsBuilder(object):
                           output_path=datadir,
                           make_dir=True)
 
-    @staticmethod
     def convert_to_bids(edf_fpath, bids_dir, bids_basename,
                         excluded_contacts=None, eog_contacts=None, misc_contacts=None, overwrite=False):
         """

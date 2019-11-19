@@ -83,6 +83,10 @@ class BaseBids(object):
     def subject_nums(self):
         return mne_bids.utils.get_entity_vals(self.datadir, 'sub')
 
+    @property
+    def num_subjects(self):
+        return len(self.subject_nums)
+
     def print_dir_tree(self):
         basepath = os.path.join(self.datadir)
         print_dir_tree(basepath)

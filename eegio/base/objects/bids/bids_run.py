@@ -5,7 +5,10 @@ import pandas as pd
 import warnings
 
 from eegio.base.objects.bids.basebids import BaseBids
+from eegio.base.utils.bids_helper import BidsBuilder
 from eegio.loaders.bidsio import BidsIO, BidsWriter, BidsLoader
+
+from mne_bids import make_bids_basename
 
 class BidsRun(BaseBids):
     """
@@ -42,6 +45,8 @@ class BidsRun(BaseBids):
         self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
         self._add_original_scan_filename()
+        self._convert_run_to_bids()
+
 
     @property
     def fpath(self):
@@ -55,6 +60,11 @@ class BidsRun(BaseBids):
 
     def load_result(self):
         self.result_fpath = self.results_fpath
+
+    def _convert_run_to_bids(self):
+        bids_basename = make_bids_basename(subject=self.subject_id, session=self.session_id, run=self.run_id)
+        builder = BidsBuilder()
+        builder.convert_to_bids(edf_fpath=self.original_filename, bids_dir=self.datadir, bids_basename=bids_basename)
 
     def _add_original_scan_filename(self):
         """
@@ -75,7 +85,7 @@ class BidsRun(BaseBids):
             if row['filename'] == self.fpath:
                 row['original_filename'] = self.original_filename
 
-    def _modify_electrode_status(self, clinical_fpath):
+    def modify_electrode_status(self, clinical_fpath):
         """
         Updates the run's channel information by looking at the generated clinical electrode sheet annotations
 
@@ -120,6 +130,7 @@ class BidsRun(BaseBids):
     def _add_notes_to_channels(self):
         """
         Adds a column to the *channels.tsv file to allow for more detailed description of status beyond good/bad
+
         Returns
         -------
 

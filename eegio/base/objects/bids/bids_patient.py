@@ -7,8 +7,10 @@ import mne_bids
 from mne_bids import make_bids_basename
 
 from eegio.base.objects.bids.basebids import BaseBids
+from eegio.base.objects.bids.bids_run import BidsRun
 from eegio.base.utils.bids_helper import BidsBuilder
 from eegio.loaders.bidsio import BidsWriter, BidsLoader
+
 
 
 class BidsPatient(BaseBids):
@@ -118,29 +120,62 @@ class BidsPatient(BaseBids):
             patient = BidsPatient(patient_id, session_id, datadir, original_subject_id=original_subject_id)
         return patient
 
-    def preprocess_edf_files(self, filelist, line_noise=60):
-        output_fpaths = []
+    # def preprocess_edf_files(self, filelist, line_noise=60):
+    #     output_fpaths = []
+    #
+    #     # preprocess all edf files first
+    #     for i, fpath in enumerate(filelist):
+    #         if not os.path.exists(fpath):
+    #             raise OSError(f"{fpath} doesn't exist. Please pass in valid filepaths.")
+    #
+    #         bids_basename = make_bids_basename(self.subject_id, self.session_id, run=i)
+    #         bids_edf_fpath = BidsBuilder.convert_to_bids(fpath, self.datadir, bids_basename, overwrite=True)
+    #
+    #         # TODO: Helper functions here
+    #
+    #         # overwrite default line frequency noise in MNEBids
+    #         if line_noise != 50:
+    #             sidecardict = self.loader.load_sidecar_json()
+    #             sidecardict["PowerLineFrequency"] = line_noise
+    #             self.writer.write_sidecar_json()
+    #
+    #         output_fpaths.append(bids_edf_fpath)
+    #
+    #     # process these all into fif files
+    #     return output_fpaths
 
-        # preprocess all edf files first
+    def preprocess_edf_files(self, filelist=None, line_noise=60):
+        """
+
+        Parameters
+        ----------
+        filelist : list[os.PathLike]
+            The list of all files to be converted into .fif format. Default is all edf files available
+        line_noise : int
+            The line noise to be eliminated. Typically 60 Hz in America
+
+        Returns
+        -------
+
+        """
+        if filelist is None:
+            filelist = self._get_all_datasets()
         for i, fpath in enumerate(filelist):
-            if not os.path.exists(fpath):
+            if not os.path.exists(filelist):
                 raise OSError(f"{fpath} doesn't exist. Please pass in valid filepaths.")
-
-            bids_basename = make_bids_basename(self.subject_id, self.session_id, run=i)
-            bids_edf_fpath = BidsBuilder.convert_to_bids(fpath, self.datadir, bids_basename, overwrite=True)
-
-            # TODO: Helper functions here
-
-            # overwrite default line frequency noise in MNEBids
             if line_noise != 50:
                 sidecardict = self.loader.load_sidecar_json()
                 sidecardict["PowerLineFrequency"] = line_noise
                 self.writer.write_sidecar_json()
+            
+            # TODO: Check if .fif file already exists. Otherwise convert to fif
 
-            output_fpaths.append(bids_edf_fpath)
-
-        # process these all into fif files
-        return output_fpaths
+    def create_run(self, new_fpath, clinical_fpath):
+        run_id = str(self.numdatasets).zfill(2)
+        bidsrun = BidsRun(subject_id=self.subject_id, session_id=self.session_id, run_id=run_id, datadir=self.datadir,
+                          modality=self.modality, original_filename=new_fpath,
+                          original_subject_id=self.original_subject_id)
+        bidsrun.modify_electrode_status(clinical_fpath=clinical_fpath)
 
     def load_dataset(self, session_id, run_id, kind):
         """
