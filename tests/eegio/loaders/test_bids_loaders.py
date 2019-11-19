@@ -1,7 +1,8 @@
 import pytest
 import os
 import tempfile
-
+import mne
+import mne_bids
 from eegio.base.objects.bids.basebids import BaseBids
 from eegio.base.objects.bids.bids_patient import BidsPatient
 
@@ -41,7 +42,8 @@ class Test_BidsLoader:
         :return:
         :rtype:
         """
-        bidspat = BidsPatient(subject_id='0001',
+        test_subjectid = '0001'
+        bidspat = BidsPatient(subject_id=test_subjectid,
                               session_id='seizure',
                               datadir=test_fpath,
                               managing_user="test",
@@ -55,4 +57,25 @@ class Test_BidsLoader:
         # preprocess scalp EDF files
         bidspat.preprocess_edf_files([os.path.join(test_fpath, "scalp_test.edf"),
                                       os.path.join(test_fpath, "scalp_test_2.edf")])
+
+        # should be able to read in all the data related to the edf file
+        test_modality = 'eeg'
+        session_ids = bidspat.get_subject_sessions()
+        for session_id in session_ids:
+            run_ids = bidspat.get_subject_runs(sesion_id=session_id)
+
+            for run_id in run_ids:
+                rawmne, metadata = bidspat.load_dataset(session_id=session_id, run_id=run_id, kind=test_modality)
+
+                assert isinstance(rawmne, mne.io.Raw)
+
+        # load a specific dataset in mind and allow to pass in filename
+        test_filename = mne_bids.make_bids_basename(subject=test_subjectid, session=session_id, run=run_id)
+        # should not pass in filename and other variables
+        with pytest.raises(Exception):
+            bidspat.load_dataset(filename=test_filename, session_id=session_id, run_id=run_id, kind=test_modality)
+
+        # should be able to load a dataset based on its filename
+        rawmne, metadata = bidspat.load_dataset(filename=test_filename)
+
 
