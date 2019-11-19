@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Dict
 import pandas as pd
 
 import warnings
@@ -85,9 +85,32 @@ class BidsRun(BaseBids):
             if row['filename'] == self.fpath:
                 row['original_filename'] = self.original_filename
 
-    def modify_electrode_status(self, clinical_fpath):
+    def modify_electrode_type(self, chlabel: str, chtype: str):
         """
-        Updates the run's channel information by looking at the generated clinical electrode sheet annotations
+        Updates the run's channel information to be one of the ones in the following:
+        https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
+
+        Right now, we support EEG, ECOG, SEEG, ECG (i.e. EKG), EMG, EOG, MISC.
+
+        All others are categorized as OTHER for now.
+
+        TODO:
+        1. add support for other types.
+
+        Parameters
+        ----------
+        chmapping :
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def modify_electrode_status(self, chlabel: str, chdescription: str):
+        """
+        Updates the run's channel information by looking at the generated clinical electrode sheet annotations.
+        Electrode status can either be "good", or "bad"
 
         Parameters
         ----------
