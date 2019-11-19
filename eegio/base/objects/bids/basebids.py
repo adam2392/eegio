@@ -15,7 +15,9 @@ class BaseBids(object):
      - easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)
 
     Only supports iEEG/scalp EEG data. We assume you store data as a BIDS with sub_<###> as the
-    identifiers.
+    identifiers. Allows easy querying of its own data structure via:
+
+    self.query.
 
     TODO:
     1. Add support for runs and acquisitions (https://mne.tools/mne-bids/generated/mne_bids.utils.get_entity_vals.html#mne_bids.utils.get_entity_vals)
@@ -93,7 +95,7 @@ class BaseBids(object):
 
     def create_dataset_folder(self, fpath, **dataset_description_kwargs):
         # create dataset description
-        mne_bids.make_dataset_description(fpath, dataset_description_kwargs)
+        mne_bids.make_dataset_description(fpath, **dataset_description_kwargs)
 
     def print_summary(self):
         """

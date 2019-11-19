@@ -10,16 +10,6 @@ class BidsRun(BaseBids):
 
     Attributes
     ----------
-    patientid: str
-        patient identifier for this BidsPatient
-    datadir: os.PathLike
-        The base directory for storing BidsPatient data
-    managing_user: str
-        managing user that is tied to this BidsPatient. E.g. a clinical center, specific researcher, or specific doctor
-    modality: str
-        Modality of recording done to this patient. E.g. ecog, seeg, scalp, ieeg.
-    metadata:
-        TODO
 
     Notes
     -----
