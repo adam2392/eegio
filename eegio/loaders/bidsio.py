@@ -6,6 +6,8 @@ import pandas as pd
 import mne
 from mne_bids import make_bids_basename
 
+from eegio.format.scrubber import ChannelScrub
+from eegio.base.config import BAD_MARKERS
 
 def write_tsv(data_dict, out_file, first_colum="id"):
     columns = get_all_sub_keys(data_dict)
@@ -106,6 +108,12 @@ class BidsIO():
                                                              session=self.session_id,
                                                              run=self.run_id,
                                                              suffix=f"{self.kind}.{self.datatype}"))
+    @property
+    def result_fpath(self):
+        return os.path.join(self.datadir, 'results', make_bids_basename(subject=self.subject_id,
+                                                                        session=self.session_id,
+                                                                        run=self.run_id,
+                                                                        suffix="results.npz"))
 
     @property
     def sidecarjson_fpath(self):
@@ -222,7 +230,22 @@ class BidsWriter(BidsIO):
         super(BidsWriter, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
 
     def write_channels_tsv(self, metadata, fpath=self.chanstsv_fpath, overwrite=True):
-        write_tsv(metadata, fpath, first_colum="")
+        """
+        Writes the updated channel information to a file
+
+        Parameters
+        ----------
+        metadata : pandas.DataFrame
+            The new channel information after modification
+        fpath : os.PathLike
+            The location to save this data
+        overwrite : bool
+            Whether to overwrite the existing channels tsv file
+        Returns
+        -------
+
+        """
+        write_tsv(metadata, fpath, first_colum="name")
 
     def write_sidecar_json(self):
         pass
@@ -230,19 +253,87 @@ class BidsWriter(BidsIO):
     def write_scans_tsv(self):
         pass
 
-    def write_electrode_coords(self, coords_dict):
-        pass
+    def write_electrode_coords(self, coords_dict, channels_df):
+        return channels_df
 
-    def write_electrode_status(self, status_dict):
-        pass
+    def write_electrode_status(self, status_dict, channels_df):
+        """
+        Updates the status of the electrodes based on hard-coded rules.
+
+        Parameters
+        ----------
+        status_dict : dict
+            The dictionary of electrode status information grabbed from the formatted clinical sheet
+        channels_df : pandas.DataFrame
+            The current BIDS layout of channel information containing default values
+
+        Returns
+        -------
+        An updated version of channels_df with correct annotations for status
+        """
+        channel_scrub = ChannelScrub
+        channel_names = channels_df['name']
+        bad_channels = channel_scrub.look_for_bad_channels(channel_names)
+        for key, value in bad_channels:
+            for ind, row in channels_df.iterrows():
+                if key == row['name']:
+                    row['status'] = 'bad'
+                    row['notes'] = f"scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
+        for key, value in status_dict.items():
+            for ind, row in channels_df.iterrows():
+                if key == row['name']:
+                    row['status'] = value.status
+                    row['notes'] = value.notes
+        return channels_df
 
     def write_participants_tsv(self, new_df):
+        """
+        Updates the participants.tsv folder with new information
+
+        Parameters
+        ----------
+        new_df : pandas.DataFrame
+            The updated information for the participants.tsv file
+
+        Returns
+        -------
+
+        """
         outfile = self.participantstsv_fpath
         write_tsv(new_df, outfile, 'participant_id')
 
     def write_participants_json(self, new_dict):
+        """
+
+        Parameters
+        ----------
+        new_dict : dict
+            The updated dictionary for the participants.json file.
+
+        Returns
+        -------
+
+        """
         outfile = self.participantsjson_fpath
         write_json(new_dict, outfile)
 
-    def write_electrode_type(self, ):
-        pass
+    def write_electrode_type(self, channels_df):
+        """
+
+        Parameters
+        ----------
+        channels_df : pandas.DataFrame
+            The current information about the channels containing default type values.
+
+        Returns
+        -------
+        An updated version of channels_df with the correct type information
+        """
+        channel_scrub = ChannelScrub
+        channel_names = channels_df['name']
+        channel_dict = channel_scrub.label_channel_types(channel_names)
+        for key, value in channel_dict.items():
+            for ind, row in channel_df.iterrows():
+                if key == row['name']:
+                    row['type'] = value.upper()
+        return channels_df

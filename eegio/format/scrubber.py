@@ -5,7 +5,7 @@ import mne
 import numpy as np
 
 from eegio.base.objects.electrodes.elecs import Contacts
-from eegio.base.config import NON_EEG_MARKERS
+from eegio.base.config import NON_EEG_MARKERS, BAD_MARKERS
 
 
 class ChannelScrub:
@@ -46,7 +46,7 @@ class ChannelScrub:
 
     @classmethod
     def look_for_bad_channels(
-        self, ch_names, bad_markers: List[str] = ["$", "FZ", "GZ", "DC", "STI"]
+        self, ch_names, bad_markers: List[str] = BAD_MARKERS
     ):
         """
         Helper function to allow hardcoding of what are "bad channels"

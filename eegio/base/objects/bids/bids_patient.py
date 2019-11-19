@@ -19,20 +19,6 @@ class BidsPatient(BaseBids):
 
     Attributes
     ----------
-    subject_id: str
-        patient identifier for this BidsPatient
-    session_id: str
-        the session that the patient data belongs to
-    datadir: os.PathLike
-        The base directory for storing BidsPatient data
-    managing_user: str
-        managing user that is tied to this BidsPatient. E.g. a clinical center, specific researcher, or specific doctor
-    original_subject_id: str
-        the original subject_id in the data source
-    modality: str
-        Modality of recording done to this patient. E.g. ecog, seeg, scalp, ieeg.
-    metadata:
-        TODO
 
     Notes
     -----
@@ -82,8 +68,11 @@ class BidsPatient(BaseBids):
         self.writer = BidsWriter(datadir, subject_id, session_id)
 
         # automatically update patient metadata
-        self._add_resected_contacts()
-        self._add_original_patient_name()
+        resected_str = " ".join(self.resected_contacts)
+        self._modify_participants_file('resected_contacts', resected_str, [], ['The list of contacts corresponding to '
+                                                                               'resected regions'])
+        self._modify_participants_file('original_subjectid', self.original_subject_id, [], ['The subjectid in the '
+                                                                                            'clinical data source'] )
 
     def __str__(self):
         return "{} Patient with {} Dataset Recordings ".format(
@@ -169,40 +158,74 @@ class BidsPatient(BaseBids):
         dataset = self.loader.load_dataset(session_id, run_id)
         metadata = self.loader.load_sidecar_json()
 
-    def _add_resected_contacts(self):
-        resected_list = " ".join(self.resected_contacts)
+    def _modify_participants_file(self, keyname, data, labels=None, descriptions=None):
+        """
+        Modify the BIDS dataset participants file(s) to include all the relevant data.
+
+        Parameters
+        ----------
+        keyname : str
+            The name of the column to which data should be added
+        data : str
+            The value to add to the column with keyname
+        labels : list[str]
+            The labels associated with the keyname to add to the JSON file
+        descriptions : list[str]
+            The descriptions of the labels if they exist or just the  keyname if labels do not exist
+
+        Returns
+        -------
+
+        """
+        participants_json = self.loader.load_participants_json()
+        if keyname not in participants_json.keys():
+            participants_json = BidsBuilder.add_participant_field(keyname, labels, descriptions)
+            self.writer.write_participants_json(participants_json)
 
         participants_data = self.loader.load_participants_tsv()
-        participants_json = self.loader.load_participants_json()
-        if 'resected_contacts' not in participants_json.keys():
-            participants_json = BidsBuilder.add_participant_field('resected_contacts', [], ['The list of contacts corresponding to '
-                                                                        'resected regions'])
-            self.writer.write_participants_json(participants_json)
         colnames = participants_data.columns
-        if 'resected_contacts' not in colnames:
-            resected = [''] * participants_data.shape[0]
-            participants_data['resected_contacts'] = resected
+        if keyname not in colnames:
+            emptylist = [''] * participants_data.shape[0]
+            participants_data[keyname] = emptylist
         for ind, row in participants_data.iterrows():
             if row['participant_id'] == self.subject_id:
-                participants_data['paricipant_id'][ind] = resected_list
+                participants_data[keyname][ind] = data
         self.writer.write_participants_tsv(participants_data)
 
-    def _add_original_patient_name(self):
-        participants_data = self.loader.load_participants_tsv()
-        participants_json = self.loader.load_participants_json()
-        if 'original_subjectid' not in participants_json.keys():
-            participants_json = BidsBuilder.add_participant_field(participants_json, 'original_subjectid', [],
-                                              ['The subjectid in the clinical data source'])
-            self.writer.write_participants_json(participants_json)
-        colnames = participants_data.columns
-        if 'original_subjectid' not in colnames:
-            originals = [''] * participants_data.shape[0]
-            participants_data['original'] = originals
-        for ind, row in participants_data.iterrows():
-            if row['participant_id'] == self.subject_id:
-                participants_data['participant_id'][ind] = self.original_subject_id
-        self.writer.write_participants_tsv(participants_data)
-        # TODO: Add the self.original_subject_id field into the DataFrame and write to tsv
+    # def _add_resected_contacts(self):
+    #     resected_list = " ".join(self.resected_contacts)
+    #
+    #     participants_data = self.loader.load_participants_tsv()
+    #     participants_json = self.loader.load_participants_json()
+    #     if 'resected_contacts' not in participants_json.keys():
+    #         participants_json = BidsBuilder.add_participant_field('resected_contacts', [], ['The list of contacts corresponding to '
+    #                                                                     'resected regions'])
+    #         self.writer.write_participants_json(participants_json)
+    #     colnames = participants_data.columns
+    #     if 'resected_contacts' not in colnames:
+    #         resected = [''] * participants_data.shape[0]
+    #         participants_data['resected_contacts'] = resected
+    #     for ind, row in participants_data.iterrows():
+    #         if row['participant_id'] == self.subject_id:
+    #             participants_data['paricipant_id'][ind] = resected_list
+    #     self.writer.write_participants_tsv(participants_data)
+    #
+    # def _add_original_patient_name(self):
+    #     participants_data = self.loader.load_participants_tsv()
+    #     participants_json = self.loader.load_participants_json()
+    #     if 'original_subjectid' not in participants_json.keys():
+    #         participants_json = BidsBuilder.add_participant_field(participants_json, 'original_subjectid', [],
+    #                                           ['The subjectid in the clinical data source'])
+    #         self.writer.write_participants_json(participants_json)
+    #     colnames = participants_data.columns
+    #     if 'original_subjectid' not in colnames:
+    #         originals = [''] * participants_data.shape[0]
+    #         participants_data['original'] = originals
+    #     for ind, row in participants_data.iterrows():
+    #         if row['participant_id'] == self.subject_id:
+    #             participants_data['participant_id'][ind] = self.original_subject_id
+    #     self.writer.write_participants_tsv(participants_data)
+    #     # TODO: Add the self.original_subject_id field into the DataFrame and write to tsv
 
 
     def get_filesizes(self):

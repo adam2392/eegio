@@ -24,6 +24,14 @@ NON_EEG_MARKERS = [
     "rfc",
 ]
 
+BAD_MARKERS = [
+    "$",
+    "FZ",
+    "GZ",
+    "DC",
+    "STI",
+]
+
 """ Clinical excel sheet configuration """
 COLS_TO_REGEXP_EXPAND = [
     "bad_contacts",
