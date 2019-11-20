@@ -8,6 +8,9 @@ from eegio.base.objects.bids.basebids import BaseBids
 from eegio.base.utils.bids_helper import BidsBuilder
 from eegio.loaders.bidsio import BidsIO, BidsWriter, BidsLoader
 
+from eegio.format.scrubber import ChannelScrub
+from eegio.base.config import BAD_MARKERS
+
 from mne_bids import make_bids_basename
 
 class BidsRun(BaseBids):
@@ -46,6 +49,8 @@ class BidsRun(BaseBids):
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
         self._add_original_scan_filename()
         self._convert_run_to_bids()
+        self._modify_electrode_info()
+        self._update_sidecar_json()
 
 
     @property
@@ -85,7 +90,64 @@ class BidsRun(BaseBids):
             if row['filename'] == self.fpath:
                 row['original_filename'] = self.original_filename
 
-    def modify_electrode_type(self, chlabel: str, chtype: str):
+    def _modify_electrode_info(self, status_dict: dict = None):
+        """
+
+        Parameters
+        ----------
+        status_dict : dict
+            A possible dictionary created from an external data file
+
+        Returns
+        -------
+        """
+        self._add_notes_to_channels()
+        channel_data = self.loader.load_channels_tsv()
+        bad_channel_dict = self.find_bad_channels()
+        for key, value in bad_channel_dict:
+            channel_data = self.modify_electrode_status(channel_data, key, value)
+        if status_dict is not None:
+            for key, value in status_dict:
+                channel_data = self.modify_electrode_status(channel_data, key, value)
+            channel_types_dict = self.find_channel_types()
+        for key, value in channel_types_dict:
+            channel_data = self.modify_electrode_type(channel_data, key, value)
+        self.writer.write_channels_tsv(channel_data)
+
+    def find_bad_channels(self):
+        """
+        Finds bad electrodes based on hardcoded rules of the electrode name
+
+        Returns
+        -------
+        A dictionary where the key is the electrode name and the value is a string description
+        """
+        channel_df = self.loader.load_channels_tsv()
+        channel_scrub = ChannelScrub
+        channel_names = channel_df['name']
+        bad_channels = channel_scrub.look_for_bad_channels(channel_names)
+        bad_channels_dict = {}
+        for bad in bad_channels:
+            bad_channels_dict[bad] = f"scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
+        return bad_channels_dict
+
+    def find_channel_types(self):
+        """
+        Finds the actual type of the electrode based on a regular expression of the electrode name
+
+        Returns
+        -------
+        A dictionary where the key is the electrode name and the value is the type
+        """
+        channel_df = self.loader.load_channels_tsv()
+        channel_scrub = ChannelScrub
+        channel_names = channel_df['name']
+        channel_dict = channel_scrub.label_channel_types(channel_names)
+        for key, value in channel_dict.items():
+            channel_dict[key] = value.uppper()
+        return channel_dict
+
+    def modify_electrode_type(self, channel_df: pd.DataFrame, chlabel: str, chtype: str):
         """
         Updates the run's channel information to be one of the ones in the following:
         https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
@@ -99,55 +161,47 @@ class BidsRun(BaseBids):
 
         Parameters
         ----------
-        chmapping :
+        channel_df: pandas.DataFrame
+            The current DataFrame containing electrode contact information
+        chlabel: str
+            The label of the electrode to modify
+        chtype: str
+            The type to change the electrode to
 
         Returns
         -------
-
+        The modified DataFrame
         """
-        pass
+        for ind, row in channel_df.iterrows():
+            if row['name'] == chlabel:
+                channel_df[ind]['type'] = chtype
+        return channel_df
 
-    def modify_electrode_status(self, chlabel: str, chdescription: str):
+    def modify_electrode_status(self, channel_df: pd.DataFrame, chlabel: str, chdescription: str):
         """
         Updates the run's channel information by looking at the generated clinical electrode sheet annotations.
         Electrode status can either be "good", or "bad"
 
         Parameters
         ----------
-        clinical_fpath : os.PathLike
-            The location of the clinical formatted electrode sheet (xlsx format)
+        channel_df: pandas.DataFrame
+            The current DataFrame containing electrode contact information
+        chlabel: str
+            The label of the electrode to modify
+        chdescription: str
+            The description to fill in the 'notes' column of the DataFrame
+
 
         Returns
         -------
+        The modified DataFrame
 
         """
-        clinical_data = pd.read_xlsx(clinical_fpath)
-        channels_data = self.loader.load_channels_tsv()
-        subject_data = pd.DataFrame()
-        for ind, row in clinical_data.iterrows():
-            if row['patient_id'] == self.subject_id or row['patient_id'] == self.original_subject_id:
-                subject_data = row
-        if subject_data.empty:
-            warnings.warn('The patient has not been annotated in the passed clinical file')
-        else:
-            bad_contacts = subject_data['bad_contacts']
-            wm_contacts = subject_data['wm_contacts']
-            out_contacts = subject_data['out_contacts']
-            modify_channels = {}
-            # Will these cells be loaded as lists or a string to be parsed?
-            for bad in bad_contacts:
-                new_dict = {bad: {'status': 'bad', 'notes': "bad"}}
-                modify_channels.update(new_dict)
-            for wm in wm_contacts:
-                new_dict = {wm: {'status': 'bad', 'notes': "white matter"}}
-                modify_channels.update(new_dict)
-            for out in out_contacts:
-                new_dict = {out: {'status': 'bad', 'notes': "out"}}
-                modify_channels.update(new_dict)
-            channels_data = self.writer.write_electrode_status(modify_channels, channels_data)
-            channels_data = self.writer.write_electrode_coords(None, channels_data)
-            channels_data = self.writer.write_electrode_type(channels_data)
-            self.writer.write_channels_tsv(channels_data)
+        for ind, row in channel_df.iterrows():
+            if row['name'] == chlabel:
+                channel_df[ind]['status'] = 'bad'
+                channel_df[ind]['notes'] = chdescription
+        return channel_df
 
 
     def _add_notes_to_channels(self):
@@ -164,6 +218,28 @@ class BidsRun(BaseBids):
             notes = [''] * channels_data.shape[0]
             channels_data['Notes'] = notes
         self.writer.write_channels_tsv(channels_data)
+
+
+    def _update_sidecar_json(self):
+        """
+        Reads the current tsv file for the run's channels and updates the sidecar json with the channel type
+
+        Returns
+        -------
+
+        """
+        channels_data = self.loader.load_channels_tsv()
+        types = channels_data['type']
+        sidecar_dict = self.loader.load_sidecar_json()
+        numbers = types.value_counts()
+        sidecar_dict['EEGChannelCount'] = numbers['EEG']
+        sidecar_dict['ECOGChannelCount'] = numbers['ECOG']
+        sidecar_dict['SEEGChannelCount'] = numbers['SEEG']
+        sidecar_dict['EOGChannelCount'] = numbers['EOG']
+        sidecar_dict['ECGChannelCount'] = numbers['ECG']
+        sidecar_dict['EMGChannelCount'] = numbers['EMG']
+        sidecar_dict['MiscChannelCount'] = numbers['Misc']
+        self.writer.write_sidecar_json()
 
     def _add_metadata(self, id, data):
         """
