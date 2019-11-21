@@ -33,7 +33,7 @@ class BidsBuilder(object):
                           output_path=datadir,
                           make_dir=True)
 
-    def convert_to_bids(edf_fpath, bids_dir, bids_basename,
+    def convert_to_bids(self, edf_fpath, bids_dir, bids_basename,
                         excluded_contacts=None, eog_contacts=None, misc_contacts=None, overwrite=False):
         """
         Helper function to convert an edf file into bids format and create all

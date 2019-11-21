@@ -46,3 +46,4 @@ GB = 1e9
 
 
 EEGIO_DIR = os.path.normpath(os.path.join(os.getcwd(),'../..'))
+TEST_DATA_DIR = os.path.join(EEGIO_DIR, 'data', 'ieeg_ecog_test.edf')

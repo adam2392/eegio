@@ -138,7 +138,7 @@ class BidsIO():
 
 class BidsLoader(BidsIO):
     def __init__(self, bidsdir, subject_id, session_id, run_id = None, kind="eeg"):
-        super(BidsLoader, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
+        super(BidsLoader, self).__init__(bidsdir, subject_id, session_id, kind, run_id)
 
     def load_sidecar_json(self):
         """
@@ -227,9 +227,9 @@ class BidsLoader(BidsIO):
 
 class BidsWriter(BidsIO):
     def __init__(self, bidsdir, subject_id, session_id, run_id=None, kind="eeg"):
-        super(BidsWriter, self).__init__(bidsdir, subject_id, session_id, run_id, kind)
+        super(BidsWriter, self).__init__(bidsdir, subject_id, session_id, kind, run_id)
 
-    def write_channels_tsv(self, metadata, fpath=self.chanstsv_fpath, overwrite=True):
+    def write_channels_tsv(self, metadata, fpath=None, overwrite=True):
         """
         Writes the updated channel information to a file
 
@@ -245,6 +245,8 @@ class BidsWriter(BidsIO):
         -------
 
         """
+        if fpath is None:
+            fpath = self.chanstsv_fpath
         write_tsv(metadata, fpath, first_colum="name")
 
     def write_sidecar_json(self):
@@ -256,35 +258,35 @@ class BidsWriter(BidsIO):
     def write_electrode_coords(self, coords_dict, channels_df):
         return channels_df
 
-    def write_electrode_status(self, status_dict, channels_df):
-        """
-        Updates the status of the electrodes based on hard-coded rules.
-
-        Parameters
-        ----------
-        status_dict : dict
-            The dictionary of electrode status information grabbed from the formatted clinical sheet
-        channels_df : pandas.DataFrame
-            The current BIDS layout of channel information containing default values
-
-        Returns
-        -------
-        An updated version of channels_df with correct annotations for status
-        """
-        channel_scrub = ChannelScrub
-        channel_names = channels_df['name']
-        bad_channels = channel_scrub.look_for_bad_channels(channel_names)
-        for key, value in bad_channels:
-            for ind, row in channels_df.iterrows():
-                if key == row['name']:
-                    row['status'] = 'bad'
-                    row['notes'] = f"scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
-        for key, value in status_dict.items():
-            for ind, row in channels_df.iterrows():
-                if key == row['name']:
-                    row['status'] = value.status
-                    row['notes'] = value.notes
-        return channels_df
+    # def write_electrode_status(self, status_dict, channels_df):
+    #     """
+    #     Updates the status of the electrodes based on hard-coded rules.
+    #
+    #     Parameters
+    #     ----------
+    #     status_dict : dict
+    #         The dictionary of electrode status information grabbed from the formatted clinical sheet
+    #     channels_df : pandas.DataFrame
+    #         The current BIDS layout of channel information containing default values
+    #
+    #     Returns
+    #     -------
+    #     An updated version of channels_df with correct annotations for status
+    #     """
+    #     channel_scrub = ChannelScrub
+    #     channel_names = channels_df['name']
+    #     bad_channels = channel_scrub.look_for_bad_channels(channel_names)
+    #     for key, value in bad_channels:
+    #         for ind, row in channels_df.iterrows():
+    #             if key == row['name']:
+    #                 row['status'] = 'bad'
+    #                 row['notes'] = f"scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
+    #     for key, value in status_dict.items():
+    #         for ind, row in channels_df.iterrows():
+    #             if key == row['name']:
+    #                 row['status'] = value.status
+    #                 row['notes'] = value.notes
+    #     return channels_df
 
     def write_participants_tsv(self, new_df):
         """
@@ -317,23 +319,23 @@ class BidsWriter(BidsIO):
         outfile = self.participantsjson_fpath
         write_json(new_dict, outfile)
 
-    def write_electrode_type(self, channels_df):
-        """
-
-        Parameters
-        ----------
-        channels_df : pandas.DataFrame
-            The current information about the channels containing default type values.
-
-        Returns
-        -------
-        An updated version of channels_df with the correct type information
-        """
-        channel_scrub = ChannelScrub
-        channel_names = channels_df['name']
-        channel_dict = channel_scrub.label_channel_types(channel_names)
-        for key, value in channel_dict.items():
-            for ind, row in channel_df.iterrows():
-                if key == row['name']:
-                    row['type'] = value.upper()
-        return channels_df
+    # def write_electrode_type(self, channels_df):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     channels_df : pandas.DataFrame
+    #         The current information about the channels containing default type values.
+    #
+    #     Returns
+    #     -------
+    #     An updated version of channels_df with the correct type information
+    #     """
+    #     channel_scrub = ChannelScrub
+    #     channel_names = channels_df['name']
+    #     channel_dict = channel_scrub.label_channel_types(channel_names)
+    #     for key, value in channel_dict.items():
+    #         for ind, row in channel_df.iterrows():
+    #             if key == row['name']:
+    #                 row['type'] = value.upper()
+    #     return channels_df

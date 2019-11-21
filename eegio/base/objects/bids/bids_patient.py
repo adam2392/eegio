@@ -12,7 +12,6 @@ from eegio.base.utils.bids_helper import BidsBuilder
 from eegio.loaders.bidsio import BidsWriter, BidsLoader
 
 
-
 class BidsPatient(BaseBids):
     """
     The class for our patient data that inherits basic dataset functionality and follows Bids
@@ -37,9 +36,12 @@ class BidsPatient(BaseBids):
             managing_user: str = None,
             original_subject_id: str = None,
             modality: str = "ieeg",
-            resected_contacts: list[str] = None,
+            resected_contacts: list = None,
     ):
         super(BidsPatient, self).__init__(datadir=datadir, modality=modality)
+
+        if resected_contacts is None:
+            resected_contacts = []
 
         self.subject_id = subject_id
         self.session_id = session_id
@@ -66,15 +68,15 @@ class BidsPatient(BaseBids):
         self._create_derivative_folders()
 
         # instantiate a loader/writer
-        self.loader = BidsLoader(datadir, subject_id, session_id)
+        self.loader = BidsLoader(bidsdir=datadir, subject_id=subject_id, session_id=session_id)
         self.writer = BidsWriter(datadir, subject_id, session_id)
 
         # automatically update patient metadata
         resected_str = " ".join(self.resected_contacts)
-        self._modify_participants_file('resected_contacts', resected_str, [], ['The list of contacts corresponding to '
-                                                                               'resected regions'])
-        self._modify_participants_file('original_subjectid', self.original_subject_id, [], ['The subjectid in the '
-                                                                                            'clinical data source'] )
+        #self._modify_participants_file('resected_contacts', resected_str, [], ['The list of contacts corresponding to '
+        #                                                                       'resected regions'])
+        #self._modify_participants_file('original_subjectid', self.original_subject_id, [], ['The subjectid in the '
+        #                                                                                    'clinical data source'] )
 
     def __str__(self):
         return "{} Patient with {} Dataset Recordings ".format(
@@ -112,12 +114,11 @@ class BidsPatient(BaseBids):
 
     @classmethod
     def create_fake_example(self):
-        import tempfile
         patient_id = self.subject_id
         session_id = self.session_id
         original_subject_id = self.original_subject_id
-        with tempfile.TemporaryDirectory() as datadir:
-            patient = BidsPatient(patient_id, session_id, datadir, original_subject_id=original_subject_id)
+        datadir = self.datadir
+        patient = BidsPatient(patient_id, session_id, datadir, original_subject_id=original_subject_id)
         return patient
 
     # def preprocess_edf_files(self, filelist, line_noise=60):
@@ -167,15 +168,15 @@ class BidsPatient(BaseBids):
                 sidecardict = self.loader.load_sidecar_json()
                 sidecardict["PowerLineFrequency"] = line_noise
                 self.writer.write_sidecar_json()
-            
+
             # TODO: Check if .fif file already exists. Otherwise convert to fif
 
-    def create_run(self, new_fpath, clinical_fpath):
+    def create_run(self, new_fpath):
         run_id = str(self.numdatasets).zfill(2)
         bidsrun = BidsRun(subject_id=self.subject_id, session_id=self.session_id, run_id=run_id, datadir=self.datadir,
                           modality=self.modality, original_filename=new_fpath,
                           original_subject_id=self.original_subject_id)
-        bidsrun.modify_electrode_status(clinical_fpath=clinical_fpath)
+        bidsrun.modify_electrode_status()
 
     def load_dataset(self, session_id, run_id, kind):
         """

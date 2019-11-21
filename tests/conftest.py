@@ -101,36 +101,36 @@ def bidspatient():
     subject_id = "01"
     session_id = "seizure"
     managing_user = "EZTrack"
-    datadir = os.path.join("./")
     original_subject_id = 'test_patient_01'
     modality = 'ieeg'
-    patient = BidsPatient(
-        subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
-        original_subject_id=original_subject_id, modality=modality
-    )
+    with tempfile.TemporaryDirectory() as datadir:
+        patient = BidsPatient(
+            subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
+            original_subject_id=original_subject_id, modality=modality
+        )
     patient = patient.create_fake_example()
 
     return patient
 
 
-@pytest.fixture(scope="class")
-def bidsrun():
-    """
-    Creating a pytest fixture for a fake bidsRun data object
-    Returns
-    -------
-
-    """
-    from eegio.base.objects.bids.bids_run import BidsRun
-    subject_id = "01"
-    session_id = "seizure"
-    run_id = "00"
-    modality = "ieeg"
-    original_filename = "test_"
-    with tempfile.TemporaryDirectory() as datadir:
-        run = BidsRun(subject_id=subject_id, session_id=session_id, run_id=run_id, datadir=datadir, modality=modality,
-                      original_filename=original_filename)
-    return run
+# @pytest.fixture(scope="class")
+# def bidsrun():
+#     """
+#     Creating a pytest fixture for a fake bidsRun data object
+#     Returns
+#     -------
+#
+#     """
+#     from eegio.base.objects.bids.bids_run import BidsRun
+#     subject_id = "01"
+#     session_id = "seizure"
+#     run_id = "00"
+#     modality = "ieeg"
+#     original_filename = "test_"
+#     with tempfile.TemporaryDirectory() as datadir:
+#         run = BidsRun(subject_id=subject_id, session_id=session_id, run_id=run_id, datadir=datadir, modality=modality,
+#                       original_filename=original_filename)
+#     return run
 
 
 
