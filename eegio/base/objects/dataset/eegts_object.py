@@ -10,7 +10,7 @@ from eegio.base import config
 from eegio.base.objects.dataset.basedataobject import BaseDataset
 from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.base.utils.data_structures_utils import compute_samplepoints
-from eegio.format.scrubber import ChannelScrub
+from eegio.base.utils.scrubber import ChannelScrub
 
 
 class EEGTimeSeries(BaseDataset):

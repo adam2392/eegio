@@ -6,7 +6,7 @@ import pandas as pd
 import mne
 from mne_bids import make_bids_basename
 
-from eegio.format.scrubber import ChannelScrub
+from eegio.base.utils.scrubber import ChannelScrub
 from eegio.base.config import BAD_MARKERS
 
 def write_tsv(data_dict, out_file, first_colum="id"):

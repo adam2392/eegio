@@ -1,7 +1,6 @@
 import pytest
-import random
 import mne
-from eegio.format.scrubber import ChannelScrub, EventScrub
+from eegio.base.utils.scrubber import ChannelScrub, EventScrub
 
 
 @pytest.mark.usefixture("edf_fpath")

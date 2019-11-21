@@ -5,7 +5,7 @@ import pytest
 from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
 from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.base.utils import ScalpMontageHelper
-from eegio.format.scrubber import ChannelScrub
+from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.loader import Loader
 
 

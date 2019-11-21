@@ -9,7 +9,7 @@ import pyedflib
 from eegio.base.objects import EEGTimeSeries, Contacts
 from eegio.base.utils.data_structures_utils import MatReader
 from eegio.format.baseadapter import BaseAdapter
-from eegio.format.scrubber import ChannelScrub, EventScrub
+from eegio.base.utils.scrubber import ChannelScrub, EventScrub
 from eegio.loaders.baseloader import BaseLoader
 
 
