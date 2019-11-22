@@ -49,7 +49,7 @@ class BidsRun(BaseBids):
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
         self._add_original_scan_filename()
         self._convert_run_to_bids()
-        self._modify_electrode_info()
+        self.modify_electrode_info()
         self._update_sidecar_json()
 
 
@@ -70,6 +70,10 @@ class BidsRun(BaseBids):
         bids_basename = make_bids_basename(subject=self.subject_id, session=self.session_id, run=self.run_id)
         builder = BidsBuilder()
         builder.convert_to_bids(edf_fpath=self.original_filename, bids_dir=self.datadir, bids_basename=bids_basename)
+        # Possible that this breaks the participants.tsv. We need subject age and sex pulled from the edf file and added
+        # to the participants.tsv file before running convert otherwise this will always add a new patient.
+        # Option 2, just remove the newly added patient as shown below
+        # builder.remove_added_patient(self.loader, self.writer, self.subject_id)
 
     def _add_original_scan_filename(self):
         """
@@ -90,13 +94,9 @@ class BidsRun(BaseBids):
             if row['filename'] == self.fpath:
                 row['original_filename'] = self.original_filename
 
-    def _modify_electrode_info(self, status_dict: dict = None):
+    def modify_electrode_info(self):
         """
-
-        Parameters
-        ----------
-        status_dict : dict
-            A possible dictionary created from an external data file
+        This method searches for automatic patterns in the electrode names to modify the channels.tsv file
 
         Returns
         -------
@@ -106,10 +106,7 @@ class BidsRun(BaseBids):
         bad_channel_dict = self.find_bad_channels()
         for key, value in bad_channel_dict:
             channel_data = self.modify_electrode_status(channel_data, key, value)
-        if status_dict is not None:
-            for key, value in status_dict:
-                channel_data = self.modify_electrode_status(channel_data, key, value)
-            channel_types_dict = self.find_channel_types()
+        channel_types_dict = self.find_channel_types()
         for key, value in channel_types_dict:
             channel_data = self.modify_electrode_type(channel_data, key, value)
         self.writer.write_channels_tsv(channel_data)
@@ -147,7 +144,8 @@ class BidsRun(BaseBids):
             channel_dict[key] = value.uppper()
         return channel_dict
 
-    def modify_electrode_type(self, channel_df: pd.DataFrame, chlabel: str, chtype: str):
+    @staticmethod
+    def modify_electrode_type(channel_df: pd.DataFrame, chlabel: str, chtype: str):
         """
         Updates the run's channel information to be one of the ones in the following:
         https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
@@ -177,7 +175,8 @@ class BidsRun(BaseBids):
                 channel_df[ind]['type'] = chtype
         return channel_df
 
-    def modify_electrode_status(self, channel_df: pd.DataFrame, chlabel: str, chdescription: str):
+    @staticmethod
+    def modify_electrode_status(channel_df: pd.DataFrame, chlabel: str, chdescription: str):
         """
         Updates the run's channel information by looking at the generated clinical electrode sheet annotations.
         Electrode status can either be "good", or "bad"
@@ -203,7 +202,6 @@ class BidsRun(BaseBids):
                 channel_df[ind]['notes'] = chdescription
         return channel_df
 
-
     def _add_notes_to_channels(self):
         """
         Adds a column to the *channels.tsv file to allow for more detailed description of status beyond good/bad
@@ -218,7 +216,6 @@ class BidsRun(BaseBids):
             notes = [''] * channels_data.shape[0]
             channels_data['Notes'] = notes
         self.writer.write_channels_tsv(channels_data)
-
 
     def _update_sidecar_json(self):
         """
@@ -241,20 +238,4 @@ class BidsRun(BaseBids):
         sidecar_dict['MiscChannelCount'] = numbers['Misc']
         self.writer.write_sidecar_json()
 
-    def _add_metadata(self, id, data):
-        """
-        Helper function to add patient metadata. Requires column ID and then data source to be passed in.
 
-        Parameters
-        ----------
-        id :
-        data :
-
-        Returns
-        -------
-
-        """
-        pass
-
-    def _add_scandata(self, filename, acq_time, **scan_kwargs):
-        pass

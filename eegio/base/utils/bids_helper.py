@@ -1,5 +1,8 @@
 import os
 
+from typing import Union
+import pandas as pd
+
 import mne
 from mne_bids import write_raw_bids, make_bids_folders
 
@@ -33,22 +36,24 @@ class BidsBuilder(object):
                           output_path=datadir,
                           make_dir=True)
 
+
     def convert_to_bids(self, edf_fpath, bids_dir, bids_basename,
                         excluded_contacts=None, eog_contacts=None, misc_contacts=None, overwrite=False):
         """
-        Helper function to convert an edf file into bids format and create all
-        necessary metadata files corresponding to this data from Bids format.
 
-        Parameters:
-        -----------
-        data: os.PathLike
-            The path of the edf file to be loaded
-        datadir:
+        Parameters
+        ----------
+        edf_fpath :
+        bids_dir :
+        bids_basename :
+        excluded_contacts :
+        eog_contacts :
+        misc_contacts :
+        overwrite :
 
-        savePath: os.PathLike
-            The path to save the resulting edf file. Named with Bids convention
-        exluded_contacts: List[str]
-            The list of contacts to exclude from conversion
+        Returns
+        -------
+
         """
         if excluded_contacts is None:
             excluded_contacts = ["-", ""]
@@ -114,38 +119,44 @@ class BidsBuilder(object):
         else:
             os.mkdir(results_dir)
 
-    @staticmethod
-    def add_participant_field(current_dict, new_field, labels=None, descriptors=None):
+    def add_field_to_dict(current_dict: dict, new_field: str, description: Union[str, dict]):
         """
         Adds a new field to the participants.json file
 
         Parameters
         ----------
         current_dict : dict
-            The participants dictionary to add to
+            The dictionary to add to
         new_field : str
             The name of the new field
-        labels : List[str]
-            The name of subfields for the new field.
-        descriptors: List[str]
-            The values for each label. If labels empty, corresponds to the description of the new_field
+        description: Union[str, dict]
+            The description of the new field
         Returns
         -------
         The modified dict variable
         """
-        if type(descriptors) is not list:
-            descriptors = [descriptors]
-        if labels is None:
-            if len(descriptors) != 1:
-                pass
-            else:
-                new_dict = {new_field: descriptors[0]}
-        else:
-            new_dict = {new_field: {}}
-            values = tuple(zip(labels, descriptors))
-            for lab, desc in values:
-                print(lab, desc)
-                new_dict[new_field][lab] = desc
+        new_dict = {new_field: description}
 
         current_dict.update(new_dict)
         return current_dict
+
+    @staticmethod
+    def add_subject_to_participants(subject_id: str, loader, writer):
+        """
+
+        Parameters
+        ----------
+        subject_id : str
+            The name of the subject to add to the participants file
+
+        Returns
+        -------
+
+        """
+        participants_df = loader.load_participants_tsv()
+        colnames = participants_df.columns
+        new_df = pd.DataFrame(['n/a']*len(colnames), columns=colnames)
+        participants_df.append(new_df, ignore_index=True)
+        writer.write_participants_tsv(participants_df)
+
+
