@@ -1,19 +1,24 @@
 import sys
 import os
+import tempfile
 import pytest
 
-@pytest.mark.usefixtures("basebids")
+from eegio.base.objects.bids.basebids import BaseBids
+
 class TestBaseBids:
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-    def testbasebids(self, basebids):
+    def testbasebids(self):
         """
 
         Parameters
         ----------
-        basebids : BaseBids
 
         Returns
         -------
 
         """
-        assert os.path.exists(basebids.description_fpath)
+        # check that base bids initializes correct class attributes
+        modality = "ieeg"
+        with tempfile.TemporaryDirectory() as datadir:
+            basebids = BaseBids(datadir=datadir, modality=modality)
+            assert os.path.exists(basebids.description_fpath)

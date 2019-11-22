@@ -108,7 +108,7 @@ def bidspatient():
             subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
             original_subject_id=original_subject_id, modality=modality
         )
-    patient = patient.create_fake_example()
+        patient = patient.create_fake_example()
 
     return patient
 

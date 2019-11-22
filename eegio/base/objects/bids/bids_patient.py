@@ -267,6 +267,7 @@ class BidsPatient(BaseBids):
     def _load_metadata(self, metadata: dict):
         self.metadata = metadata
 
+
     def _create_metadata(self):
         """
         Creates the metadata dictionary from whatever is in the participants.tsv file
@@ -362,3 +363,4 @@ class BidsPatient(BaseBids):
         self.writer.write_participants_tsv(participants_df)
         metadata = self._create_metadata()
         self._load_metadata(metadata)
+

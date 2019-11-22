@@ -58,7 +58,18 @@ class TestBidsPatient:
 
 
     def test_bidspatient_channelfunc(self, bidspatient):
+        """
+        Test function for BidsPatient that allows modification of the channels.
+        Tests read/write/delete functionality.
 
+        Parameters
+        ----------
+        bidspatient :
+
+        Returns
+        -------
+
+        """
         assert len(bidspatient.wm_channels) >= 0
         assert len(bidspatient.bad_channels) >= 0
 
@@ -78,7 +89,8 @@ class TestBidsPatient:
 
     def test_bidspatient_errors(self, bidspatient):
         """
-        Test error and warnings raised by patient class.
+        Test error and warnings raised by patient class that should be raised when a user
+        does not conform the API.
 
         Parameters
         ----------
@@ -88,10 +100,6 @@ class TestBidsPatient:
         Returns
         -------
         """
-
-        # partition data into windows
-        with pytest.warns(RuntimeWarning):
-            fpaths = bidspatient.get_all_filepaths()
-
+        pass
 
         
