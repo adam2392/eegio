@@ -8,7 +8,7 @@ from eegio.base.objects.bids.basebids import BaseBids
 from eegio.base.utils.bids_helper import BidsBuilder
 from eegio.loaders.bidsio import BidsIO, BidsWriter, BidsLoader
 
-from eegio.format.scrubber import ChannelScrub
+from eegio.base.utils.scrubber import ChannelScrub
 from eegio.base.config import BAD_MARKERS
 
 from mne_bids import make_bids_basename
@@ -47,6 +47,7 @@ class BidsRun(BaseBids):
         # instantiate a loader/writer
         self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
+
         self._add_original_scan_filename()
         self._convert_run_to_bids()
         self._modify_electrode_info()
