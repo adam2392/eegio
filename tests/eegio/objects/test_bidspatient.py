@@ -1,11 +1,10 @@
-import sys
 import os
+import tempfile
 
 import pytest
 
-import pandas as pd
+from eegio.base.objects.bids.bids_patient import BidsPatient
 
-from eegio.base.config import MB
 
 @pytest.mark.usefixture("bidspatient")
 class TestBidsPatient:
@@ -47,7 +46,7 @@ class TestBidsPatient:
             for ind, row in participants_tsv.iterrows():
                 if (ind == bidspatient.subject_id):
                     resected_contacts = row['resected_contacts']
-                    assert resected_contacts ==  " ".join(bidspatient.resected_contacts)
+                    assert resected_contacts == " ".join(bidspatient.resected_contacts)
         if original_col:
             for ind, row in participants_tsv.iterrows():
                 if (ind == bidspatient.subject_id):
@@ -55,19 +54,16 @@ class TestBidsPatient:
                     assert original_subjectid == bidspatient.original_subject_id
 
         # check that the derivative folders have been created
-        data_fpath = os.path.join(bidspatient.datadir, 'sub-'+bidspatient.subject_id, 'ses-'+bidspatient.session_id,
+        data_fpath = os.path.join(bidspatient.datadir, 'sub-' + bidspatient.subject_id, 'ses-' + bidspatient.session_id,
                                   bidspatient.modality)
-        prepocessed_fpath = os.path.join(bidspatient.datadir, 'sub-'+bidspatient.subject_id,
-                                         'ses-'+bidspatient.session_id, 'preprocessed')
-        results_fpath = os.path.join(bidspatient.datadir, 'sub-'+bidspatient.subject_id,
-                                         'ses-'+bidspatient.session_id, 'results')
+        prepocessed_fpath = os.path.join(bidspatient.datadir, 'sub-' + bidspatient.subject_id,
+                                         'ses-' + bidspatient.session_id, 'preprocessed')
+        results_fpath = os.path.join(bidspatient.datadir, 'sub-' + bidspatient.subject_id,
+                                     'ses-' + bidspatient.session_id, 'results')
 
         assert os.path.exists(data_fpath)
         assert os.path.exists(prepocessed_fpath)
         assert os.path.exists(results_fpath)
-
-
-
 
     def test_bidspatient_participants_modify(self, bidspatient):
         """
@@ -125,6 +121,17 @@ class TestBidsPatient:
         Returns
         -------
         """
-        pass
+        subject_id = "test"
+        session_id = "seizure"
+        managing_user = "EZTrack"
+        original_subject_id = 'test_patient_01'
+        modality = 'eeg'
+        datadir = './bidstest/'
+        with tempfile.TemporaryDirectory() as datadir:
+            patient = BidsPatient(
+                subject_id=subject_id, session_id=session_id, datadir=datadir,
+                managing_user=managing_user,
+                original_subject_id=original_subject_id, modality=modality
+            )
 
-        
+            # assert various user errors that should occur and make sense

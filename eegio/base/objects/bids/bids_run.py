@@ -1,17 +1,15 @@
 import os
 from typing import Union, Dict
+
 import pandas as pd
+from mne_bids import make_bids_basename
 
-import warnings
-
+from eegio.base.config import BAD_MARKERS
 from eegio.base.objects.bids.basebids import BaseBids
 from eegio.base.utils.bids_helper import BidsBuilder
+from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.bidsio import BidsIO, BidsWriter, BidsLoader
 
-from eegio.base.utils.scrubber import ChannelScrub
-from eegio.base.config import BAD_MARKERS
-
-from mne_bids import make_bids_basename
 
 class BidsRun(BaseBids):
     """
@@ -26,6 +24,7 @@ class BidsRun(BaseBids):
     Examples
     --------
     """
+
     def __init__(
             self,
             subject_id: str,
@@ -33,51 +32,122 @@ class BidsRun(BaseBids):
             run_id: str,
             datadir: Union[str, os.PathLike] = None,
             modality: str = "ieeg",
-            original_filename: str = None,
-            original_subject_id: str = '',
     ):
         super(BidsRun, self).__init__(datadir=datadir, modality=modality)
         self.subject_id = subject_id
         self.session_id = session_id
         self.run_id = run_id
-        self.original_filename = original_filename
-        self.original_subject_id = original_subject_id
         self.result_fpath = None
 
         # instantiate a loader/writer
+        '''
+        Use these when accessing files directly. BidsIO should not be called.
+        '''
         self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
 
-        self._convert_run_to_bids()
-        self._add_original_scan_filename()
-        self.modify_electrode_info()
-        self._update_sidecar_json()
-
+        # upon loading a BidsRun, update the sidecar json's channel counts. This makes
+        # it BIDS-compatible since these fields are required.
+        self._update_sidecar_json_channelcounts()
 
     @property
     def fpath(self):
-        io = BidsIO(self.datadir, self.subject_id, self.session_id, self.modality, self.run_id, "edf")
-        return io.datafile_fpath
+        return self.loader.datafile_fpath
+
+    @property
+    def sfreq(self):
+        sidecar = self.loader.load_sidecar_json()
+        return sidecar["SamplingFrequency"]
+
+    @property
+    def linefreq(self):
+        sidecar = self.loader.load_sidecar_json()
+        return sidecar["PowerLineFrequency"]
+
+    @property
+    def chs(self):
+        """
+        Gets the channel labels as a numpy array.
+
+        Returns
+        -------
+
+        """
+        chdf = self.loader.load_channels_tsv()
+        return chdf["name"].to_numpy()
 
     @property
     def results_fpath(self):
-        io = BidsIO(self.datadir, self.subject_id, self.session_id, self.modality, self.run_id, "edf")
-        return io.result_fpath
+        return self.loader.result_fpath
 
-    def load_result(self):
-        self.result_fpath = self.results_fpath
-
-    def _convert_run_to_bids(self):
-        bids_basename = make_bids_basename(subject=self.subject_id, session=self.session_id, run=self.run_id)
-        builder = BidsBuilder()
-        builder.convert_to_bids(edf_fpath=self.original_filename, bids_dir=self.datadir, bids_basename=bids_basename)
-        # Possible that this breaks the participants.tsv. We need subject age and sex pulled from the edf file and added
-        # to the participants.tsv file before running convert otherwise this will always add a new patient.
-        # Option 2, just remove the newly added patient as shown below
-        # builder.remove_added_patient(self.loader, self.writer, self.subject_id)
-
-    def _add_original_scan_filename(self):
+    def load_data(self):
         """
+        Wrapper function that loads in the dataset using BidsLoader.
+
+        Returns
+        -------
+
+        """
+        return self.loader.load_dataset()
+
+    def get_run_metadata(self):
+        return self.loader.load_sidecar_json()
+
+    def get_channels_metadata(self):
+        chdf = self.loader.load_channels_tsv()
+        return chdf.to_dict()
+
+    def get_channel_types(self):
+        """
+        Returns the channel types of this BidsRun as a dictionary with key as the channel name,
+        and type as the value in the dictionary.
+
+        TODO:
+        1. make sure this works.
+
+        Returns
+        -------
+
+        """
+        chdf = self.loader.load_channels_tsv()
+        return chdf[["name", "type"]]
+
+    def get_channels_status(self):
+        """
+        Returns the channel status of this BidsRun as a dictionary with channel "name" as the key,
+        and "status" as the value in the dictionary.
+
+        TODO:
+        1. make sure this works.
+
+        Returns
+        -------
+
+        """
+        chdf = self.loader.load_channels_tsv()
+        return chdf[["name", "status"]]
+
+    def modify_sidecar_json(self, key, value, overwrite=False):
+        """
+        Should modify sidecar json (represented as a dictionary) with a specified key and value. It will overwrite
+        existing sidecar elements if already present. However, if overwrite is False, then it should raise a RunTimeError.
+
+
+        Parameters
+        ----------
+        key :
+        value :
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def modify_original_scan_filename(self, original_filename: str):
+        """
+        Helper function that would add the original scan filename. If it was not passed in correctly.
+
         Adds the original scan filename (from clinical source) to the scans tsv folder for this BidsPatient
 
         Returns
@@ -93,10 +163,15 @@ class BidsRun(BaseBids):
             scans_data['original_filename'] = fnames
         for index, row in scans_data.iterrows():
             if row['filename'] == self.fpath:
-                row['original_filename'] = self.original_filename
+                row['original_filename'] = original_filename
 
-    def modify_electrode_info(self):
+    def modify_channel_info(self, channel_id, column_id, value):
         """
+        TODO:
+        - This shouldn't be here. A user should ideally just have done this when setting up the BIDS folder, and
+        dataset.
+        -
+
         This method searches for automatic patterns in the electrode names to modify the channels.tsv file
 
         Returns
@@ -111,6 +186,9 @@ class BidsRun(BaseBids):
         for key, value in channel_types_dict.items():
             channel_data = self.modify_electrode_type(channel_data, key, value)
         self.writer.write_channels_tsv(channel_data)
+
+    def append_channel_info(self, column_id: str, channel_id: str=None, value=None, channel_dict: Dict=None):
+        pass
 
     def find_bad_channels(self):
         """
@@ -218,46 +296,27 @@ class BidsRun(BaseBids):
             channels_data['notes'] = notes
         self.writer.write_channels_tsv(channels_data)
 
-    def _update_sidecar_json(self):
+    def _update_sidecar_json_channelcounts(self):
         """
-        Reads the current tsv file for the run's channels and updates the sidecar json with the channel type
+        Helper function to update sidecar json for channel counts.
+        Reads the current tsv file for the run's channels and updates the sidecar json with the channel type.
+
+        Should be called everytime we modify anything in the sidecar json file.
 
         Returns
         -------
 
         """
+        # load in channel tsv file as a dataframe
         channels_data = self.loader.load_channels_tsv()
         types = channels_data['type']
+
+        # load in sidecar json as a dictionary
         sidecar_dict = self.loader.load_sidecar_json()
         numbers = types.value_counts()
-        try:
-            sidecar_dict['EEGChannelCount'] = int(numbers['EEG'])
-        except KeyError:
-            sidecar_dict['EEGChannelCount'] = 0
-        try:
-            sidecar_dict['ECOGChannelCount'] = int(numbers['ECOG'])
-        except KeyError:
-            sidecar_dict['ECOGChannelCount'] = 0
-        try:
-            sidecar_dict['SEEGChannelCount'] = int(numbers['SEEG'])
-        except KeyError:
-            sidecar_dict['SEEGChannelCount'] = 0
-        try:
-            sidecar_dict['EOGChannelCount'] = int(numbers['EOG'])
-        except KeyError:
-            sidecar_dict['EOGChannelCount'] = 0
-        try:
-            sidecar_dict['ECGChannelCount'] = int(numbers['ECG'])
-        except KeyError:
-            sidecar_dict['ECGChannelCount'] = 0
-        try:
-            sidecar_dict['EMGChannelCount'] = int(numbers['EMG'])
-        except KeyError:
-            sidecar_dict['EMGChannelCount'] = 0
-        try:
-            sidecar_dict['MiscChannelCount'] = int(numbers['Misc'])
-        except KeyError:
-            sidecar_dict['MiscChannelCount'] = 0
+
+        # go through each possible electrode type and update the count in sidecar json
+        for chtype, count in zip(types, numbers):
+            sidecar_dict[f"{chtype}ChannelCount"] = int(count)
+
         self.writer.write_sidecar_json(sidecar_dict)
-
-

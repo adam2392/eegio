@@ -138,5 +138,3 @@ class BaseBids(object):
         counter = report.generate()
         main_report = counter.most_common()
         print(main_report)
-
-    # def

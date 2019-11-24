@@ -193,7 +193,7 @@ class BidsPatient(BaseBids):
         bidsrun = BidsRun(subject_id=self.subject_id, session_id=self.session_id, run_id=run_id, datadir=self.datadir,
                           modality=self.modality, original_filename=new_fpath,
                           original_subject_id=self.original_subject_id)
-        bidsrun.modify_electrode_info()
+        bidsrun.modify_channel_info()
         scans = self._create_scan_data()
         self._load_scans(scans)
         self._get_all_datasets()

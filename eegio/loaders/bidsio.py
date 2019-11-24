@@ -2,13 +2,11 @@ import json
 import os
 from datetime import datetime
 
-import pandas as pd
-import numpy as np
 import mne
+import numpy as np
+import pandas as pd
 from mne_bids import make_bids_basename
 
-from eegio.base.utils.scrubber import ChannelScrub
-from eegio.base.config import BAD_MARKERS
 
 def write_tsv(data_dict, out_file, first_colum="id"):
     columns = get_all_sub_keys(data_dict)
@@ -72,13 +70,13 @@ class BidsIO():
 
     """
 
-    def __init__(self, bidsdir, subject_id, session_id, kind, run_id = None, datatype="edf"):
+    def __init__(self, bidsdir, subject_id, session_id, kind, run_id=None, datatype="edf"):
         self.rootdir = bidsdir
         self.subject_id = subject_id
         self.run_id = run_id
         self.session_id = session_id
-        self.subjdir = os.path.join(bidsdir, 'sub-'+self.subject_id)
-        self.sessiondir = os.path.join(self.subjdir, 'ses-'+self.session_id)
+        self.subjdir = os.path.join(bidsdir, 'sub-' + self.subject_id)
+        self.sessiondir = os.path.join(self.subjdir, 'ses-' + self.session_id)
         self.datadir = os.path.join(self.sessiondir, kind)
         self.kind = kind
         self.datatype = datatype
@@ -108,6 +106,7 @@ class BidsIO():
                                                              session=self.session_id,
                                                              run=self.run_id,
                                                              suffix=f"{self.kind}.{self.datatype}"))
+
     @property
     def result_fpath(self):
         return os.path.join(self.datadir, 'results', make_bids_basename(subject=self.subject_id,
@@ -137,7 +136,7 @@ class BidsIO():
 
 
 class BidsLoader(BidsIO):
-    def __init__(self, bidsdir, subject_id, session_id, run_id = None, kind="eeg"):
+    def __init__(self, bidsdir, subject_id, session_id, run_id=None, kind="eeg"):
         super(BidsLoader, self).__init__(bidsdir, subject_id, session_id, kind, run_id)
 
     def load_sidecar_json(self):
@@ -220,7 +219,7 @@ class BidsLoader(BidsIO):
             raw = mne.io.read_raw_fif(datafile_fpath)
         elif 'edf' in datafile_fpath:
             raw = mne.io.read_raw_edf(datafile_fpath)
-        #else:
+        # else:
         #    DatasetTypeError('Passed dataset must be of type')
         return raw
 
@@ -248,12 +247,11 @@ class BidsWriter(BidsIO):
         if fpath is None:
             fpath = self.chanstsv_fpath
         metadata.to_csv(fpath, sep='\t', index=False)
-        #write_tsv(metadata, fpath, first_colum="name")
+        # write_tsv(metadata, fpath, first_colum="name")
 
     def write_sidecar_json(self, sidecar_dict):
         outfile = self.sidecarjson_fpath
         write_json(sidecar_dict, outfile)
-
 
     def write_scans_tsv(self, scans_df):
         outfile = self.scanstsv_fpath

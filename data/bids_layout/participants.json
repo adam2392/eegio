@@ -12,5 +12,7 @@
             "F": "female",
             "M": "male"
         }
-    }
+    },
+    "resected_contacts": "The list of contacts corresponding to resected regions",
+    "original_subjectid": "The subjectid in the clinical data source"
 }

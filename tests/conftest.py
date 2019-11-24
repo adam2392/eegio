@@ -1,7 +1,6 @@
 """ Define fixtures available for eegio tests. """
 import os
 import os.path
-import tempfile
 
 import numpy as np
 import pytest
@@ -76,21 +75,6 @@ def ieegts():
 
 
 @pytest.fixture(scope="class")
-def basebids():
-    """
-    Creating a pytest fixture for the base bids class
-    Returns
-    -------
-
-    """
-    from eegio.base.objects.bids.basebids import BaseBids
-    modality = "ieeg"
-    with tempfile.TemporaryDirectory() as datadir:
-        base = BaseBids(datadir=datadir, modality=modality)
-    return base
-
-
-@pytest.fixture(scope="class")
 def bidspatient():
     """
     Creating a pytest fixture for a fake bidsPatient data object.
@@ -98,47 +82,37 @@ def bidspatient():
     :return:
     """
     from eegio.base.objects.bids.bids_patient import BidsPatient
-    subject_id = "test"
+    test_subjectid = '0001'
+    test_fpath = os.path.join(os.getcwd(), "./data/bids_layout/")
+    bidspat = BidsPatient(subject_id=test_subjectid,
+                          session_id='seizure',
+                          datadir=test_fpath,
+                          managing_user="test",
+                          modality='eeg')
+    return bidspat
+
+
+@pytest.fixture(scope="class")
+def bidsrun_scalp():
+    """
+    Creating a pytest fixture for a fake bidsRun data object
+    Returns
+    -------
+
+    """
+    from eegio.base.objects.bids.bids_run import BidsRun
+    test_subjectid = '0001'
     session_id = "seizure"
-    managing_user = "EZTrack"
-    original_subject_id = 'test_patient_01'
-    modality = 'eeg'
-    datadir = './bidstest/'
-    resected_contacts = ["a1", "a3"]
-    patient = BidsPatient(
-        subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
-        original_subject_id=original_subject_id, modality=modality, resected_contacts=resected_contacts,
-    )
-    #patient = patient.create_fake_example()
-    # with tempfile.TemporaryDirectory() as datadir:
-    #     patient = BidsPatient(
-    #         subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
-    #         original_subject_id=original_subject_id, modality=modality
-    #     )
-    #     patient = patient.create_fake_example()
+    kind = "eeg"
+    run_id = "01"
+    test_datadir = os.path.join(os.getcwd(), "./data/bids_layout/")
 
-    return patient
-
-
-# @pytest.fixture(scope="class")
-# def bidsrun():
-#     """
-#     Creating a pytest fixture for a fake bidsRun data object
-#     Returns
-#     -------
-#
-#     """
-#     from eegio.base.objects.bids.bids_run import BidsRun
-#     subject_id = "01"
-#     session_id = "seizure"
-#     run_id = "00"
-#     modality = "ieeg"
-#     original_filename = "test_"
-#     with tempfile.TemporaryDirectory() as datadir:
-#         run = BidsRun(subject_id=subject_id, session_id=session_id, run_id=run_id, datadir=datadir, modality=modality,
-#                       original_filename=original_filename)
-#     return run
-
+    run = BidsRun(subject_id=test_subjectid,
+                  session_id=session_id,
+                  run_id=run_id,
+                  datadir=test_datadir,
+                  modality=kind)
+    return run
 
 
 @pytest.fixture(scope="class")
@@ -160,32 +134,7 @@ def result():
     result = Patient(
         patientid, datadir=datadir, managing_user=managing_user, datasetids=datasetids
     )
-
     return result
-
-
-@pytest.fixture(scope="class")
-def clinical_sheet():
-    """
-    Creating a pytest fixture for a fake Result data object.
-
-    :return:
-    """
-    import numpy as np
-    from eegio.base.objects.clinical import PatientClinical
-
-    patid = "test_patient_01"
-    datasetids = [f"test_sz{i}" for i in range(2)]
-    centerid = "jhu"
-    example_datadict = {
-        "length_of_recording": 400,
-        "timepoints": np.hstack((np.arange(0, 100), np.arange(5, 105))),
-    }
-
-    patclin = PatientClinical(patid, datasetids, centerid)
-    patclin.load_from_dict(example_datadict)
-    # clinical_sheet = MasterClinicalSheet([patclin])
-    # return clinical_sheet
 
 
 @pytest.fixture(scope="class")
@@ -222,7 +171,7 @@ def fif_fpath():
     :return:
     """
     # load in edf data
-    testdatadir = os.path.join(os.getcwd(), "./data/")
+    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/")
     filepath = os.path.join(testdatadir, "scalp_test_raw.fif")
     return filepath
 
