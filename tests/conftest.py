@@ -98,17 +98,24 @@ def bidspatient():
     :return:
     """
     from eegio.base.objects.bids.bids_patient import BidsPatient
-    subject_id = "01"
+    subject_id = "test"
     session_id = "seizure"
     managing_user = "EZTrack"
     original_subject_id = 'test_patient_01'
-    modality = 'ieeg'
-    with tempfile.TemporaryDirectory() as datadir:
-        patient = BidsPatient(
-            subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
-            original_subject_id=original_subject_id, modality=modality
-        )
-        patient = patient.create_fake_example()
+    modality = 'eeg'
+    datadir = './bidstest/'
+    resected_contacts = ["a1", "a3"]
+    patient = BidsPatient(
+        subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
+        original_subject_id=original_subject_id, modality=modality, resected_contacts=resected_contacts,
+    )
+    #patient = patient.create_fake_example()
+    # with tempfile.TemporaryDirectory() as datadir:
+    #     patient = BidsPatient(
+    #         subject_id=subject_id, session_id=session_id, datadir=datadir, managing_user=managing_user,
+    #         original_subject_id=original_subject_id, modality=modality
+    #     )
+    #     patient = patient.create_fake_example()
 
     return patient
 

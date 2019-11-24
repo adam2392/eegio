@@ -1,4 +1,5 @@
 import sys
+import os
 
 import pytest
 
@@ -26,8 +27,9 @@ class TestBidsPatient:
         assert bidspatient.numdatasets == 0
 
         # check that resected contacts and original subject id have been added to the participants tsv
-        participants_json = bidspatient.loader.load_participants_json
-        participants_tsv = bidspatient.loader.load_participants_tsv
+        participants_json = bidspatient.loader.load_participants_json()
+        participants_tsv = bidspatient.loader.load_participants_tsv()
+        participants_tsv = participants_tsv.set_index('participant_id')
 
         participants_keys = participants_json.keys()
         resect = 'resected_contacts' in participants_keys
@@ -43,24 +45,33 @@ class TestBidsPatient:
 
         if resect_col:
             for ind, row in participants_tsv.iterrows():
-                if (row['participant_id'] == bidspatient.subject_id):
+                if (ind == bidspatient.subject_id):
                     resected_contacts = row['resected_contacts']
                     assert resected_contacts ==  " ".join(bidspatient.resected_contacts)
         if original_col:
             for ind, row in participants_tsv.iterrows():
-                if (row['participant_id'] == bidspatient.subject_id):
+                if (ind == bidspatient.subject_id):
                     original_subjectid = row['original_subjectid']
                     assert original_subjectid == bidspatient.original_subject_id
 
-        # check that the derivate folders have been created
+        # check that the derivative folders have been created
+        data_fpath = os.path.join(bidspatient.datadir, 'sub-'+bidspatient.subject_id, 'ses-'+bidspatient.session_id,
+                                  bidspatient.modality)
+        prepocessed_fpath = os.path.join(bidspatient.datadir, 'sub-'+bidspatient.subject_id,
+                                         'ses-'+bidspatient.session_id, 'preprocessed')
+        results_fpath = os.path.join(bidspatient.datadir, 'sub-'+bidspatient.subject_id,
+                                         'ses-'+bidspatient.session_id, 'results')
+
+        assert os.path.exists(data_fpath)
+        assert os.path.exists(prepocessed_fpath)
+        assert os.path.exists(results_fpath)
 
 
 
 
-    def test_bidspatient_channelfunc(self, bidspatient):
+    def test_bidspatient_participants_modify(self, bidspatient):
         """
-        Test function for BidsPatient that allows modification of the channels.
-        Tests read/write/delete functionality.
+        Test function for BidsPatient that allows modification participant files.
 
         Parameters
         ----------
@@ -70,22 +81,36 @@ class TestBidsPatient:
         -------
 
         """
-        assert len(bidspatient.wm_channels) >= 0
-        assert len(bidspatient.bad_channels) >= 0
+        participants_json = bidspatient.loader.load_participants_json()
+        participants_tsv = bidspatient.loader.load_participants_tsv()
+        colnames = participants_tsv.columns
 
-        # test working w/ channels
-        test_bad_ch = ["a1", "a2", "a3"]
-        test_wm_ch = ["b1", "b3"]
-        
-        bidspatient.add_bad_channels(test_bad_ch)
-        bidspatient.add_wm_channels(test_wm_ch)
+        new_field = 'new_field'
+        assert new_field not in participants_json.keys()
+        assert new_field not in colnames
 
-        assert len(bidspatient.wm_channels) == len(test_wm_ch)
-        assert len(bidspatient.bad_channels) == len(test_bad_ch)
+        # test addition of new field
+        bidspatient.add_participants_field(new_field, description='the new field', subject_val='new_val',
+                                           default_val='default_val')
 
-        # make sure that bidspatient object isnt loading in any explicit data
-        # into the object
-        assert sys.getsizeof(bidspatient) < 5 * MB
+        participants_json = bidspatient.loader.load_participants_json()
+        participants_tsv = bidspatient.loader.load_participants_tsv()
+        colnames = participants_tsv.columns
+
+        assert new_field in participants_json.keys()
+        assert new_field in colnames
+
+        # test removal of the field
+        bidspatient.remove_participants_field(new_field)
+        participants_json = bidspatient.loader.load_participants_json()
+        participants_tsv = bidspatient.loader.load_participants_tsv()
+        colnames = participants_tsv.columns
+
+        assert new_field not in participants_json.keys()
+        assert new_field not in colnames
+
+        bidspatient.add_participants_field(new_field, description='the new field', subject_val='new_val',
+                                           default_val='default_val')
 
     def test_bidspatient_errors(self, bidspatient):
         """

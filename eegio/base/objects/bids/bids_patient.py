@@ -45,6 +45,9 @@ class BidsPatient(BaseBids):
         if resected_contacts is None:
             resected_contacts = []
 
+        if scans is None:
+            scans = {}
+
         self.subject_id = subject_id
         self.session_id = session_id
         self.managing_user = managing_user
@@ -60,7 +63,7 @@ class BidsPatient(BaseBids):
             warnings.warn(f"Subject directory does not exist at: {self.subjdir} "
                           f"We are going to create it for you!")
             # create bids folder for this subject
-            BidsBuilder.make_bids_folder_struct(self.datadir, self.subject_id, self.modality)
+            BidsBuilder.make_bids_folder_struct(self.datadir, self.subject_id, self.modality, self.session_id)
             new_subject = True
 
         bids_basename = make_bids_basename(subject=self.subject_id, session=self.session_id)
@@ -87,9 +90,9 @@ class BidsPatient(BaseBids):
         # automatically update patient metadata
         resected_str = " ".join(self.resected_contacts)
         self.add_participants_field('resected_contacts', 'The list of contacts corresponding to resected regions',
-                                    resected_str, '')
+                                    resected_str, 'n/a')
         self.add_participants_field('original_subjectid', 'The subjectid in the clinical data source',
-                                    self.original_subject_id)
+                                    self.original_subject_id, 'n/a')
 
         metadata = self._create_metadata()
         self._load_metadata(metadata)
@@ -108,15 +111,16 @@ class BidsPatient(BaseBids):
             raise ValueError("Can only create two types of derivative folders right now.")
 
         # create preprocess, results folders
-        BidsBuilder.make_preprocessed_folder(self.datadir, self.subject_id)
-        BidsBuilder.make_results_folder(self.datadir, self.subject_id)
+        BidsBuilder.make_preprocessed_folder(self.datadir, self.subject_id, self.session_id)
+        BidsBuilder.make_results_folder(self.datadir, self.subject_id, self.session_id)
 
     def get_subject_sessions(self):
         return mne_bids.utils.get_entity_vals(self.subjdir, 'ses')
 
     @property
     def numdatasets(self):
-        return len(self.dataset_fpaths)
+        # should be return len(self.dataset_fpaths). Fix updating _get_all_datasets
+        return len(self.scans)
 
     @property
     def numfifs(self):
@@ -127,6 +131,7 @@ class BidsPatient(BaseBids):
         return len([x for x in self.edf_fpaths if x.endswith(".edf")])
 
     def _get_all_datasets(self):
+        # Should update after creating a run, but does not work currently
         edffiles = self.query.get(extension='.edf', return_type='file')
         fiffiles = self.query.get(extension='.fif', return_type='file')
         self.edf_fpaths = edffiles
@@ -191,6 +196,8 @@ class BidsPatient(BaseBids):
         bidsrun.modify_electrode_info()
         scans = self._create_scan_data()
         self._load_scans(scans)
+        self._get_all_datasets()
+        return bidsrun
 
     def add_scans(self, scans: list):
         """
@@ -258,9 +265,9 @@ class BidsPatient(BaseBids):
         """
         scans_df = self.loader.load_scans_tsv()
         scans_dict = {}
-        for ind, row in scans_df:
+        for ind, row in scans_df.iterrows():
             scans_dict[row['filename']] = {}
-            for index, value in row:
+            for index, value in row.iteritems():
                 scans_dict[row['filename']][index] = value
         return scans_dict
 
@@ -276,13 +283,14 @@ class BidsPatient(BaseBids):
 
         """
         participants_df = self.loader.load_participants_tsv()
-        participants_series = participants_df.loc[self.subject_id]
+        participants_series = participants_df.loc[participants_df['participant_id'] == self.subject_id].squeeze()
         series_dict = {'participant_id': participants_series.name}
         for index, value in participants_series.iteritems():
             series_dict[index] = value
         return series_dict
 
-    def add_participants_field(self, column_id, description: Union[str, dict], subject_val: str = '', default_val: str = ''):
+    def add_participants_field(self, column_id, description: Union[str, dict], subject_val: str = 'n/a',
+                               default_val: str = 'n/a'):
         """
 
         Parameters
@@ -302,6 +310,7 @@ class BidsPatient(BaseBids):
         """
         participants_dict = self.loader.load_participants_json()
         participants_df = self.loader.load_participants_tsv()
+        participants_df = participants_df.set_index('participant_id')
         if column_id not in participants_dict.keys():
             participants_dict = BidsBuilder.add_field_to_dict(participants_dict, column_id, description)
             self.writer.write_participants_json(participants_dict)
@@ -316,7 +325,7 @@ class BidsPatient(BaseBids):
         else:
             warnings.warn('Field already exists for the participants file. Modifying instead')
             self.modify_participants_file(column_id, subject_val)
-        metadata =  self._create_metadata()
+        metadata = self._create_metadata()
         self._load_metadata(metadata)
 
     def remove_participants_field(self, column_id: str):
@@ -335,7 +344,7 @@ class BidsPatient(BaseBids):
         if column_id not in participants_dict.keys():
             raise KeyError(f'The field {column_id} does not exist in the participants file')
         del participants_dict[column_id]
-        self.writer.write_participants_json()
+        self.writer.write_participants_json(participants_dict)
         colnames = participants_df.columns
         if column_id not in colnames:
             raise ValueError(f'The field {column_id} does not exist in the participants file')

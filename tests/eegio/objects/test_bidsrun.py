@@ -22,10 +22,10 @@ class TestBidsRun:
 
         """
         assert bidspatient.numdatasets == 0
+        assert bidspatient.num_subjects == 0
 
-        bidspatient.create_run(TEST_DATA_DIR)
+        scans = ['/Users/patrick/Desktop/eegio/data/bids_layout/scalp_test.edf']
+        bidsrun = bidspatient.add_scans(scans)
 
         assert bidspatient.numdatasets == 1
-
-        channel_data = bidspatient.loader.load_scans_tsv()
-        channel_data.to_csv('test_channels.csv')
+        assert bidspatient.num_subjects == 1

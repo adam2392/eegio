@@ -72,7 +72,7 @@ class BidsBuilder(object):
         return output_path
 
     @staticmethod
-    def make_preprocessed_folder(datadir, subject_id, session='ses-one', preprocess_name='preprocessed'):
+    def make_preprocessed_folder(datadir, subject_id, session='one', preprocess_name='preprocessed'):
         """
         Creates the preproceesed data folder in the correct location if it does
         not already exist. Assumes session is 'one'.
@@ -88,7 +88,7 @@ class BidsBuilder(object):
         -------
 
         """
-        basedir = os.path.join(datadir, 'sub-' + subject_id, session)
+        basedir = os.path.join(datadir, 'sub-' + subject_id, 'ses-' + session)
         preprocessed_dir = os.path.join(basedir, preprocess_name)
         if os.path.exists(preprocessed_dir):
             return 1
@@ -96,7 +96,7 @@ class BidsBuilder(object):
             os.mkdir(preprocessed_dir)
 
     @staticmethod
-    def make_results_folder(datadir, patientid, session='ses-one', result_name='results'):
+    def make_results_folder(datadir, patientid, session='one', result_name='results'):
         """
         Creates the results folder in the correct location if it does not already
         exist. Assumes session is 'one'.
@@ -112,7 +112,7 @@ class BidsBuilder(object):
         -------
 
         """
-        basedir = os.path.join(datadir, 'sub-' + patientid, session)
+        basedir = os.path.join(datadir, 'sub-' + patientid, 'ses-'+session)
         results_dir = os.path.join(basedir, result_name)
         if os.path.exists(results_dir):
             return 1
@@ -155,8 +155,12 @@ class BidsBuilder(object):
         """
         participants_df = loader.load_participants_tsv()
         colnames = participants_df.columns
-        new_df = pd.DataFrame(['n/a']*len(colnames), columns=colnames)
-        participants_df.append(new_df, ignore_index=True)
+        new_df = pd.DataFrame([[subject_id]+['n/a']*(len(colnames)-1)], columns=colnames)
+        if participants_df.empty:
+            participants_df = new_df
+        else:
+            participants_df.append(new_df)
+        participants_df = participants_df.set_index('participant_id')
         writer.write_participants_tsv(participants_df)
 
 

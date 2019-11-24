@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 import pandas as pd
+import numpy as np
 import mne
 from mne_bids import make_bids_basename
 
@@ -42,7 +43,7 @@ def data_value_to_string(data):
 
 def write_json(data, out_file):
     with open(out_file, "w") as opened_file:
-        json.dump(data, opened_file)
+        json.dump(data, opened_file, indent=4)
 
 
 def write_tsv_row(row, opened_file):
@@ -73,13 +74,12 @@ class BidsIO():
 
     def __init__(self, bidsdir, subject_id, session_id, kind, run_id = None, datatype="edf"):
         self.rootdir = bidsdir
-        self.subjdir = os.path.join(bidsdir, make_bids_basename(subject=subject_id))
-        self.sessiondir = os.path.join(self.subjdir, make_bids_basename(subject=subject_id,
-                                                                        session=session_id))
-        self.datadir = os.path.join(self.sessiondir, kind)
         self.subject_id = subject_id
         self.run_id = run_id
         self.session_id = session_id
+        self.subjdir = os.path.join(bidsdir, 'sub-'+self.subject_id)
+        self.sessiondir = os.path.join(self.subjdir, 'ses-'+self.session_id)
+        self.datadir = os.path.join(self.sessiondir, kind)
         self.kind = kind
         self.datatype = datatype
 
@@ -89,11 +89,11 @@ class BidsIO():
 
     @property
     def participantsjson_fpath(self):
-        return os.path.join(self.datadir, "participants.json")
+        return os.path.join(self.rootdir, "participants.json")
 
     @property
     def participantstsv_fpath(self):
-        return os.path.join(self.datadir, "participants.tsv")
+        return os.path.join(self.rootdir, "participants.tsv")
 
     @property
     def eventstsv_fpath(self):
@@ -247,13 +247,18 @@ class BidsWriter(BidsIO):
         """
         if fpath is None:
             fpath = self.chanstsv_fpath
-        write_tsv(metadata, fpath, first_colum="name")
+        metadata.to_csv(fpath, sep='\t', index=False)
+        #write_tsv(metadata, fpath, first_colum="name")
 
-    def write_sidecar_json(self):
-        pass
+    def write_sidecar_json(self, sidecar_dict):
+        outfile = self.sidecarjson_fpath
+        write_json(sidecar_dict, outfile)
 
-    def write_scans_tsv(self):
-        pass
+
+    def write_scans_tsv(self, scans_df):
+        outfile = self.scanstsv_fpath
+        scans_df = scans_df.replace(np.nan, 'n/a', regex=True)
+        scans_df.to_csv(outfile, sep='\t', index=True)
 
     def write_electrode_coords(self, coords_dict, channels_df):
         return channels_df
@@ -302,7 +307,10 @@ class BidsWriter(BidsIO):
 
         """
         outfile = self.participantstsv_fpath
-        write_tsv(new_df, outfile, 'participant_id')
+        new_df = new_df.replace(np.nan, 'n/a', regex=True)
+        new_df.to_csv(outfile, sep='\t', index=True)
+        # below is only if data passed as dict
+        # write_tsv(new_df, outfile, 'participant_id')
 
     def write_participants_json(self, new_dict):
         """

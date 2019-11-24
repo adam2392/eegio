@@ -48,8 +48,8 @@ class BidsRun(BaseBids):
         self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
 
-        self._add_original_scan_filename()
         self._convert_run_to_bids()
+        self._add_original_scan_filename()
         self.modify_electrode_info()
         self._update_sidecar_json()
 
@@ -105,10 +105,10 @@ class BidsRun(BaseBids):
         self._add_notes_to_channels()
         channel_data = self.loader.load_channels_tsv()
         bad_channel_dict = self.find_bad_channels()
-        for key, value in bad_channel_dict:
+        for key, value in bad_channel_dict.items():
             channel_data = self.modify_electrode_status(channel_data, key, value)
         channel_types_dict = self.find_channel_types()
-        for key, value in channel_types_dict:
+        for key, value in channel_types_dict.items():
             channel_data = self.modify_electrode_type(channel_data, key, value)
         self.writer.write_channels_tsv(channel_data)
 
@@ -142,7 +142,7 @@ class BidsRun(BaseBids):
         channel_names = channel_df['name']
         channel_dict = channel_scrub.label_channel_types(channel_names)
         for key, value in channel_dict.items():
-            channel_dict[key] = value.uppper()
+            channel_dict[key] = value.upper()
         return channel_dict
 
     @staticmethod
@@ -173,7 +173,7 @@ class BidsRun(BaseBids):
         """
         for ind, row in channel_df.iterrows():
             if row['name'] == chlabel:
-                channel_df[ind]['type'] = chtype
+                channel_df['type'][ind] = chtype
         return channel_df
 
     @staticmethod
@@ -199,8 +199,8 @@ class BidsRun(BaseBids):
         """
         for ind, row in channel_df.iterrows():
             if row['name'] == chlabel:
-                channel_df[ind]['status'] = 'bad'
-                channel_df[ind]['notes'] = chdescription
+                channel_df['status'][ind] = 'bad'
+                channel_df['notes'][ind] = chdescription
         return channel_df
 
     def _add_notes_to_channels(self):
@@ -213,9 +213,9 @@ class BidsRun(BaseBids):
         """
         channels_data = self.loader.load_channels_tsv()
         colnames = channels_data.columns
-        if 'Notes' not in colnames:
+        if 'notes' not in colnames:
             notes = [''] * channels_data.shape[0]
-            channels_data['Notes'] = notes
+            channels_data['notes'] = notes
         self.writer.write_channels_tsv(channels_data)
 
     def _update_sidecar_json(self):
@@ -230,13 +230,34 @@ class BidsRun(BaseBids):
         types = channels_data['type']
         sidecar_dict = self.loader.load_sidecar_json()
         numbers = types.value_counts()
-        sidecar_dict['EEGChannelCount'] = numbers['EEG']
-        sidecar_dict['ECOGChannelCount'] = numbers['ECOG']
-        sidecar_dict['SEEGChannelCount'] = numbers['SEEG']
-        sidecar_dict['EOGChannelCount'] = numbers['EOG']
-        sidecar_dict['ECGChannelCount'] = numbers['ECG']
-        sidecar_dict['EMGChannelCount'] = numbers['EMG']
-        sidecar_dict['MiscChannelCount'] = numbers['Misc']
-        self.writer.write_sidecar_json()
+        try:
+            sidecar_dict['EEGChannelCount'] = int(numbers['EEG'])
+        except KeyError:
+            sidecar_dict['EEGChannelCount'] = 0
+        try:
+            sidecar_dict['ECOGChannelCount'] = int(numbers['ECOG'])
+        except KeyError:
+            sidecar_dict['ECOGChannelCount'] = 0
+        try:
+            sidecar_dict['SEEGChannelCount'] = int(numbers['SEEG'])
+        except KeyError:
+            sidecar_dict['SEEGChannelCount'] = 0
+        try:
+            sidecar_dict['EOGChannelCount'] = int(numbers['EOG'])
+        except KeyError:
+            sidecar_dict['EOGChannelCount'] = 0
+        try:
+            sidecar_dict['ECGChannelCount'] = int(numbers['ECG'])
+        except KeyError:
+            sidecar_dict['ECGChannelCount'] = 0
+        try:
+            sidecar_dict['EMGChannelCount'] = int(numbers['EMG'])
+        except KeyError:
+            sidecar_dict['EMGChannelCount'] = 0
+        try:
+            sidecar_dict['MiscChannelCount'] = int(numbers['Misc'])
+        except KeyError:
+            sidecar_dict['MiscChannelCount'] = 0
+        self.writer.write_sidecar_json(sidecar_dict)
 
 

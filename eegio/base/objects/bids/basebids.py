@@ -3,6 +3,8 @@ from abc import abstractmethod, abstractclassmethod, abstractproperty, abstracts
 import os
 from typing import Union
 import warnings
+import pandas as pd
+import json
 import bids
 import bids.reports
 import mne_bids
@@ -65,9 +67,20 @@ class BaseBids(object):
             self.create_dataset_folder(self.datadir,
                                        name="BIDS_DATASET")
 
+        if not os.path.exists(self.participants_tsv_fpath):
+            self.create_participants_files(self.participants_tsv_fpath, self.participants_json_fpath)
+
     @property
     def description_fpath(self):
         return os.path.join(self.datadir, "dataset_description.json")
+
+    @property
+    def participants_tsv_fpath(self):
+        return os.path.join(self.datadir, "participants.tsv")
+
+    @property
+    def participants_json_fpath(self):
+        return os.path.join(self.datadir, "participants.json")
 
     @property
     def query(self):
@@ -102,6 +115,16 @@ class BaseBids(object):
     def create_dataset_folder(self, fpath, **dataset_description_kwargs):
         # create dataset description
         mne_bids.make_dataset_description(fpath, **dataset_description_kwargs)
+
+    def create_participants_files(self, tsv_fpath, json_fpath):
+        empty_df = pd.DataFrame(columns=['participant_id', 'age', 'sex'])
+        empty_df.to_csv(tsv_fpath, sep='\t', index=False)
+        participants_json = {'participant_id': 'Id of the subject', 'age': 'age of subject in years',
+                             'sex': 'Male (M) or female (F)'}
+        with open(json_fpath, 'w') as fp:
+            json.dump(participants_json, fp, indent=4)
+            fp.close()
+
 
     def print_summary(self):
         """
