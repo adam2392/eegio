@@ -1,7 +1,2 @@
-	Unnamed: 0	participant_id	Unnamed: 0.1	Unnamed: 0.1.1	age	sex	resected_contacts	original_subjectid
-0	0.0	sub-0001	0.0	0.0	n/a	n/a	n/a	n/a
-1	1.0	0001	1.0	1.0	n/a	n/a	n/a	n/a
-2	2.0	n/a	2.0	1.0	n/a	n/a	n/a	n/a
-3	3.0	n/a	1.0	n/a	n/a	n/a	n/a	n/a
-4	1.0	n/a	n/a	n/a	n/a	n/a	n/a	n/a
-0001	n/a	n/a	n/a	n/a	n/a	n/a	n/a	n/a
+participant_id	age	sex
+0002	n/a	n/a

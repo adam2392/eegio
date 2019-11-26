@@ -29,6 +29,9 @@ class BidsBuilder(object):
         -------
 
         """
+        if type(datadir) is not str:
+            datadir = str(datadir)
+
         # create bids folders for this subject
         make_bids_folders(subject=subject,
                           kind=modality,
@@ -36,8 +39,8 @@ class BidsBuilder(object):
                           output_path=datadir,
                           make_dir=True)
 
-
-    def convert_to_bids(self, edf_fpath, bids_dir, bids_basename,
+    @staticmethod
+    def convert_to_bids(edf_fpath, bids_dir, bids_basename,
                         excluded_contacts=None, eog_contacts=None, misc_contacts=None, overwrite=False):
         """
 
@@ -119,6 +122,7 @@ class BidsBuilder(object):
         else:
             os.mkdir(results_dir)
 
+    @staticmethod
     def add_field_to_dict(current_dict: dict, new_field: str, description: Union[str, dict]):
         """
         Adds a new field to the participants.json file
@@ -163,4 +167,40 @@ class BidsBuilder(object):
         participants_df = participants_df.set_index('participant_id')
         writer.write_participants_tsv(participants_df)
 
+    def create_channel_info(self, bidsrun):
+        """
+        TODO:
+        - This shouldn't be here. A user should ideally just have done this when setting up the BIDS folder, and
+        dataset.
+        -
 
+        This method searches for automatic patterns in the electrode names to modify the channels.tsv file
+
+        Returns
+        -------
+        """
+        self.add_notes_to_channels(bidsrun)
+        channel_data = bidsrun.loader.load_channels_tsv()
+        bad_channel_dict = bidsrun.find_bad_channels()
+        for key, value in bad_channel_dict.items():
+            channel_data = bidsrun.modify_electrode_status(channel_data, key, value)
+        channel_types_dict = bidsrun.find_channel_types()
+        for key, value in channel_types_dict.items():
+            channel_data = bidsrun.modify_electrode_type(channel_data, key, value)
+        bidsrun.writer.write_channels_tsv(channel_data)
+
+    @staticmethod
+    def add_notes_to_channels(bidsrun):
+        """
+        Adds a column to the *channels.tsv file to allow for more detailed description of status beyond good/bad
+
+        Returns
+        -------
+
+        """
+        channels_data = bidsrun.loader.load_channels_tsv()
+        colnames = channels_data.columns
+        if 'notes' not in colnames:
+            notes = [''] * channels_data.shape[0]
+            channels_data['notes'] = notes
+        bidsrun.writer.write_channels_tsv(channels_data)

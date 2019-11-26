@@ -34,16 +34,13 @@ class BidsPatient(BaseBids):
             session_id: str = None,
             datadir: Union[str, os.PathLike] = None,
             managing_user: str = None,
-            original_subject_id: str = None,
             modality: str = "ieeg",
-            resected_contacts: list = None,
             metadata: dict = None,
             scans: dict = None,
+            original_subject_id: str = None,
     ):
         super(BidsPatient, self).__init__(datadir=datadir, modality=modality)
 
-        if resected_contacts is None:
-            resected_contacts = []
 
         if scans is None:
             scans = {}
@@ -51,9 +48,7 @@ class BidsPatient(BaseBids):
         self.subject_id = subject_id
         self.session_id = session_id
         self.managing_user = managing_user
-        self.original_subject_id = original_subject_id
-        self.resected_contacts = resected_contacts
-        self.subjdir = os.path.join(self.datadir, self.subject_id)
+        self.subjdir = os.path.join(self.datadir, 'sub-'+self.subject_id)
         self.metadata = metadata
         self.scans = scans
 
@@ -88,11 +83,8 @@ class BidsPatient(BaseBids):
             # TODO: How do we add subject age/sex at this point
 
         # automatically update patient metadata
-        resected_str = " ".join(self.resected_contacts)
-        self.add_participants_field('resected_contacts', 'The list of contacts corresponding to resected regions',
-                                    resected_str, 'n/a')
-        self.add_participants_field('original_subjectid', 'The subjectid in the clinical data source',
-                                    self.original_subject_id, 'n/a')
+        self.resected_contacts = None
+        self.original_subject_id = original_subject_id
 
         metadata = self._create_metadata()
         self._load_metadata(metadata)
@@ -188,12 +180,14 @@ class BidsPatient(BaseBids):
                 non_processed.append(row['filename'])
         return non_processed
 
-    def _create_run(self, new_fpath):
+    def _create_run(self, scan):
         run_id = str(self.numdatasets).zfill(2)
+        bids_basename = make_bids_basename(subject=self.subject_id, session=self.session_id, run=run_id)
+        builder = BidsBuilder()
+        builder.convert_to_bids(edf_fpath=scan, bids_dir=self.datadir, bids_basename=bids_basename)
         bidsrun = BidsRun(subject_id=self.subject_id, session_id=self.session_id, run_id=run_id, datadir=self.datadir,
-                          modality=self.modality, original_filename=new_fpath,
-                          original_subject_id=self.original_subject_id)
-        bidsrun.modify_channel_info()
+                          modality=self.modality)
+        builder.create_channel_info(bidsrun)
         scans = self._create_scan_data()
         self._load_scans(scans)
         self._get_all_datasets()
@@ -373,3 +367,13 @@ class BidsPatient(BaseBids):
         metadata = self._create_metadata()
         self._load_metadata(metadata)
 
+    def add_resected_contacts(self, resected_list):
+        resected_str = " ".join(resected_list)
+        self.add_participants_field('resected_contacts', 'The list of contacts corresponding to resected regions',
+                                    resected_str, 'n/a')
+        self.resected_contacts = resected_list
+
+    def add_original_subject_id(self, original_subject_id):
+        self.add_participants_field('original_subjectid', 'The subjectid in the clinical data source',
+                                    original_subject_id, 'n/a')
+        self.original_subject_id = original_subject_id

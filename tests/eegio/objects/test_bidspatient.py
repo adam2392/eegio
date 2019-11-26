@@ -32,6 +32,25 @@ class TestBidsPatient:
 
         participants_keys = participants_json.keys()
         resect = 'resected_contacts' in participants_keys
+        assert not resect
+        original = 'original_subjectid' in participants_keys
+        assert not original
+
+        participants_columns = participants_tsv.columns
+        resect_col = 'resected_contacts' in participants_columns
+        assert not resect_col
+        original_col = 'original_subjectid' in participants_columns
+        assert not original_col
+
+        bidspatient.add_resected_contacts(['a1','a2'])
+        bidspatient.add_original_subject_id('test_0001')
+
+        participants_json = bidspatient.loader.load_participants_json()
+        participants_tsv = bidspatient.loader.load_participants_tsv()
+        participants_tsv = participants_tsv.set_index('participant_id')
+
+        participants_keys = participants_json.keys()
+        resect = 'resected_contacts' in participants_keys
         assert resect
         original = 'original_subjectid' in participants_keys
         assert original
@@ -121,17 +140,6 @@ class TestBidsPatient:
         Returns
         -------
         """
-        subject_id = "test"
-        session_id = "seizure"
-        managing_user = "EZTrack"
-        original_subject_id = 'test_patient_01'
-        modality = 'eeg'
-        datadir = './bidstest/'
-        with tempfile.TemporaryDirectory() as datadir:
-            patient = BidsPatient(
-                subject_id=subject_id, session_id=session_id, datadir=datadir,
-                managing_user=managing_user,
-                original_subject_id=original_subject_id, modality=modality
-            )
+        pass
 
             # assert various user errors that should occur and make sense

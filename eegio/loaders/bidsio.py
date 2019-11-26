@@ -186,7 +186,7 @@ class BidsLoader(BidsIO):
 
         """
         participants_fpath = self.participantstsv_fpath
-        participants = pd.read_table(participants_fpath)
+        participants = pd.read_table(participants_fpath, dtype={'participant_id': str})
         return participants
 
     def load_participants_json(self):

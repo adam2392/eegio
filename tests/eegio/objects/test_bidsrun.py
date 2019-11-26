@@ -43,8 +43,9 @@ class TestBidsRun:
         # determine all the channel status
         chstatus = bidsrun_scalp.get_channels_status()
 
+
         # get good and bad indices based on status
-        badinds = [i for i, ch in enumerate(chs) if chstatus[ch] == "bad"]
+        badinds = [i for i, ch in enumerate(chs) if chstatus["status"][ch] == "bad"]
         goodinds = [i for i in range(len(chs)) if i not in badinds]
 
         # run scrubber through "good channels" and make sure internal functionality didn't mess things up
@@ -53,8 +54,9 @@ class TestBidsRun:
 
         # loaded in the scalp EEG data
         raw = bidsrun_scalp.load_data()
-        assert isinstance(raw, mne.io.Raw)
+        assert isinstance(raw, mne.io.base.BaseRaw)
 
+    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def testbidsrun_modifyfunc(self, bidsrun_scalp):
         """
         Tests the BidsRun functionality to modify metadata in the context of a sidecar json and channels.tsv
@@ -77,17 +79,21 @@ class TestBidsRun:
         '''
         First test adding additional metadata using the sidecarjson.
         '''
+        # test field not default written into sidecar
         institution_name = "National institute of Health"
         run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName", value=institution_name)
-        # this should have been written
         assert bidsrun_scalp.get_run_metadata()["InstitutionName"] == institution_name
+        # this should have been written
+
+        # test for capitalization specificity
         manufacturer = "nk"
         run_metadata = bidsrun_scalp.modify_sidecar_json(key="manufacturer", value=manufacturer)
-
+        assert bidsrun_scalp.get_run_metadata()["manufacturer"] == manufacturer
         # Keynames should always start with capital letter when passed in
         assert all(x in bidsrun_scalp.get_run_metadata().keys()
                    for x in ["Manufacturer", "InstitutionName"])
 
+        # test for field that needs to be overwritten
         institution_name = "National institute of Health_v2"
         run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName", value=institution_name, overwrite=True)
         # this should have been rewritten
@@ -105,14 +111,15 @@ class TestBidsRun:
         column_id = "low_cutoff"
         value = "0.0"
         for channel_id in chs:
-            bidsrun_scalp.modify_channel_info(channel_id, column_id, value)
+            bidsrun_scalp.modify_channel_info(channel_id=channel_id, column_id=column_id, value=value)
 
         # append new channel information
         column_id = "resected"
         value = True
         for channel_id in chs:
-            bidsrun_scalp.append_channel_info(column_id, channel_id=channel_id, value=value)
+            bidsrun_scalp.append_channel_info(column_id=column_id, channel_id=channel_id, value=value)
 
+    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def testbidsrun_errors(self, bidsrun_scalp):
         # get the channel labels
         chs = bidsrun_scalp.chs
@@ -131,3 +138,12 @@ class TestBidsRun:
                                               channel_id=chs[0],
                                               value="test",
                                               channel_dict={ch: "test" for ch in chs})
+
+        # error should be raised when attempting to modify a channel that does not exist
+        with pytest.raises(KeyError):
+            bidsrun_scalp.modify_channel_info(column_id='low_cutoff', channel_id='Nonexisting channel', value='2.0')
+
+        # error should be raised when attempting to modify a column that does not exist
+        with pytest.raises(ValueError):
+            bidsrun_scalp.modify_channel_info(column_id='Nonexisting column', channel_id='EEG C4-Ref', value=True)
+

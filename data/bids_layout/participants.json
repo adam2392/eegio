@@ -1,18 +1,5 @@
 {
-    "participant_id": {
-        "Description": "Unique participant identifier"
-    },
-    "age": {
-        "Description": "Age of the participant at time of testing",
-        "Units": "years"
-    },
-    "sex": {
-        "Description": "Biological sex of the participant",
-        "Levels": {
-            "F": "female",
-            "M": "male"
-        }
-    },
-    "resected_contacts": "The list of contacts corresponding to resected regions",
-    "original_subjectid": "The subjectid in the clinical data source"
+    "participant_id": "Id of the subject",
+    "age": "age of subject in years",
+    "sex": "Male (M) or female (F)"
 }

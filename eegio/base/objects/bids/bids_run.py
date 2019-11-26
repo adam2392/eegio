@@ -32,12 +32,14 @@ class BidsRun(BaseBids):
             run_id: str,
             datadir: Union[str, os.PathLike] = None,
             modality: str = "ieeg",
+            original_fileid: Union[str, os.PathLike] = None,
     ):
         super(BidsRun, self).__init__(datadir=datadir, modality=modality)
         self.subject_id = subject_id
         self.session_id = session_id
         self.run_id = run_id
         self.result_fpath = None
+        self.original_fileid = original_fileid
 
         # instantiate a loader/writer
         '''
@@ -78,6 +80,12 @@ class BidsRun(BaseBids):
 
     @property
     def results_fpath(self):
+        """
+
+        Returns
+        -------
+
+        """
         return self.loader.result_fpath
 
     def load_data(self):
@@ -91,9 +99,21 @@ class BidsRun(BaseBids):
         return self.loader.load_dataset()
 
     def get_run_metadata(self):
+        """
+
+        Returns
+        -------
+
+        """
         return self.loader.load_sidecar_json()
 
     def get_channels_metadata(self):
+        """
+
+        Returns
+        -------
+
+        """
         chdf = self.loader.load_channels_tsv()
         return chdf.to_dict()
 
@@ -110,7 +130,7 @@ class BidsRun(BaseBids):
 
         """
         chdf = self.loader.load_channels_tsv()
-        return chdf[["name", "type"]]
+        return chdf[["name", "type"]].set_index("name")
 
     def get_channels_status(self):
         """
@@ -125,12 +145,13 @@ class BidsRun(BaseBids):
 
         """
         chdf = self.loader.load_channels_tsv()
-        return chdf[["name", "status"]]
+        return chdf[["name", "status"]].set_index("name")
 
     def modify_sidecar_json(self, key, value, overwrite=False):
         """
         Should modify sidecar json (represented as a dictionary) with a specified key and value. It will overwrite
-        existing sidecar elements if already present. However, if overwrite is False, then it should raise a RunTimeError.
+        existing sidecar elements if already present. However, if overwrite is False, then it should raise a
+        RunTimeError.
 
 
         Parameters
@@ -142,7 +163,13 @@ class BidsRun(BaseBids):
         -------
 
         """
-        pass
+        sidecar_dict = self.loader.load_sidecar_json()
+        current_keys = sidecar_dict.keys()
+        if key in current_keys and overwrite is False:
+            raise RuntimeError(f'The passed key {key} already exists in the sidecar json file. Please pass overwrite'
+                               f'as true if you wish to make the change')
+        sidecar_dict[key] = value
+        self.writer.write_sidecar_json(sidecar_dict)
 
     def modify_original_scan_filename(self, original_filename: str):
         """
@@ -165,30 +192,62 @@ class BidsRun(BaseBids):
             if row['filename'] == self.fpath:
                 row['original_filename'] = original_filename
 
-    def modify_channel_info(self, channel_id, column_id, value):
+    def append_channel_info(self, column_id: str, channel_id: str=None, value=None, channel_dict: Dict=None):
         """
-        TODO:
-        - This shouldn't be here. A user should ideally just have done this when setting up the BIDS folder, and
-        dataset.
-        -
 
-        This method searches for automatic patterns in the electrode names to modify the channels.tsv file
+        Parameters
+        ----------
+        column_id :
+        channel_id :
+        value :
+        channel_dict :
 
         Returns
         -------
-        """
-        self._add_notes_to_channels()
-        channel_data = self.loader.load_channels_tsv()
-        bad_channel_dict = self.find_bad_channels()
-        for key, value in bad_channel_dict.items():
-            channel_data = self.modify_electrode_status(channel_data, key, value)
-        channel_types_dict = self.find_channel_types()
-        for key, value in channel_types_dict.items():
-            channel_data = self.modify_electrode_type(channel_data, key, value)
-        self.writer.write_channels_tsv(channel_data)
 
-    def append_channel_info(self, column_id: str, channel_id: str=None, value=None, channel_dict: Dict=None):
-        pass
+        """
+        if value is not None and channel_dict is not None:
+            raise TypeError("Passed in both value and channel dictionary. Only pass in one!")
+        channel_df = self.loader.load_channels_tsv()
+        colnames = channel_df.columns
+        if column_id not in colnames:
+            if channel_dict is not None:
+                new_data = []
+                for key, value in channel_dict.items():
+                    new_data.append(value)
+            else:
+                new_data = [''] * channel_df.shape[0]
+            channel_df[column_id] = new_data
+        if value is not None:
+            channel_df[column_id][channel_id] = value
+        self.writer.write_channels_tsv(channel_df)
+
+    def modify_channel_info(self, column_id: str, channel_id: str, value=None):
+        """
+
+        Parameters
+        ----------
+        column_id : str
+            The column to modify. Must already exist in the tsv file
+        channel_id : str
+            The channel to modify. Must exist for the recording
+        value :
+            The value to add for the channel and column
+
+        Returns
+        -------
+
+        """
+        channel_df = self.loader.load_channels_tsv()
+        colnames = channel_df.columns
+        if column_id not in colnames:
+            raise ValueError(f'Column id {column_id} not in the channels tsv file. Please pass a correct column or '
+                             f'add to the tsv file')
+        channels = channel_df['name'].tolist()
+        if channel_id not in channels:
+            raise KeyError(f'Passed channel {channel_id} not a valid channel for this recording.')
+        channel_df[column_id][channel_id] = value
+        self.writer.write_channels_tsv(channel_df)
 
     def find_bad_channels(self):
         """
@@ -281,21 +340,6 @@ class BidsRun(BaseBids):
                 channel_df['notes'][ind] = chdescription
         return channel_df
 
-    def _add_notes_to_channels(self):
-        """
-        Adds a column to the *channels.tsv file to allow for more detailed description of status beyond good/bad
-
-        Returns
-        -------
-
-        """
-        channels_data = self.loader.load_channels_tsv()
-        colnames = channels_data.columns
-        if 'notes' not in colnames:
-            notes = [''] * channels_data.shape[0]
-            channels_data['notes'] = notes
-        self.writer.write_channels_tsv(channels_data)
-
     def _update_sidecar_json_channelcounts(self):
         """
         Helper function to update sidecar json for channel counts.
@@ -320,3 +364,24 @@ class BidsRun(BaseBids):
             sidecar_dict[f"{chtype}ChannelCount"] = int(count)
 
         self.writer.write_sidecar_json(sidecar_dict)
+
+
+    def _get_original_fileid(self):
+        """
+
+        Returns
+        -------
+
+        """
+        scans_df = self.loader.load_scans_tsv()
+        if self.run_id is None and self.original_fileid is None:
+            raise ValueError('Must pass at least the run_id or original_fileid for an existing subject')
+        if self.original_fileid is not None:
+            return True
+        elif self.run_id is not None:
+            for ind, row in scans_df.iterrows():
+                if self.run_id in row['filename']:
+                    self.original_fileid = row['original_fileid']
+                    return True
+        if self.original_fileid is None:
+            return False
