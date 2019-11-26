@@ -140,7 +140,7 @@ class TestBidsRun:
                                               channel_dict={ch: "test" for ch in chs})
 
         # error should be raised when attempting to modify a channel that does not exist
-        with pytest.raises(KeyError):
+        with pytest.raises(LookupError):
             bidsrun_scalp.modify_channel_info(column_id='low_cutoff', channel_id='Nonexisting channel', value='2.0')
 
         # error should be raised when attempting to modify a column that does not exist

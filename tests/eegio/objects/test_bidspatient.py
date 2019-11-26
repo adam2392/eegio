@@ -140,6 +140,22 @@ class TestBidsPatient:
         Returns
         -------
         """
-        pass
+        new_field = 'new_field'
+        # error should be raised when trying to remove a field that does not exist
+        with pytest.raises(LookupError):
+            bidspatient.add_participants_field(new_field, description='the new field', subject_val='new_val',
+                                               default_val='default_val')
+            bidspatient.remove_participants_field(new_field)
+            bidspatient.remove_participants_field(new_field)
 
-            # assert various user errors that should occur and make sense
+        fake_fpaths = ['Path/That/Does/Not/Exist.edf']
+        # errors should be raised when passing in files that do not exist.
+        with pytest.raises(OSError):
+            bidspatient.add_scans(fake_fpaths)
+
+        with pytest.raises(OSError):
+            bidspatient.preprocess_edf_files(fake_fpaths)
+
+        # error should be raised when attempting to modify the participants tsv with a column name that DNE
+        with pytest.raises(ValueError):
+            bidspatient.modify_participants_file(column_id='nonexisting column', new_value='new_value')

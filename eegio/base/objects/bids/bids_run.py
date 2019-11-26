@@ -245,7 +245,7 @@ class BidsRun(BaseBids):
                              f'add to the tsv file')
         channels = channel_df['name'].tolist()
         if channel_id not in channels:
-            raise KeyError(f'Passed channel {channel_id} not a valid channel for this recording.')
+            raise LookupError(f'Passed channel {channel_id} not a valid channel for this recording.')
         channel_df[column_id][channel_id] = value
         self.writer.write_channels_tsv(channel_df)
 

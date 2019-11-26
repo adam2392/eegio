@@ -137,7 +137,7 @@ class BidsPatient(BaseBids):
         patient = BidsPatient(patient_id, session_id, datadir, original_subject_id=original_subject_id)
         return patient
 
-    def preprocess_edf_files(self, filelist=None, line_noise=60):
+    def preprocess_edf_files(self, filelist: list = None, line_noise=60):
         """
 
         Parameters
@@ -154,7 +154,7 @@ class BidsPatient(BaseBids):
         if filelist is None:
             filelist = self._find_non_processed_files()
         for i, fpath in enumerate(filelist):
-            if not os.path.exists(filelist):
+            if not os.path.exists(fpath):
                 raise OSError(f"{fpath} doesn't exist. Please pass in valid filepaths.")
             if line_noise != 50:
                 sidecardict = self.loader.load_sidecar_json()
@@ -205,6 +205,8 @@ class BidsPatient(BaseBids):
 
         """
         for scan in scans:
+            if not os.path.exists(scan):
+                raise OSError(f'{scan} does not exist. Please pass existing scans')
             self._create_run(scan)
 
     def load_dataset(self, session_id, run_id, kind):
@@ -336,7 +338,7 @@ class BidsPatient(BaseBids):
         participants_dict = self.loader.load_participants_json()
         participants_df = self.loader.load_participants_tsv()
         if column_id not in participants_dict.keys():
-            raise KeyError(f'The field {column_id} does not exist in the participants file')
+            raise LookupError(f'The field {column_id} does not exist in the participants file')
         del participants_dict[column_id]
         self.writer.write_participants_json(participants_dict)
         colnames = participants_df.columns
@@ -354,7 +356,7 @@ class BidsPatient(BaseBids):
         Parameters
         ----------
         column_id : str
-            The name of the column to which data should be modified
+            The name of the column to which data should be modified. Must exist in the tsv file
         new_value : str
             The new value of the column_id for this BidsPatient
         Returns
@@ -362,6 +364,9 @@ class BidsPatient(BaseBids):
 
         """
         participants_df = self.loader.load_participants_tsv()
+        colnames = participants_df.columns
+        if column_id not in colnames:
+            raise ValueError(f'{column_id} not in the existing participants file. Add it first.')
         participants_df.at[self.subject_id, column_id] = new_value
         self.writer.write_participants_tsv(participants_df)
         metadata = self._create_metadata()
