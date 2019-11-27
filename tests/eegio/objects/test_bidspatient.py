@@ -2,7 +2,7 @@ import os
 import tempfile
 import mne
 import pytest
-
+from mne_bids import make_bids_basename
 from eegio.base.objects.bids.bids_patient import BidsPatient
 
 
@@ -20,8 +20,19 @@ class TestBidsPatient:
         Returns
         -------
         """
-        # check for no datasets
-        # assert bidspatient.numdatasets == 0
+        # check that the derivative folders have been created
+        # TODO: I don't think this will work. I'm not sure what is being tested here. I cleaned up the make_bids_basename,
+        # but then I realized, that these existence checks aren'te ven valid cuz there is no file yet.
+        # data_fpath = os.path.join(bidspatient.datadir, bidspatient.modality,
+        #                           make_bids_basename(subject=bidspatient.subject_id,
+        #                                             session=bidspatient.session_id))
+        # prepocessed_fpath = os.path.join(bidspatient.datadir, "preprocessed", make_bids_basename(subject=bidspatient.subject_id,
+        #                                                                                          session=bidspatient.session_id))
+        # results_fpath = os.path.join(bidspatient.datadir, "results", make_bids_basename(subject=bidspatient.subject_id,
+        #                                                                                 session=bidspatient.session_id))
+        # assert os.path.exists(data_fpath)
+        # assert os.path.exists(prepocessed_fpath)
+        # assert os.path.exists(results_fpath)
 
         # check the participants tsv
         participants_json = bidspatient.loader.load_participants_json()
@@ -60,68 +71,50 @@ class TestBidsPatient:
         Returns
         -------
         """
-
-        # check for no datasets
-        assert bidspatient.numdatasets == 0
-
+        '''
+        Check that we can add fields to the participants level
+        '''
         # check the participants tsv
         participants_json = bidspatient.loader.load_participants_json()
         participants_tsv = bidspatient.loader.load_participants_tsv()
         participants_tsv = participants_tsv.set_index('participant_id')
-
-        participants_keys = participants_json.keys()
-        resect = 'resected_contacts' in participants_keys
-        assert not resect
-        original = 'original_subjectid' in participants_keys
-        assert not original
-
-        participants_columns = participants_tsv.columns
-        resect_col = 'resected_contacts' in participants_columns
-        assert not resect_col
-        original_col = 'original_subjectid' in participants_columns
-        assert not original_col
-
-        bidspatient.add_resected_contacts(['a1','a2'])
+        assert 'original_subjectid' not in participants_json.keys()
+        assert 'original_subjectid' not in participants_tsv.columns
         bidspatient.add_original_subject_id('test_0001')
 
         participants_json = bidspatient.loader.load_participants_json()
         participants_tsv = bidspatient.loader.load_participants_tsv()
         participants_tsv = participants_tsv.set_index('participant_id')
+        assert 'original_subjectid' in participants_json.keys()
+        assert 'original_subjectid' in participants_tsv.columns
 
-        participants_keys = participants_json.keys()
-        resect = 'resected_contacts' in participants_keys
-        assert resect
-        original = 'original_subjectid' in participants_keys
-        assert original
+        for ind, row in participants_tsv.iterrows():
+            if (ind == bidspatient.subject_id):
+                original_subjectid = row['original_subjectid']
+                assert original_subjectid == bidspatient.original_subject_id
 
-        participants_columns = participants_tsv.columns
-        resect_col = 'resected_contacts' in participants_columns
-        assert resect_col
-        original_col = 'original_subjectid' in participants_columns
-        assert original_col
+        '''
+        Check that we can add additional information to scan level for all sessions
+        '''
+        # TODO
 
-        if resect_col:
-            for ind, row in participants_tsv.iterrows():
-                if (ind == bidspatient.subject_id):
-                    resected_contacts = row['resected_contacts']
-                    assert resected_contacts == " ".join(bidspatient.resected_contacts)
-        if original_col:
-            for ind, row in participants_tsv.iterrows():
-                if (ind == bidspatient.subject_id):
-                    original_subjectid = row['original_subjectid']
-                    assert original_subjectid == bidspatient.original_subject_id
-
-        # check that the derivative folders have been created
-        data_fpath = os.path.join(bidspatient.datadir, 'sub-' + bidspatient.subject_id, 'ses-' + bidspatient.session_id,
-                                  bidspatient.modality)
-        prepocessed_fpath = os.path.join(bidspatient.datadir, 'sub-' + bidspatient.subject_id,
-                                         'ses-' + bidspatient.session_id, 'preprocessed')
-        results_fpath = os.path.join(bidspatient.datadir, 'sub-' + bidspatient.subject_id,
-                                     'ses-' + bidspatient.session_id, 'results')
-
-        assert os.path.exists(data_fpath)
-        assert os.path.exists(prepocessed_fpath)
-        assert os.path.exists(results_fpath)
+        '''
+        Check that we can add fields to the run level for all participants.
+        
+        E.g. adding resected contacts, etc.
+        '''
+        # TODO
+        # resect = 'resected_contacts' in participants_keys
+        # assert not resect
+        # resect_col = 'resected_contacts' in participants_columns
+        # assert not resect_col
+        # bidspatient.add_resected_contacts(['a1', 'a2'])
+        #
+        # if resect_col:
+        #     for ind, row in participants_tsv.iterrows():
+        #         if (ind == bidspatient.subject_id):
+        #             resected_contacts = row['resected_contacts']
+        #             assert resected_contacts == " ".join(bidspatient.resected_contacts)
 
     @pytest.mark.skip()
     def test_bidspatient_participants_modify(self, bidspatient):
