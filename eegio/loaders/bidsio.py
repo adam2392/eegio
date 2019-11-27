@@ -1,138 +1,13 @@
 import json
 import os
-from datetime import datetime
 
 import mne
 import numpy as np
 import pandas as pd
+import mne_bids
 from mne_bids import make_bids_basename
-
-
-def write_tsv(data_dict, out_file, first_colum="id"):
-    columns = get_all_sub_keys(data_dict)
-    with open(out_file, "w") as opened_file:
-        header = [first_colum] + list(columns)
-        write_tsv_row(header, opened_file)
-        for key, value in data_dict.items():
-            column_values = list()
-            for column in columns:
-                if column in value:
-                    column_values.append(data_value_to_string(value[column]))
-                else:
-                    column_values.append("")
-            row = [key] + column_values
-            write_tsv_row(row, opened_file)
-
-
-def data_value_to_string(data):
-    if isinstance(data, datetime):
-        try:
-            return datetime.strftime(data, "%Y-%m-%dT%H:%M:%S")
-        except ValueError:
-            return "{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:{second:02d}".format(year=data.year,
-                                                                                                  month=data.month,
-                                                                                                  day=data.day,
-                                                                                                  hour=data.hour,
-                                                                                                  minute=data.minute,
-                                                                                                  second=data.second)
-    else:
-        return str(data)
-
-
-def write_json(data, out_file):
-    with open(out_file, "w") as opened_file:
-        json.dump(data, opened_file, indent=4)
-
-
-def write_tsv_row(row, opened_file):
-    opened_file.write("\t".join(row) + "\n")
-
-
-def get_all_sub_keys(data_dict):
-    keys = set()
-    for value in data_dict.values():
-        for key in value.keys():
-            keys.add(key)
-    return keys
-
-
-class BidsIO():
-    """
-    BIDS IO for EEG data base class.
-
-    Parameters
-    ----------
-    bidsdir :
-    subject_id :
-    session_id :
-    run_id :
-    kind :
-
-    """
-
-    def __init__(self, bidsdir, subject_id, session_id, kind, run_id=None, datatype="edf"):
-        self.rootdir = bidsdir
-        self.subject_id = subject_id
-        self.run_id = run_id
-        self.session_id = session_id
-        self.subjdir = os.path.join(bidsdir, 'sub-' + self.subject_id)
-        self.sessiondir = os.path.join(self.subjdir, 'ses-' + self.session_id)
-        self.datadir = os.path.join(self.sessiondir, kind)
-        self.kind = kind
-        self.datatype = datatype
-
-        SUPPORTED_DATATYPES = ["edf", "fif", "nii", "nii.gz", "mgz"]
-        if datatype not in SUPPORTED_DATATYPES:
-            raise ValueError(f"Supported data file types are: {SUPPORTED_DATATYPES}")
-
-    @property
-    def participantsjson_fpath(self):
-        return os.path.join(self.rootdir, "participants.json")
-
-    @property
-    def participantstsv_fpath(self):
-        return os.path.join(self.rootdir, "participants.tsv")
-
-    @property
-    def eventstsv_fpath(self):
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix="events.tsv"))
-
-    @property
-    def datafile_fpath(self):
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix=f"{self.kind}.{self.datatype}"))
-
-    @property
-    def result_fpath(self):
-        return os.path.join(self.datadir, 'results', make_bids_basename(subject=self.subject_id,
-                                                                        session=self.session_id,
-                                                                        run=self.run_id,
-                                                                        suffix="results.npz"))
-
-    @property
-    def sidecarjson_fpath(self):
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix=f"{self.kind}.json"))
-
-    @property
-    def chanstsv_fpath(self):
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix="channels.tsv"))
-
-    @property
-    def scanstsv_fpath(self):
-        return os.path.join(self.sessiondir, make_bids_basename(subject=self.subject_id,
-                                                                session=self.session_id,
-                                                                suffix="scans.tsv"))
+from eegio.base.objects.bids.basebids import BidsIO
+from eegio.base.utils.bids_helper import write_json
 
 
 class BidsLoader(BidsIO):
@@ -160,8 +35,10 @@ class BidsLoader(BidsIO):
         -------
         A pandas DataFrame object of the tsv
         """
-        scans_fpath = self.scanstsv_fpath
-        scans = pd.read_table(scans_fpath)
+        if not os.path.exists(self.scanstsv_fpath):
+            raise OSError(f"{self.scanstsv_fpath} doesn't exist! Our parameters for loading are: "
+                          f"{self.bids_parameters}")
+        scans = pd.read_table(self.scanstsv_fpath)
         return scans
 
     def load_channels_tsv(self):
@@ -172,8 +49,11 @@ class BidsLoader(BidsIO):
         -------
         A pandas DataFrame object of the tsv
         """
-        channels_fpath = self.chanstsv_fpath
-        channels = pd.read_table(channels_fpath)
+        if not os.path.exists(self.chanstsv_fpath):
+            raise OSError(f"{self.chanstsv_fpath} doesn't exist! Our parameters for loading are: "
+                          f"{self.bids_parameters}")
+        channels = pd.read_table(self.chanstsv_fpath, index_col=None)
+        channels.dropna(inplace=True)
         return channels
 
     def load_participants_tsv(self):
@@ -219,8 +99,9 @@ class BidsLoader(BidsIO):
             raw = mne.io.read_raw_fif(datafile_fpath)
         elif 'edf' in datafile_fpath:
             raw = mne.io.read_raw_edf(datafile_fpath)
-        # else:
-        #    DatasetTypeError('Passed dataset must be of type')
+
+        raw = mne_bids.read_raw_bids(bids_fname=os.path.basename(self.datafile_fpath),
+                                     bids_root=self.rootdir)
         return raw
 
 
@@ -247,11 +128,10 @@ class BidsWriter(BidsIO):
         if fpath is None:
             fpath = self.chanstsv_fpath
         metadata.to_csv(fpath, sep='\t', index=False)
-        # write_tsv(metadata, fpath, first_colum="name")
 
     def write_sidecar_json(self, sidecar_dict):
         outfile = self.sidecarjson_fpath
-        write_json(sidecar_dict, outfile)
+        write_json(outfile, sidecar_dict, overwrite=True)
 
     def write_scans_tsv(self, scans_df):
         outfile = self.scanstsv_fpath
@@ -260,36 +140,6 @@ class BidsWriter(BidsIO):
 
     def write_electrode_coords(self, coords_dict, channels_df):
         return channels_df
-
-    # def write_electrode_status(self, status_dict, channels_df):
-    #     """
-    #     Updates the status of the electrodes based on hard-coded rules.
-    #
-    #     Parameters
-    #     ----------
-    #     status_dict : dict
-    #         The dictionary of electrode status information grabbed from the formatted clinical sheet
-    #     channels_df : pandas.DataFrame
-    #         The current BIDS layout of channel information containing default values
-    #
-    #     Returns
-    #     -------
-    #     An updated version of channels_df with correct annotations for status
-    #     """
-    #     channel_scrub = ChannelScrub
-    #     channel_names = channels_df['name']
-    #     bad_channels = channel_scrub.look_for_bad_channels(channel_names)
-    #     for key, value in bad_channels:
-    #         for ind, row in channels_df.iterrows():
-    #             if key == row['name']:
-    #                 row['status'] = 'bad'
-    #                 row['notes'] = f"scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
-    #     for key, value in status_dict.items():
-    #         for ind, row in channels_df.iterrows():
-    #             if key == row['name']:
-    #                 row['status'] = value.status
-    #                 row['notes'] = value.notes
-    #     return channels_df
 
     def write_participants_tsv(self, new_df):
         """
@@ -304,11 +154,8 @@ class BidsWriter(BidsIO):
         -------
 
         """
-        outfile = self.participantstsv_fpath
         new_df = new_df.replace(np.nan, 'n/a', regex=True)
-        new_df.to_csv(outfile, sep='\t', index=True)
-        # below is only if data passed as dict
-        # write_tsv(new_df, outfile, 'participant_id')
+        new_df.to_csv(self.participantstsv_fpath, sep='\t', index=True)
 
     def write_participants_json(self, new_dict):
         """
@@ -323,25 +170,4 @@ class BidsWriter(BidsIO):
 
         """
         outfile = self.participantsjson_fpath
-        write_json(new_dict, outfile)
-
-    # def write_electrode_type(self, channels_df):
-    #     """
-    #
-    #     Parameters
-    #     ----------
-    #     channels_df : pandas.DataFrame
-    #         The current information about the channels containing default type values.
-    #
-    #     Returns
-    #     -------
-    #     An updated version of channels_df with the correct type information
-    #     """
-    #     channel_scrub = ChannelScrub
-    #     channel_names = channels_df['name']
-    #     channel_dict = channel_scrub.label_channel_types(channel_names)
-    #     for key, value in channel_dict.items():
-    #         for ind, row in channel_df.iterrows():
-    #             if key == row['name']:
-    #                 row['type'] = value.upper()
-    #     return channels_df
+        write_json(outfile, new_dict, overwrite=True)

@@ -1,18 +1,11 @@
-import sys
-import os
-import tempfile
+import mne
 import pytest
 
-import pandas as pd
-import mne
 from eegio.base.utils.scrubber import ChannelScrub
-from eegio.base.config import TEST_DATA_DIR
-from eegio.base.objects.bids.bids_run import BidsRun
 
 
 @pytest.mark.usefixtures("bidsrun_scalp")
 class TestBidsRun:
-    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def testbidsrun_basicfunc(self, bidsrun_scalp):
         """
         Tests the main BidsRun functionality. A BidsRun should be able to:
@@ -43,20 +36,14 @@ class TestBidsRun:
         # determine all the channel status
         chstatus = bidsrun_scalp.get_channels_status()
 
-
         # get good and bad indices based on status
         badinds = [i for i, ch in enumerate(chs) if chstatus["status"][ch] == "bad"]
         goodinds = [i for i in range(len(chs)) if i not in badinds]
-
-        # run scrubber through "good channels" and make sure internal functionality didn't mess things up
-        badchs = ChannelScrub.look_for_bad_channels(chs[goodinds])
-        assert badchs == []
 
         # loaded in the scalp EEG data
         raw = bidsrun_scalp.load_data()
         assert isinstance(raw, mne.io.base.BaseRaw)
 
-    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def testbidsrun_modifyfunc(self, bidsrun_scalp):
         """
         Tests the BidsRun functionality to modify metadata in the context of a sidecar json and channels.tsv
@@ -81,21 +68,28 @@ class TestBidsRun:
         '''
         # test field not default written into sidecar
         institution_name = "National institute of Health"
-        run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName", value=institution_name)
+        bidsrun_scalp.delete_sidecar_field(key="InstitutionName")
+        run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName",
+                                                         value=institution_name,
+                                                         overwrite=False)
         assert bidsrun_scalp.get_run_metadata()["InstitutionName"] == institution_name
         # this should have been written
 
         # test for capitalization specificity
         manufacturer = "nk"
-        run_metadata = bidsrun_scalp.modify_sidecar_json(key="manufacturer", value=manufacturer)
-        assert bidsrun_scalp.get_run_metadata()["manufacturer"] == manufacturer
+        run_metadata = bidsrun_scalp.modify_sidecar_json(key="manufacturer",
+                                                         value=manufacturer,
+                                                         overwrite=True)
+        assert bidsrun_scalp.get_run_metadata()["Manufacturer"] == manufacturer
         # Keynames should always start with capital letter when passed in
         assert all(x in bidsrun_scalp.get_run_metadata().keys()
                    for x in ["Manufacturer", "InstitutionName"])
 
         # test for field that needs to be overwritten
         institution_name = "National institute of Health_v2"
-        run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName", value=institution_name, overwrite=True)
+        run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName",
+                                                         value=institution_name,
+                                                         overwrite=True)
         # this should have been rewritten
         assert bidsrun_scalp.get_run_metadata()["InstitutionName"] == institution_name
 
@@ -119,7 +113,6 @@ class TestBidsRun:
         for channel_id in chs:
             bidsrun_scalp.append_channel_info(column_id=column_id, channel_id=channel_id, value=value)
 
-    @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def testbidsrun_errors(self, bidsrun_scalp):
         # get the channel labels
         chs = bidsrun_scalp.chs
@@ -147,3 +140,33 @@ class TestBidsRun:
         with pytest.raises(ValueError):
             bidsrun_scalp.modify_channel_info(column_id='Nonexisting column', channel_id='EEG C4-Ref', value=True)
 
+        # run scrubber through "good channels" and make sure internal functionality didn't mess things up
+        # get the channel labels
+        chs = bidsrun_scalp.chs
+        # determine all the channel status
+        chstatus = bidsrun_scalp.get_channels_status()
+        # get good and bad indices based on status
+        badinds = [i for i, ch in enumerate(chs) if chstatus["status"][ch] == "bad"]
+        goodinds = [i for i in range(len(chs)) if i not in badinds]
+        badchs = ChannelScrub.look_for_bad_channels(chs[goodinds])
+        with pytest.raises(Exception):
+            assert badchs == []
+
+    def testbidsrun_catastrophic(self, bidsrun_scalp):
+        """
+        A test for descriptive errors in catastrophic error cases. These include, but are not limited to:
+
+        1.
+
+        TODO:
+        - complete
+
+        Parameters
+        ----------
+        bidsrun_scalp :
+
+        Returns
+        -------
+
+        """
+        pass

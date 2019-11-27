@@ -139,15 +139,23 @@ class ChannelScrub:
             ]
 
             if elec_contacts_nums == []:
-                channeltypes[chanlabel] = "bad-non"
+                channeltypes[chanlabel] = "BAD"
+            elif any(x in eleclabel for x in ["EKG", "ECG"]):
+                channeltypes[chanlabel] = "EKG"
+            elif "EOG" in eleclabel:
+                channeltypes[chanlabel] = "EOG"
+            elif "EMG" in eleclabel:
+                channeltypes[chanlabel] = "EMG"
+            elif "STIM" in eleclabel:
+                channeltypes[chanlabel] = "STIM"
             elif eleclabel == "G":
-                channeltypes[chanlabel] = "grid"
+                channeltypes[chanlabel] = "GRID"
             elif max(elec_contacts_nums) <= 6:
-                channeltypes[chanlabel] = "strip"
+                channeltypes[chanlabel] = "STRIP"
             elif max(elec_contacts_nums) > 6 and max(elec_contacts_nums) < 20:
-                channeltypes[chanlabel] = "seeg"
+                channeltypes[chanlabel] = "SEEG"
             else:
-                channeltypes[chanlabel] = "eeg"
+                channeltypes[chanlabel] = "EEG"
 
         return channeltypes
 

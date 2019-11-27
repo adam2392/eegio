@@ -1,6 +1,6 @@
 {
     "TaskName": null,
-    "Manufacturer": "n/a",
+    "Manufacturer": "nk",
     "PowerLineFrequency": 50,
     "SamplingFrequency": 200.0,
     "SoftwareFilters": "n/a",
@@ -14,5 +14,6 @@
     "ECGChannelCount": 0,
     "EMGChannelCount": 0,
     "MiscChannelCount": 0,
-    "TriggerChannelCount": 0
+    "TriggerChannelCount": 0,
+    "InstitutionName": "National institute of Health_v2"
 }

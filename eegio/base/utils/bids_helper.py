@@ -1,5 +1,6 @@
 import os
-
+import json
+import datetime
 from typing import Union
 import pandas as pd
 
@@ -12,6 +13,7 @@ class BidsBuilder(object):
     Suite of helper functions to build out a bids data directory.
 
     """
+
     @staticmethod
     def make_bids_folder_struct(datadir, subject, modality, session_id="one"):
         """
@@ -115,7 +117,7 @@ class BidsBuilder(object):
         -------
 
         """
-        basedir = os.path.join(datadir, 'sub-' + patientid, 'ses-'+session)
+        basedir = os.path.join(datadir, 'sub-' + patientid, 'ses-' + session)
         results_dir = os.path.join(basedir, result_name)
         if os.path.exists(results_dir):
             return 1
@@ -159,7 +161,7 @@ class BidsBuilder(object):
         """
         participants_df = loader.load_participants_tsv()
         colnames = participants_df.columns
-        new_df = pd.DataFrame([[subject_id]+['n/a']*(len(colnames)-1)], columns=colnames)
+        new_df = pd.DataFrame([[subject_id] + ['n/a'] * (len(colnames) - 1)], columns=colnames)
         if participants_df.empty:
             participants_df = new_df
         else:
@@ -204,3 +206,79 @@ class BidsBuilder(object):
             notes = [''] * channels_data.shape[0]
             channels_data['notes'] = notes
         bidsrun.writer.write_channels_tsv(channels_data)
+
+
+def _to_tsv(data, fname):
+    """Write an OrderedDict into a tsv file.
+
+    Parameters
+    ----------
+    data : collections.OrderedDict
+        Ordered dictionary containing data to be written to a tsv file.
+    fname : str
+        Path to the file being written.
+
+    """
+    n_rows = len(data[list(data.keys())[0]])
+    output = _tsv_to_str(data, n_rows)
+
+    with open(fname, 'wb') as f:
+        f.write(output.encode('utf-8'))
+
+
+def _tsv_to_str(data, rows=5):
+    """Return a string representation of the OrderedDict.
+
+    Parameters
+    ----------
+    data : collections.OrderedDict
+        OrderedDict to return string representation of.
+    rows : int, optional
+        Maximum number of rows of data to output.
+
+    Returns
+    -------
+    str
+        String representation of the first `rows` lines of `data`.
+
+    """
+    col_names = list(data.keys())
+    n_rows = len(data[col_names[0]])
+    output = list()
+    # write headings.
+    output.append('\t'.join(col_names))
+
+    # write column data.
+    max_rows = min(n_rows, rows)
+    for idx in range(max_rows):
+        row_data = list(str(data[key][idx]) for key in data)
+        output.append('\t'.join(row_data))
+
+    return '\n'.join(output)
+
+def write_json(fname, dictionary, overwrite=False, verbose=False):
+    """Write JSON to a file."""
+    if os.path.exists(fname) and not overwrite:
+        raise FileExistsError('"%s" already exists. Please set '  # noqa: F821
+                              'overwrite to True.' % fname)
+
+    json_output = json.dumps(dictionary, indent=4)
+    with open(fname, 'w') as fid:
+        fid.write(json_output)
+        fid.write('\n')
+
+    if verbose is True:
+        print(os.linesep + "Writing '%s'..." % fname + os.linesep)
+        print(json_output)
+
+
+def write_tsv(fname, dictionary, overwrite=False, verbose=False):
+    """Write an ordered dictionary to a .tsv file."""
+    if os.path.exists(fname) and not overwrite:
+        raise FileExistsError('"%s" already exists. Please set '  # noqa: F821
+                              'overwrite to True.' % fname)
+    _to_tsv(dictionary, fname)
+
+    if verbose:
+        print(os.linesep + "Writing '%s'..." % fname + os.linesep)
+        print(_tsv_to_str(dictionary))

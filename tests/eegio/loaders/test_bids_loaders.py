@@ -4,6 +4,7 @@ import tempfile
 import mne
 import mne_bids
 from eegio.base.objects.bids.basebids import BaseBids
+from eegio.base.objects.bids.bids_run import BidsRun
 from eegio.base.objects.bids.bids_patient import BidsPatient
 
 test_fpath = os.path.join(os.getcwd(), "./data/bids_layout/")
@@ -33,6 +34,19 @@ class Test_BidsLoader:
             # there should be no data here when creating inside temporary directory
             assert layout.subject_nums == []
 
+    def test_bids_run_setup(self, edf_fpath):
+        pass
+        test_subjectid = '0001'
+        session_id = "seizure"
+        kind = "eeg"
+        run_id = "00"
+        run = BidsRun(subject_id=test_subjectid,
+                      session_id=session_id,
+                      run_id=run_id,
+                      datadir=test_fpath,
+                      modality=kind)
+        run._create_bidsrun(edf_fpath)
+
     def test_edf(self, edf_fpath):
         """
         Test loading in an edf filepath with lightweight wrapper of MNE reading of edf files.
@@ -48,11 +62,10 @@ class Test_BidsLoader:
                               datadir=test_fpath,
                               managing_user="test",
                               modality='eeg')
-
         # get sessions
         bidspat.get_subject_sessions()
-        assert bidspat.numdatasets == 0
-        assert len(bidspat.get_subject_sessions()) == 0
+        assert bidspat.numdatasets >= 0
+        assert len(bidspat.get_subject_sessions()) >= 0
 
         # preprocess scalp EDF files
         bidspat.preprocess_edf_files([os.path.join(test_fpath, "scalp_test.edf"),

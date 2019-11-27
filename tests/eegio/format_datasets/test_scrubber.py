@@ -5,8 +5,7 @@ from eegio.base.utils.scrubber import ChannelScrub, EventScrub
 
 @pytest.mark.usefixture("edf_fpath")
 class TestContacts:
-    @pytest.mark.usefixture("rawio")
-    def test_channelscrubber(self, rawio):
+    def test_channelscrubber(self):
         """
         Test error and warnings raised by Contacts class.
 
