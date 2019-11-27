@@ -87,18 +87,18 @@ class DatasetTester(object):
 
     def check_modality(self):
         """
-        Function to test the dataset's modality. We have the possibilities of:
+        Function to test the dataset's kind. We have the possibilities of:
         - seeg
         - ecog
         - scalp
         - ieeg (the most general case of seeg and ecog)
 
-        These separate modality names, help corresponding functions interpret
+        These separate kind names, help corresponding functions interpret
         different channesl differently.
 
         :return: None
         """
-        keys = {"modality": ["seeg", "ecog", "scalp", "ieeg"]}
+        keys = {"kind": ["seeg", "ecog", "scalp", "ieeg"]}
         self._check_keys(keys)
 
     def check_clinical_outcomes(self):

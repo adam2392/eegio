@@ -19,7 +19,7 @@ class EEGTimeSeries(BaseDataset):
     The additional components for this are related to the mne.Info data structure
 
     For example:
-        - modality (scalp, ecog, seeg)
+        - kind (scalp, ecog, seeg)
         - sampling rate,
         - voltage values range,
         - reference scheme
@@ -168,7 +168,7 @@ class EEGTimeSeries(BaseDataset):
             modality = "ecog"
         elif self.modality == "seeg":
             modality = "seeg"
-        else:  # if self.modality == 'scalp' or self.modality == 'ieeg':
+        else:  # if self.kind == 'scalp' or self.kind == 'ieeg':
             modality = "eeg"
         chlist = self.chanlabels.tolist()
         self.info = mne.create_info(

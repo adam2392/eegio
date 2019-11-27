@@ -152,11 +152,11 @@
 #         # load in the cleaned ch labels
 #         contacts = Contacts(chlabels, require_matching=False)
 #         samplerate = info["sfreq"]
-#         modality = "scalp"
+#         kind = "scalp"
 #         rawdata, times = raw_mne.get_data(return_times=True)
 #
 #         # create EEG TS object
-#         eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
+#         eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, kind)
 #
 #         # test getting the "best montage" wrapping MNE
 #         testchs = eegts.chanlabels.copy()

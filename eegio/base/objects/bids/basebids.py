@@ -36,7 +36,7 @@ class BaseBids(object):
     datadir: os.PathLike
         The base directory for storing data
     modality: str
-        The modality of data we are reading. For example, EEG, MRI, CT, etc.
+        The kind of data we are reading. For example, EEG, MRI, CT, etc.
 
     Notes
     -----

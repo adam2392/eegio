@@ -18,7 +18,7 @@ class Patient(object):
         :type managing_user: str
         :param datasetids: list of recording snapshots tied to this Patient.
         :type datasetids: List[str]
-        :param modality: modality of recording done for this patient. E.g. ecog, seeg, scalp, ieeg
+        :param modality: kind of recording done for this patient. E.g. ecog, seeg, scalp, ieeg
         :type modality: str
         :param samplerate: sampling rate for recordings. E.g. 1000 Hz
         :type samplerate: float

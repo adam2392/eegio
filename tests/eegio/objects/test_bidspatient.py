@@ -23,7 +23,7 @@ class TestBidsPatient:
         # check that the derivative folders have been created
         # TODO: I don't think this will work. I'm not sure what is being tested here. I cleaned up the make_bids_basename,
         # but then I realized, that these existence checks aren'te ven valid cuz there is no file yet.
-        # data_fpath = os.path.join(bidspatient.datadir, bidspatient.modality,
+        # data_fpath = os.path.join(bidspatient.datadir, bidspatient.kind,
         #                           make_bids_basename(subject=bidspatient.subject_id,
         #                                             session=bidspatient.session_id))
         # prepocessed_fpath = os.path.join(bidspatient.datadir, "preprocessed", make_bids_basename(subject=bidspatient.subject_id,

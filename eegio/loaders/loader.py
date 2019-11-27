@@ -49,7 +49,7 @@ class Loader(BaseLoader):
         raw_mne : mne.io.Raw
             The mne.io.Raw object containing the EEG data.
         modality : str
-            the modality name (e.g. eeg, ecog, seeg, scalp, etc.)
+            the kind name (e.g. eeg, ecog, seeg, scalp, etc.)
         annotations : List
             the list of annotations that are present in the raw EEG snapshot passed.
 
@@ -175,7 +175,7 @@ class Loader(BaseLoader):
         linefreq : (int,float)
             The line noise frequency setting. Defaults to 60 Hz.
         modality : str
-            The modality of the data you are loading. Defaults to "eeg". e.g. You can pass in ECoG, or SEEG, or scalp
+            The kind of the data you are loading. Defaults to "eeg". e.g. You can pass in ECoG, or SEEG, or scalp
         return_mne : bool
             Whether or not to return the MNE.io.Raw object, or return an EEGTimeSeries object.
 
@@ -303,7 +303,7 @@ class Loader(BaseLoader):
             The line noise frequency setting. Defaults to 60 Hz.
 
         modality : str
-            The modality of the data you are loading. Defaults to "eeg". e.g. You can pass in ECoG, or SEEG, or scalp
+            The kind of the data you are loading. Defaults to "eeg". e.g. You can pass in ECoG, or SEEG, or scalp
 
         return_mne : bool
             Whether or not to return the MNE.io.Raw object, or return an EEGTimeSeries object.

@@ -3,9 +3,14 @@ import json
 import datetime
 from typing import Union
 import pandas as pd
-
+import bids
+import tempfile
+from mne_bids import make_bids_basename
+from mne_bids.utils import _parse_bids_filename
+import mne_bids
 import mne
 from mne_bids import write_raw_bids, make_bids_folders
+import numpy as np
 
 
 class BidsBuilder(object):
@@ -15,7 +20,7 @@ class BidsBuilder(object):
     """
 
     @staticmethod
-    def make_bids_folder_struct(datadir, subject, modality, session_id="one"):
+    def make_bids_folder_struct(datadir, subject, kind, session_id="one"):
         """
         Creates the empty folder structure for a new subject according to the BIDS format.
         Session is assumed to be 'one' for now.
@@ -24,7 +29,7 @@ class BidsBuilder(object):
         ----------
         datadir :
         subject :
-        modality :
+        kind :
         session_id :
 
         Returns
@@ -36,14 +41,18 @@ class BidsBuilder(object):
 
         # create bids folders for this subject
         make_bids_folders(subject=subject,
-                          kind=modality,
+                          kind=kind,
                           session=session_id,
                           output_path=datadir,
                           make_dir=True)
 
     @staticmethod
     def convert_to_bids(edf_fpath, bids_dir, bids_basename,
-                        excluded_contacts=None, eog_contacts=None, misc_contacts=None, overwrite=False):
+                        excluded_contacts=None,
+                        eog_contacts=None,
+                        misc_contacts=None,
+                        overwrite=False,
+                        use_preprocess_pipeline=True):
         """
 
         Parameters
@@ -77,6 +86,67 @@ class BidsBuilder(object):
         return output_path
 
     @staticmethod
+    def preprocess_into_fif(bids_fname, bids_dir, kind="eeg", overwrite=True):
+        """
+        TODO:
+        1. Determine if this is necessary. EDF files on one hand are hard to modify,
+        but fif files have a lot of constraints.
+        2. We should try to discuss w/ some folks that do this, or ask on gitter for mne_bids
+        3. See: https://gist.github.com/skjerns/bc660ef59dca0dbd53f00ed38c42f6be/812cd1d4be24c0730db449ecc6eb0065da68ca51
+
+        Parameters
+        ----------
+        bids_fname :
+        bids_dir :
+        kind :
+        overwrite :
+
+        Returns
+        -------
+
+        """
+        params = _parse_bids_filename(bids_fname, verbose=False)
+        bids_basename = make_bids_basename(subject=params['sub'],
+                                           session=params['ses'],
+                                           run=params['run'],
+                                           suffix="eeg.edf")
+        raw = mne_bids.read_raw_bids(bids_basename, bids_dir)
+
+        # get events and convert to annotations
+        events, events_id = mne.events_from_annotations(raw)
+        onsets = events[:, 0] / raw.info['sfreq']
+        durations = np.zeros_like(onsets)  # assumes instantaneous events
+        descriptions = events[:, 2]
+        annotations = mne.annotations.Annotations(onset=onsets, duration=durations,
+                                                  description=descriptions,
+                                                  orig_time=raw.info['meas_date'])
+
+        # add a bids run
+        preprocessed_dir = os.path.join(bids_dir,
+                                        make_bids_basename(subject=params['sub']),
+                                        make_bids_basename(session=params['ses']),
+                                        f"{kind}")
+        if not os.path.exists(preprocessed_dir):
+            os.makedirs(preprocessed_dir)
+
+        bids_basename = make_bids_basename(subject=params['sub'],
+                                           session=params['ses'],
+                                           run=params['run'],
+                                           processing="fif",
+                                           suffix="raw")
+        # save a fif copy and reload it
+        raw.save(os.path.join(preprocessed_dir, bids_basename + ".fif"), overwrite=overwrite)
+        raw = mne.io.read_raw_fif(os.path.join(preprocessed_dir, bids_basename + ".fif"))
+
+        # convert into fif
+        output_path = write_raw_bids(raw, bids_basename,
+                                     output_path=bids_dir,
+                                     overwrite=overwrite,
+                                     # events_data=events,
+                                     verbose=False)
+        return output_path
+
+    @staticmethod
     def make_preprocessed_folder(datadir, subject_id, session='one', preprocess_name='preprocessed'):
         """
         Creates the preproceesed data folder in the correct location if it does
@@ -93,7 +163,7 @@ class BidsBuilder(object):
         -------
 
         """
-        basedir = os.path.join(datadir, 'sub-' + subject_id, 'ses-' + session)
+        basedir = os.path.join(datadir, make_bids_basename(subject=subject_id, session=session))
         preprocessed_dir = os.path.join(basedir, preprocess_name)
         if os.path.exists(preprocessed_dir):
             return 1
@@ -101,7 +171,7 @@ class BidsBuilder(object):
             os.mkdir(preprocessed_dir)
 
     @staticmethod
-    def make_results_folder(datadir, patientid, session='one', result_name='results'):
+    def make_results_folder(datadir, subject_id, session='one', result_name='results'):
         """
         Creates the results folder in the correct location if it does not already
         exist. Assumes session is 'one'.
@@ -109,7 +179,7 @@ class BidsBuilder(object):
         Parameters
         ----------
         datadir :
-        patientid :
+        subject_id :
         session :
         result_name :
 
@@ -117,7 +187,7 @@ class BidsBuilder(object):
         -------
 
         """
-        basedir = os.path.join(datadir, 'sub-' + patientid, 'ses-' + session)
+        basedir = os.path.join(datadir, make_bids_basename(subject=subject_id, session=session))
         results_dir = os.path.join(basedir, result_name)
         if os.path.exists(results_dir):
             return 1
@@ -255,6 +325,7 @@ def _tsv_to_str(data, rows=5):
         output.append('\t'.join(row_data))
 
     return '\n'.join(output)
+
 
 def write_json(fname, dictionary, overwrite=False, verbose=False):
     """Write JSON to a file."""

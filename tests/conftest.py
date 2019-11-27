@@ -7,9 +7,9 @@ import pytest
 
 
 @pytest.fixture(scope="session")
-def temporary_directory(tmp_path_factory):
+def bids_dir(tmp_path_factory):
     fn = tmp_path_factory.mktemp("bids_data")
-    return fn
+    return str(fn)
 
 
 @pytest.fixture(scope="class")
@@ -55,7 +55,7 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
     # bidspat = BidsPatient(subject_id=test_subjectid,
     #                       session_id=session_id,
     #                       datadir=test_fpath,
-    #                       modality=kind)
+    #                       kind=kind)
     # bidspat.add_scans([original_fileid])
 
     run = BidsRun(subject_id=test_subjectid,
