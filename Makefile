@@ -7,6 +7,7 @@ all: clean inplace test
 
 clean-pyc:
 	find . -name "*.pyc" | xargs rm -f
+	find . -name "*.DS_Store" | xargs rm -f
 
 clean-so:
 	find . -name "*.so" | xargs rm -f
@@ -23,10 +24,10 @@ clean-cache:
 
 clean: clean-build clean-pyc clean-so clean-ctags clean-cache
 
-implace:
+inplace:
 	$(PYTHON) setup.py install
 
-test: inplace check-manifest
+test: inplace
 	rm -f .coverage
 	$(PYTESTS) ./
 

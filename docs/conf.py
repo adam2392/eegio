@@ -26,8 +26,10 @@ import eegio
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 curdir = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(curdir, '../..', 'eegio')))
-sys.path.append(os.path.abspath(os.path.join(curdid, 'sphinxext')))
+sys.path.append(os.path.abspath(os.path.join(curdir, '../eegio/')))
+sys.path.append(os.path.abspath(os.path.join(curdir, '.')))
+sys.path.append(os.path.abspath(os.path.join(curdir, '..')))
+sys.path.append(os.path.abspath(os.path.join(curdir, 'sphinxext')))
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
@@ -45,13 +47,19 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.autosummary',
-    'sphinx_gallery.gen_gallery'
+    'sphinx_gallery.gen_gallery',
     'numpydoc',
-    'gen_cli'
+    #'gen_cli',
 ]
 
 # generate autosummary
 autosumary_generate = True
+autodoc_default_flags = ['members', 'show-inheritance', 'special-members']
+html_static_path = ['_static']
+html_domain_indices = ['py_modindex']
+
+numpydoc_show_class_members = True
+numpydoc_class_members_toctree = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -140,7 +148,7 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'navbar_titlt': 'EEGIO',
+    'navbar_title': 'EEGIO',
     'bootswatch_theme': "flatly",
     'navbar_sidebarrel': False,
     'navbar_pagenav': False,
@@ -395,19 +403,19 @@ intersphinx_mapping = {
     'scipy': ('https://scipy.github.io/devdocs', None),
 }
 
-sphinx_gallery_conf = {
+'''sphinx_gallery_conf = {
     'example_dirs': '../examples',
     'gallery_dirs': 'auto_examples',
-    'filename_pattern': '^((?!sgskip).)*$'.
+    'filename_pattern': '^((?!sgskip).)*$',
     'backreferences_dir': 'generated',
     'binder': {
         # Required keys
         'org': 'Neurologic-solutions',
         'repo': 'eegio',
-        'branch': 'format/bids'.
+        'branch': 'format/bids',
         'binder_url': 'https://mybinder.org',
         'dependencies': [
             '..environment.yml'
         ],
     }
-}
+}'''
