@@ -1,3 +1,8 @@
+"""
+Authors: Adam Li and Patrick Myers.
+
+Version: 1.0
+"""
 import os
 import pickle
 import warnings
@@ -14,18 +19,25 @@ from eegio.loaders.bidsio import BidsWriter, BidsLoader
 
 class BidsPatient(BaseBids):
     """
-    The class for our patient data that inherits basic dataset functionality and follows Bids
-    format. The additional components for this are related to the fact that each Patient can
+    Class for patient data that inherits basic dataset functionality and follows Bids format.
+
+    The additional components for this are related to the fact that each Patient can
     have multiple EEGTimeSeries, or Results related to it.
 
     Attributes
     ----------
+    subject_id: str
+        Identifier for this patient
+    session_id: str
+        Identifier for the session
+    datadir: Union[str, os.PathLike]
+        The base directory for the Bids dataset that this BidsPatient belongs
+    managing_user: str
+        Managing user that is tied to this Patient. E.g. a clinical center, or a specific researcher,
+        or specific doctor.
+    modality: str
+        The type of recording the BidsPatient underwent during this session.
 
-    Notes
-    -----
-
-    Examples
-    --------
     """
 
     def __init__(
@@ -36,6 +48,18 @@ class BidsPatient(BaseBids):
             managing_user: str = None,
             modality: str = "ieeg",
     ):
+        """
+        Initialize BidsPatient object.
+
+        Parameters
+        ----------
+        subject_id :
+        session_id :
+        datadir :
+        managing_user :
+        modality :
+
+        """
         super(BidsPatient, self).__init__(datadir=datadir, modality=modality)
 
         self.subject_id = subject_id
@@ -77,11 +101,29 @@ class BidsPatient(BaseBids):
         #     self._load_scans(scans)
 
     def __str__(self):
+        """
+        Print the string representation of BidsPatient.
+
+        Returns
+        -------
+        str
+            A description of the BidsPatient including the number of datasets.
+
+        """
         return "{} Patient with {} Dataset Recordings ".format(
             self.subject_id, self.numdatasets
         )
 
     def _loader(self, runid):
+        """
+        Create a BidsLoader for a specific runid.
+
+        Parameters
+        ----------
+        runid : str
+            Identifier for the desired recording
+
+        """
         # instantiate a loader/writer
         self.loader = BidsLoader(bidsdir=self.datadir,
                                  subject_id=self.subject_id,
@@ -89,12 +131,30 @@ class BidsPatient(BaseBids):
                                  run_id=runid)
 
     def _write(self, runid):
+        """
+        Create a BidsWriter for a specific runid.
+
+        Parameters
+        ----------
+        runid : str
+            Identifier for the desired recording
+
+        """
         self.writer = BidsWriter(bidsdir=self.datadir,
                                  subject_id=self.subject_id,
                                  session_id=self.session_id,
                                  run_id=runid)
 
     def _create_derivative_folders(self, types="all"):
+        """
+        Create the custom folders for a BidsPatient.
+
+        Parameters
+        ----------
+        types : str
+            Which derivative folders to create. Can be "all", "preprocess", or "results".
+
+        """
         if types not in ["all", "preprocess", "results"]:
             raise ValueError("Can only create two types of derivative folders right now.")
 
@@ -103,20 +163,56 @@ class BidsPatient(BaseBids):
         BidsBuilder.make_results_folder(self.datadir, self.subject_id, self.session_id)
 
     def get_subject_sessions(self):
+        """
+        Find all of the sessions that the BidsPatient has.
+
+        Returns
+        -------
+        The list of sessions
+
+        """
         return mne_bids.utils.get_entity_vals(self.subjdir, 'ses')
 
     def get_subject_runs(self):
+        """
+        Find all the runs that the BidsPatient has.
+
+        Returns
+        -------
+        list[str]
+            The list of runs
+
+        """
         return mne_bids.utils.get_entity_vals(self.subjdir, 'run')
 
     def get_subject_kinds(self):
+        """
+        Find all the types of recordings that the BidsPatient has.
+
+        Returns
+        -------
+        list[str]
+            The list of recording types
+
+        """
         return mne_bids.utils.get_kinds(self.subjdir)
 
     @property
     def numdatasets(self):
+        """
+        Find the number of datasets that the BidsPatient has.
+
+        Returns
+        -------
+        int
+            The number of datasets
+
+        """
         # should be return len(self.dataset_fpaths). Fix updating _get_all_datasets
         return len(self.scans)
 
     def _get_all_datasets(self):
+        """Load in all the dataset paths."""
         # Should update after creating a run, but does not work currently
         edffiles = self.query.get(extension='.edf', return_type='file')
         fiffiles = self.query.get(extension='.fif', return_type='file')
@@ -124,6 +220,15 @@ class BidsPatient(BaseBids):
         self.dataset_fpaths = fiffiles
 
     def load_subject_metadata(self):
+        """
+        Find all the metadata corresponding to this subject.
+
+        Returns
+        -------
+        dict
+            A dictionary containing metadata information
+
+        """
         participants_json = self.loader.load_participants_json()
         participants_tsv = self.loader.load_participants_tsv()
 
@@ -134,6 +239,21 @@ class BidsPatient(BaseBids):
         return metadata
 
     def load_session(self, session_id, kind="eeg", extension="edf"):
+        """
+        Load in the all runs for the session.
+
+        Parameters
+        ----------
+        session_id :
+        kind :
+        extension :
+
+        Returns
+        -------
+        list[mne.io.BaseRaw]
+            A list of objects with raw EEG data for a single session
+
+        """
         # query for the run ids in the session based on factors
         runs_in_session = self.query.get(target="run",
                                          subject=self.subject_id,
@@ -154,6 +274,21 @@ class BidsPatient(BaseBids):
         return rawlist
 
     def load_run(self, session_id, run_id, kind="eeg"):
+        """
+        Load in the raw data for a specific run.
+
+        Parameters
+        ----------
+        session_id :
+        run_id :
+        kind :
+
+        Returns
+        -------
+        mne.IO.BaseRaw
+            An object containing the raw EEG data
+
+        """
         loader = BidsLoader(bidsdir=self.datadir,
                    subject_id=self.subject_id,
                    session_id=session_id,
@@ -164,6 +299,7 @@ class BidsPatient(BaseBids):
 
     def preprocess_edf_files(self, filelist: list = None, line_noise=60):
         """
+        Convert .edf files to .fif and .json file pair.
 
         Parameters
         ----------
@@ -171,9 +307,6 @@ class BidsPatient(BaseBids):
             The list of all files to be converted into .fif format. Default is all edf files available
         line_noise : int
             The line noise to be eliminated. Typically 60 Hz in America
-
-        Returns
-        -------
 
         """
         if filelist is None:
@@ -190,9 +323,12 @@ class BidsPatient(BaseBids):
 
     def _find_non_processed_files(self):
         """
-        Finds the .edf files that have not been preprocessed into .fif files
+        Find the .edf files that have not been preprocessed into .fif files.
+
         Returns
         -------
+        list:
+            File paths for unprocessed recordings.
 
         """
         scans_df = self.loader.load_scans_tsv()
@@ -202,6 +338,21 @@ class BidsPatient(BaseBids):
         return scans_df[scans_df["original_filename"] == ""]["filename"].tolist()
 
     def _create_run(self, scan):
+        """
+        Create files to put the data into a bids compatible format.
+
+        Instantiate a BidsRun object corresponding to the passed scan.
+
+        Parameters
+        ----------
+        scan :
+
+        Returns
+        -------
+        BidsRun
+            The BidsRun object containing functionality to parse run-level data
+
+        """
         run_id = str(self.numdatasets).zfill(2)
         bids_basename = make_bids_basename(subject=self.subject_id, session=self.session_id, run=run_id)
         builder = BidsBuilder()
@@ -219,13 +370,11 @@ class BidsPatient(BaseBids):
 
     def add_scans(self, scans: list):
         """
-        Adds scans (runs) to the patient
+        Add scans (runs) to the patient.
+
         Parameters
         ----------
         scans : list[os.PathLike]
-
-        Returns
-        -------
 
         """
         for scan in scans:
@@ -235,15 +384,12 @@ class BidsPatient(BaseBids):
 
     def load_dataset(self, session_id, run_id, kind):
         """
-        Loads in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure
+        Load in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure.
 
         Parameters
         ----------
         session_id :
         run_id :
-
-        Returns
-        -------
 
         """
         # bids_fname = make_bids_basename(subject=self.subject_id,
@@ -255,12 +401,13 @@ class BidsPatient(BaseBids):
 
     def get_filesizes(self):
         """
-        Get the total filesize of all the files attached for this patient.
+        Get the total file size of all the files attached for this patient.
 
         Returns
         -------
         int
             size of all files
+
         """
         size = 0
         for f in self.dataset_fpaths():
@@ -268,14 +415,24 @@ class BidsPatient(BaseBids):
         return size
 
     def _load_scans(self, scans: dict):
+        """
+        Load the scan dictionary into memory.
+
+        Parameters
+        ----------
+        scans :
+
+        """
         self.scans = scans
 
     def _create_scan_data(self):
         """
-        Creates the scans dictionary from whatever is in the scans.tsv file
+        Create the scans dictionary from whatever is in the scans.tsv file.
 
         Returns
         -------
+        dict
+            A dictionary representation of the scans
 
         """
         scans_df = self.loader.load_scans_tsv()
@@ -287,14 +444,25 @@ class BidsPatient(BaseBids):
         return scans_dict
 
     def _load_metadata(self, metadata: dict):
+        """
+        Load the passed metadata into memory.
+
+        Parameters
+        ----------
+        metadata :
+
+        """
         self.metadata = metadata
 
 
     def _create_metadata(self):
         """
-        Creates the metadata dictionary from whatever is in the participants.tsv file
+        Create the metadata dictionary from whatever is in the participants.tsv file.
+
         Returns
         -------
+        dict
+            A dictionary representation of the metadata.
 
         """
         participants_df = self.loader.load_participants_tsv()
@@ -307,6 +475,7 @@ class BidsPatient(BaseBids):
     def add_participants_field(self, column_id, description: Union[str, dict], subject_val: str = 'n/a',
                                default_val: str = 'n/a'):
         """
+        Add a field to the participants files (tsv and json).
 
         Parameters
         ----------
@@ -318,9 +487,6 @@ class BidsPatient(BaseBids):
             The value of column_id for this BidsPatient
         default_val :
             The value of column_id to fill for the rest of subjects in participants.tsv
-
-        Returns
-        -------
 
         """
         participants_dict = self.loader.load_participants_json()
@@ -345,13 +511,12 @@ class BidsPatient(BaseBids):
 
     def remove_participants_field(self, column_id: str):
         """
+        Remove a field from the participants files (tsv and json).
 
         Parameters
         ----------
         column_id : str
             The name of the column to remove from the json and tsv files
-        Returns
-        -------
 
         """
         participants_dict = self.loader.load_participants_json()
@@ -370,7 +535,7 @@ class BidsPatient(BaseBids):
 
     def modify_participants_file(self, column_id: str, new_value: str):
         """
-        Modify the BIDS dataset participants tsv file to include a new value
+        Modify the BIDS dataset participants tsv file to include a new value.
 
         Parameters
         ----------
@@ -378,8 +543,6 @@ class BidsPatient(BaseBids):
             The name of the column to which data should be modified. Must exist in the tsv file
         new_value : str
             The new value of the column_id for this BidsPatient
-        Returns
-        -------
 
         """
         participants_df = self.loader.load_participants_tsv()
@@ -392,12 +555,28 @@ class BidsPatient(BaseBids):
         self._load_metadata(metadata)
 
     def add_resected_contacts(self, resected_list):
+        """
+        Add the resected contacts to the participants files (tsv and json) and loads in memory.
+
+        Parameters
+        ----------
+        resected_list :
+
+        """
         resected_str = " ".join(resected_list)
         self.add_participants_field('resected_contacts', 'The list of contacts corresponding to resected regions',
                                     resected_str, 'n/a')
         self.resected_contacts = resected_list
 
     def add_original_subject_id(self, original_subject_id):
+        """
+        Add the original subject id to the participants files (tsv and json) and loads into memory.
+
+        Parameters
+        ----------
+        original_subject_id :
+
+        """
         self.add_participants_field('original_subjectid', 'The subjectid in the clinical data source',
                                     original_subject_id, 'n/a')
         self.original_subject_id = original_subject_id

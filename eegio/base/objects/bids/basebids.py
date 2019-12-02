@@ -1,3 +1,8 @@
+"""
+Authors: Adam Li and Patrick Myers.
+
+Version: 1.0
+"""
 from abc import abstractmethod, abstractclassmethod, abstractproperty, abstractstaticmethod
 
 from collections import OrderedDict
@@ -17,7 +22,9 @@ from mne_bids import make_bids_basename
 
 class BaseBids(object):
     """
-    An instantiator class of the bids format that any BIDS derivative would use. It handles:
+    An instantiator class of the bids format that any BIDS derivative would use.
+
+    It handles:
      - the logistics of creating a bids format file structure
      - extracting metadata from files stored in iEEG-BIDS format
      - easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)
@@ -48,8 +55,6 @@ class BaseBids(object):
 
     datadir = <study_name>/derivatives/<derivative_category_name>
 
-    Examples
-    --------
     """
 
     def __init__(
@@ -57,6 +62,15 @@ class BaseBids(object):
             datadir: Union[os.PathLike, str],
             modality: str,
     ):
+        """
+        Initialize a BaseBids Object.
+
+        Parameters
+        ----------
+        datadir :
+        modality :
+
+        """
         self.rootdir = datadir
         self.datadir = datadir
         self.modality = modality
@@ -76,55 +90,129 @@ class BaseBids(object):
 
     @property
     def description_fpath(self):
+        """
+        Get the path of the dataset description file.
+
+        Returns
+        -------
+        Dataset description file path.
+
+        """
         return os.path.join(self.datadir, "dataset_description.json")
 
     @property
     def participants_tsv_fpath(self):
+        """
+        Get the path of the participants tsv file.
+
+        Returns
+        -------
+        Participants tsv file path.
+
+        """
         return os.path.join(self.datadir, "participants.tsv")
 
     @property
     def participants_json_fpath(self):
+        """
+        Get the path of the participants json file.
+
+        Returns
+        -------
+        Participants json file path.
+
+        """
         return os.path.join(self.datadir, "participants.json")
 
     @property
     def query(self):
+        """
+        Get a queryable object representing the entire Bids dataset.
+
+        Returns
+        -------
+        A BidsLayout object
+
+        """
         return bids.BIDSLayout(self.datadir)
 
     @property
     def parameters(self):
+        """
+        Get a dictionary of parameters for this Bids object.
+
+        Returns
+        -------
+        The parameter dict.
+
+        """
         return self.parameter_dict
 
     @property
     def data_types(self):
+        """
+        Get a list of all recording types in this Bids dataset.
+
+        Returns
+        -------
+        A list of recording types
+
+        """
         return mne_bids.utils.get_kinds(self.datadir)
 
     @property
     def subject_nums(self):
+        """
+        Get a list of subject_ids in this Bids dataset.
+
+        Returns
+        -------
+        A list of subject_id values.
+
+        """
         return mne_bids.utils.get_entity_vals(self.datadir, 'sub')
 
     @property
     def num_subjects(self):
+        """
+        Get the number of subjects in this Bids dataset.
+
+        Returns
+        -------
+        The number of subjects
+
+        """
         return len(self.subject_nums)
 
     def print_dir_tree(self):
+        """Print a directory tree for this Bids dataset."""
         basepath = os.path.join(self.datadir)
         print_dir_tree(basepath)
 
     def _store_params(self):
+        """Store parameters into a dict object."""
         self.parameter_dict.update(
             datadir=self.datadir,
             modality=self.modality,
         )
 
     def create_dataset_folder(self, fpath, **dataset_description_kwargs):
+        """
+        Create a new Bids format dataset.
+
+        Parameters
+        ----------
+        fpath : Union[str, os.PathLike]
+            The path of this new directory
+        dataset_description_kwargs : dict
+            Other arguments used by make_dataset_description
+
+        """
         # create dataset description
         mne_bids.make_dataset_description(fpath, **dataset_description_kwargs)
 
     def print_summary(self):
-        """
-        Print a summary of the patient in the form of a directory tree showing
-        all available data
-        """
+        """Print a summary of the patient in the form of a directory tree showing all available data."""
         if self.modality is not "MRI":
             warnings.warn("Print summary only works for neuroimaging type datasets.")
             return
@@ -141,7 +229,20 @@ class BaseBids(object):
     #         json.dump(participants_json, fp, indent=4)
     #         fp.close()
 
-    def _create_participants_json(self, fname, overwrite=True, verbose=False):
+    def _create_participants_json(self, fname, overwrite=False, verbose=False):
+        """
+        Create the participants json file for Bids compliance.
+
+        Parameters
+        ----------
+        fname : Union[str, os.PathLike]
+            The path of the participants json file
+        overwrite : bool
+            Whether to overwrite an existing participants json file
+        verbose : bool
+            Whether to print the data from the participants json file to stdout
+
+        """
         cols = OrderedDict()
         cols['participant_id'] = {'Description': 'Unique participant identifier'}
         cols['age'] = {'Description': 'Age of the participant at time of testing',
@@ -256,17 +357,37 @@ class BidsIO(object):
     """
     BIDS IO for EEG data base class.
 
-    Parameters
+    Attributes
     ----------
-    bidsdir :
-    subject_id :
-    session_id :
-    run_id :
-    kind :
+    bidsdir : Union[str, os.PathLike]
+        The base directory for Bids data
+    subject_id : str
+        The unique identifier for the corresponding BidsPatient
+    session_id : str
+        The identifier for the BidsPatient session
+    run_id : str
+        The identifier for the snapshot recording
+    kind : str
+        The type of data in the snapshot recording
 
     """
 
     def __init__(self, bidsdir, subject_id, session_id, kind, run_id=None, datatype="edf"):
+        """
+        Initialize a BidsIO Object.
+
+        Should raise a ValueError if datatype is not supported
+
+        Parameters
+        ----------
+        bidsdir :
+        subject_id :
+        session_id :
+        kind :
+        run_id :
+        datatype :
+
+        """
         self.rootdir = bidsdir
         self.subject_id = subject_id
         self.run_id = run_id
@@ -284,18 +405,50 @@ class BidsIO(object):
 
     @property
     def bids_parameters(self):
+        """
+        Return a list of basic Bids parameters.
+
+        Returns
+        -------
+        List of parameters
+
+        """
         return [self.rootdir, self.subject_id, self.session_id, self.kind, self.run_id]
 
     @property
     def participantsjson_fpath(self):
+        """
+        Get the path of the participants json file.
+
+        Returns
+        -------
+        Participants json path
+
+        """
         return os.path.join(self.rootdir, "participants.json")
 
     @property
     def participantstsv_fpath(self):
+        """
+        Get the path of the participants tsv file.
+
+        Returns
+        -------
+        Participants tsv path
+
+        """
         return os.path.join(self.rootdir, "participants.tsv")
 
     @property
     def eventstsv_fpath(self):
+        """
+        Get the path of the events tsv file.
+
+        Returns
+        -------
+        Events tsv path
+
+        """
         return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
                                                              session=self.session_id,
                                                              run=self.run_id,
@@ -303,6 +456,14 @@ class BidsIO(object):
 
     @property
     def datafile_fpath(self):
+        """
+        Get the path of the data file.
+
+        Returns
+        -------
+        Data file path
+
+        """
         return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
                                                              session=self.session_id,
                                                              run=self.run_id,
@@ -310,6 +471,14 @@ class BidsIO(object):
 
     @property
     def result_fpath(self):
+        """
+        Get the path of the results zipped numpy file.
+
+        Returns
+        -------
+        Results path
+
+        """
         return os.path.join(self.datadir, 'results', make_bids_basename(subject=self.subject_id,
                                                                         session=self.session_id,
                                                                         run=self.run_id,
@@ -317,6 +486,14 @@ class BidsIO(object):
 
     @property
     def sidecarjson_fpath(self):
+        """
+        Get the path of the sidecar json file.
+
+        Returns
+        -------
+        Sidecar json path
+
+        """
         return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
                                                              session=self.session_id,
                                                              run=self.run_id,
@@ -324,6 +501,14 @@ class BidsIO(object):
 
     @property
     def chanstsv_fpath(self):
+        """
+        Get the path of the channel tsv file.
+
+        Returns
+        -------
+        Channel tsv path
+
+        """
         return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
                                                              session=self.session_id,
                                                              run=self.run_id,
@@ -331,6 +516,14 @@ class BidsIO(object):
 
     @property
     def scanstsv_fpath(self):
+        """
+        Get the path of the scans tsv file.
+
+        Returns
+        -------
+        Scans tsv path
+
+        """
         return os.path.join(self.sessiondir, make_bids_basename(subject=self.subject_id,
                                                                 session=self.session_id,
                                                                 suffix="scans.tsv"))

@@ -1,3 +1,9 @@
+"""
+Authors: Adam Li and Patrick Myers.
+
+Version: 1.0
+"""
+
 import os
 import json
 import datetime
@@ -14,15 +20,13 @@ import numpy as np
 
 
 class BidsBuilder(object):
-    """
-    Suite of helper functions to build out a bids data directory.
-
-    """
+    """Suite of helper functions to build out a bids data directory."""
 
     @staticmethod
     def make_bids_folder_struct(datadir, subject, kind, session_id="one"):
         """
-        Creates the empty folder structure for a new subject according to the BIDS format.
+        Create the empty folder structure for a new subject according to the BIDS format.
+
         Session is assumed to be 'one' for now.
 
         Parameters
@@ -31,9 +35,6 @@ class BidsBuilder(object):
         subject :
         kind :
         session_id :
-
-        Returns
-        -------
 
         """
         if type(datadir) is not str:
@@ -54,19 +55,28 @@ class BidsBuilder(object):
                         overwrite=False,
                         use_preprocess_pipeline=True):
         """
+        Convert the passed edf file into the Bids format.
 
         Parameters
         ----------
-        edf_fpath :
-        bids_dir :
-        bids_basename :
-        excluded_contacts :
-        eog_contacts :
-        misc_contacts :
-        overwrite :
+        edf_fpath : Union[str, os.PathLike]
+            The location the edf file.
+        bids_dir : Union[str, os.PathLike]
+            The base directory for newly created bids files.
+        bids_basename : str
+            The base name of the new data files
+        excluded_contacts : list
+            Contacts to be excluded from conversion
+        eog_contacts : list
+            Contacts to be annotated as EOG.
+        misc_contacts : list
+            Contacts to be annotated  as Misc.
+        overwrite : bool
+            Whether to overwrite an existing converted file.
 
         Returns
         -------
+        The path to the new data file.
 
         """
         if excluded_contacts is None:
@@ -88,6 +98,8 @@ class BidsBuilder(object):
     @staticmethod
     def preprocess_into_fif(bids_fname, bids_dir, kind="eeg", overwrite=True):
         """
+        Preprocess the edf file into fif format for easier manipulation.
+
         TODO:
         1. Determine if this is necessary. EDF files on one hand are hard to modify,
         but fif files have a lot of constraints.
@@ -96,13 +108,18 @@ class BidsBuilder(object):
 
         Parameters
         ----------
-        bids_fname :
-        bids_dir :
-        kind :
-        overwrite :
+        bids_fname : Union[str, os.PathLike]
+            The path to the bids format edf file
+        bids_dir : Union[str, os.PathLike]
+            The base directory for bids data
+        kind : str
+            The type of data contained in the edf file.
+        overwrite : bool
+            Whether to overwrite an existing converted file.
 
         Returns
         -------
+        The path of the converted fif file
 
         """
         params = _parse_bids_filename(bids_fname, verbose=False)
@@ -149,18 +166,20 @@ class BidsBuilder(object):
     @staticmethod
     def make_preprocessed_folder(datadir, subject_id, session='one', preprocess_name='preprocessed'):
         """
-        Creates the preproceesed data folder in the correct location if it does
-        not already exist. Assumes session is 'one'.
+        Create the preproceesed data folder in the correct location if it does not already exist.
+
+        Assumes session is 'one'.
 
         Parameters
         ----------
-        datadir :
-        subject_id :
-        session :
-        preprocess_name :
-
-        Returns
-        -------
+        datadir : Union[str, os.PathLike]
+            The base directory for bids data
+        subject_id : str
+            The unique identifier for the BidsPatient
+        session : str
+            The identifier for this BidsPatient session
+        preprocess_name : str
+            The name of the preprocessed folder
 
         """
         basedir = os.path.join(datadir, make_bids_basename(subject=subject_id, session=session))
@@ -173,8 +192,9 @@ class BidsBuilder(object):
     @staticmethod
     def make_results_folder(datadir, subject_id, session='one', result_name='results'):
         """
-        Creates the results folder in the correct location if it does not already
-        exist. Assumes session is 'one'.
+        Create the results folder in the correct location if it does not already exist.
+
+        Assumes session is 'one'.
 
         Parameters
         ----------
@@ -182,9 +202,6 @@ class BidsBuilder(object):
         subject_id :
         session :
         result_name :
-
-        Returns
-        -------
 
         """
         basedir = os.path.join(datadir, make_bids_basename(subject=subject_id, session=session))
@@ -197,7 +214,7 @@ class BidsBuilder(object):
     @staticmethod
     def add_field_to_dict(current_dict: dict, new_field: str, description: Union[str, dict]):
         """
-        Adds a new field to the participants.json file
+        Add a new field to the participants.json file.
 
         Parameters
         ----------
@@ -209,7 +226,8 @@ class BidsBuilder(object):
             The description of the new field
         Returns
         -------
-        The modified dict variable
+        The modified dict object
+
         """
         new_dict = {new_field: description}
 
@@ -219,6 +237,7 @@ class BidsBuilder(object):
     @staticmethod
     def add_subject_to_participants(subject_id: str, loader, writer):
         """
+        Add a subject into the participants.tsv file.
 
         Parameters
         ----------
@@ -227,6 +246,7 @@ class BidsBuilder(object):
 
         Returns
         -------
+        The modified pandas DataFrame
 
         """
         participants_df = loader.load_participants_tsv()
@@ -238,18 +258,19 @@ class BidsBuilder(object):
             participants_df.append(new_df)
         participants_df = participants_df.set_index('participant_id')
         writer.write_participants_tsv(participants_df)
+        return participants_df
 
     def create_channel_info(self, bidsrun):
         """
-        TODO:
-        - This shouldn't be here. A user should ideally just have done this when setting up the BIDS folder, and
-        dataset.
-        -
+        Find and add necessary data to modify the channels file.
 
         This method searches for automatic patterns in the electrode names to modify the channels.tsv file
 
-        Returns
-        -------
+        Parameters
+        ----------
+        bidsrun: eegio.BidsRun
+            The object containing information about this snapshot recording.
+
         """
         self.add_notes_to_channels(bidsrun)
         channel_data = bidsrun.loader.load_channels_tsv()
@@ -264,10 +285,12 @@ class BidsBuilder(object):
     @staticmethod
     def add_notes_to_channels(bidsrun):
         """
-        Adds a column to the *channels.tsv file to allow for more detailed description of status beyond good/bad
+        Add a column to the *channels.tsv file to allow for more detailed description of status beyond good/bad.
 
-        Returns
-        -------
+        Parameters
+        ----------
+        bidsrun: eegio.BidsRun
+            The object containing information about this snapshot recording.
 
         """
         channels_data = bidsrun.loader.load_channels_tsv()
@@ -279,7 +302,8 @@ class BidsBuilder(object):
 
 
 def _to_tsv(data, fname):
-    """Write an OrderedDict into a tsv file.
+    """
+    Write an OrderedDict into a tsv file.
 
     Parameters
     ----------
@@ -297,7 +321,8 @@ def _to_tsv(data, fname):
 
 
 def _tsv_to_str(data, rows=5):
-    """Return a string representation of the OrderedDict.
+    """
+    Return a string representation of the OrderedDict.
 
     Parameters
     ----------
@@ -308,8 +333,7 @@ def _tsv_to_str(data, rows=5):
 
     Returns
     -------
-    str
-        String representation of the first `rows` lines of `data`.
+    String representation of the first `rows` lines of `data`.
 
     """
     col_names = list(data.keys())
@@ -328,7 +352,21 @@ def _tsv_to_str(data, rows=5):
 
 
 def write_json(fname, dictionary, overwrite=False, verbose=False):
-    """Write JSON to a file."""
+    """
+    Write JSON to a file.
+
+    Parameters
+    ----------
+    fname: Union[str, os.PathLike]
+        The path fo the new json file
+    dictionary: Dict
+        The data to write to the json file
+    overwrite: bool
+        Whether to overwrite an existing json file with name fname.
+    verbose: bool
+        Whether to print the data to stdout
+
+    """
     if os.path.exists(fname) and not overwrite:
         raise FileExistsError('"%s" already exists. Please set '  # noqa: F821
                               'overwrite to True.' % fname)
@@ -344,7 +382,21 @@ def write_json(fname, dictionary, overwrite=False, verbose=False):
 
 
 def write_tsv(fname, dictionary, overwrite=False, verbose=False):
-    """Write an ordered dictionary to a .tsv file."""
+    """
+    Write an ordered dictionary to a .tsv file.
+
+    Parameters
+    ----------
+    fname: Union[str, os.PathLike]
+        The path fo the new json file
+    dictionary: Dict
+        The data to write to the json file
+    overwrite: bool
+        Whether to overwrite an existing json file with name fname.
+    verbose: bool
+        Whether to print the data to stdout
+
+    """
     if os.path.exists(fname) and not overwrite:
         raise FileExistsError('"%s" already exists. Please set '  # noqa: F821
                               'overwrite to True.' % fname)

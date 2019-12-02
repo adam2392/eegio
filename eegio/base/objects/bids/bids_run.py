@@ -1,3 +1,9 @@
+"""
+Authors: Adam Li and Patrick Myers.
+
+Version: 1.0
+"""
+
 import os
 import pathlib
 from typing import Union, Dict
@@ -13,16 +19,26 @@ from eegio.loaders.bidsio import BidsWriter, BidsLoader
 
 class BidsRun(BaseBids):
     """
-    The class for a specific run of
+    The class for a specific eeg snapshot recording that follows BIDS format.
+
+    The additional functionality added by this class allow for addition, deletion, and modification
+    of metadata corresponding the the recording channel annotation and the sidecar json.
 
     Attributes
     ----------
+    subject_id: str
+        The unique identifier for the recorded subject.
+    session_id:
+        The identifier for this run's session.
+    run_id:
+        The identifier for the actual recording snapshot.
+    datadir: Union[str, os.PathLike]
+        Where this dataset is located (base directory)
+    modality: str
+        The method of data recording.
+    original_fileid: str
+        The source's file path for backwards annotation.
 
-    Notes
-    -----
-
-    Examples
-    --------
     """
 
     def __init__(
@@ -34,6 +50,19 @@ class BidsRun(BaseBids):
             modality: str = "ieeg",
             original_fileid: Union[str, os.PathLike] = None,
     ):
+        """
+        Initialize a BidsRun object.
+
+        Parameters
+        ----------
+        subject_id :
+        session_id :
+        run_id :
+        datadir :
+        modality :
+        original_fileid :
+
+        """
         super(BidsRun, self).__init__(datadir=datadir, modality=modality)
         self.subject_id = subject_id
         self.session_id = session_id
@@ -42,9 +71,7 @@ class BidsRun(BaseBids):
         self.original_fileid = original_fileid
 
         # instantiate a loader/writer
-        '''
-        Use these when accessing files directly. BidsIO should not be called.
-        '''
+
         self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
 
@@ -58,15 +85,12 @@ class BidsRun(BaseBids):
 
     def _create_bidsrun(self, data_fpath):
         """
-        Helper function that will create a BIDS Run if it does not exist.
+        Create a BIDS Run if it does not exist.
 
         Parameters
         ----------
         data_fpath : str
             A filepath to the dataset, and it will create a BIDS-like run using MNE_Bids.
-
-        Returns
-        -------
 
         """
         if pathlib.Path(data_fpath).suffix == ".fif":
@@ -87,25 +111,50 @@ class BidsRun(BaseBids):
 
     @property
     def fpath(self):
+        """
+        Get the location of the run's data file in this directory.
+
+        Returns
+        -------
+        The path to the data file
+
+        """
         return self.loader.datafile_fpath
 
     @property
     def sfreq(self):
+        """
+        Get the sampling frequency used in this recording.
+
+        Returns
+        -------
+        The sampling frequency
+
+        """
         sidecar = self.loader.load_sidecar_json()
         return sidecar["SamplingFrequency"]
 
     @property
     def linefreq(self):
+        """
+        Get the power line frequency used in this recording (i.e. either 50 Hz or 60 Hz).
+
+        Returns
+        -------
+        The power line frequency.
+
+        """
         sidecar = self.loader.load_sidecar_json()
         return sidecar["PowerLineFrequency"]
 
     @property
     def chs(self):
         """
-        Gets the channel labels as a numpy array.
+        Get the channel labels as a numpy array.
 
         Returns
         -------
+        A list of channel names in the recording.
 
         """
         chdf = self.loader.load_channels_tsv()
@@ -114,37 +163,44 @@ class BidsRun(BaseBids):
     @property
     def results_fpath(self):
         """
+        Get the path to the results directory.
 
         Returns
         -------
+        The path of the results directory
 
         """
         return self.loader.result_fpath
 
     def load_data(self):
         """
-        Wrapper function that loads in the dataset using BidsLoader.
+        Load the dataset using BidsLoader.
 
         Returns
         -------
+        The mne.io.Raw dataset
 
         """
         return self.loader.load_dataset()
 
     def get_run_metadata(self):
         """
+        Load the sidecar json file as a dict object.
 
         Returns
         -------
+        The dictionary of metadata
 
         """
         return self.loader.load_sidecar_json()
 
     def get_channels_metadata(self):
         """
+        Load the channel metadata from the tsv file as a dict object.
 
         Returns
         -------
+        The dictionary of channel annotations.
 
         """
         chdf = self.loader.load_channels_tsv()
@@ -152,14 +208,14 @@ class BidsRun(BaseBids):
 
     def get_channel_types(self):
         """
-        Returns the channel types of this BidsRun as a dictionary with key as the channel name,
-        and type as the value in the dictionary.
+        Return the channel types of this BidsRun as a pandas DataFrame.
 
-        TODO:
-        1. make sure this works.
+        The name is the index and the type is the column value. Can easily convert to
+        key, value pair of a dict if desired.
 
         Returns
         -------
+        A pandas DataFrame containing the name and type of each channel.
 
         """
         chdf = self.loader.load_channels_tsv()
@@ -167,38 +223,56 @@ class BidsRun(BaseBids):
 
     def get_channels_status(self):
         """
-        Returns the channel status of this BidsRun as a dictionary with channel "name" as the key,
-        and "status" as the value in the dictionary.
+        Return the channel status of this BidsRun as a pandas DataFrame.
 
-        TODO:
-        1. make sure this works.
+        The name is the index and the status is the column value. Can easily convert to
+        key, value pair of a dict if desired.
 
         Returns
         -------
+        A pandas DataFrame containing the name and status of each channel.
 
         """
         chdf = self.loader.load_channels_tsv()
         return chdf[["name", "status"]].set_index("name")
 
     def delete_sidecar_field(self, key):
+        """
+        Remove a field from the sidecar json file for this run.
+
+        Parameters
+        ----------
+        key : str
+            Which field to remove.
+
+        Returns
+        -------
+        The modified dictionary
+
+        """
         sidecar_dict = self.loader.load_sidecar_json()
         sidecar_dict.pop(key, None)
         self.writer.write_sidecar_json(sidecar_dict)
+        return sidecar_dict
 
     def modify_sidecar_json(self, key, value, overwrite=False):
         """
-        Should modify sidecar json (represented as a dictionary) with a specified key and value. It will overwrite
-        existing sidecar elements if already present. However, if overwrite is False, then it should raise a
-        RunTimeError.
+        Modify the sidecar json to have the new value in the passed field.
+
+        It will overwrite existing sidecar elements if already present. However, if overwrite is False,
+        then it should raise a RunTimeError.
 
 
         Parameters
         ----------
-        key :
-        value :
+        key : str
+            Which field to modify
+        value : str
+            The new value for the passed key
 
         Returns
         -------
+        The modified dictionary
 
         """
         # always make keys capitalized in sidecar json
@@ -214,12 +288,12 @@ class BidsRun(BaseBids):
 
     def modify_original_scan_filename(self, original_filename: str):
         """
-        Helper function that would add the original scan filename. If it was not passed in correctly.
+        Add the passed original filename to the scans tsv file.
 
-        Adds the original scan filename (from clinical source) to the scans tsv folder for this BidsPatient
-
-        Returns
-        -------
+        Parameters
+        ----------
+        original_filename :
+            The path to the file from the source.
 
         """
         scans_data = self.loader.load_scans_tsv()
@@ -231,20 +305,23 @@ class BidsRun(BaseBids):
             scans_data['original_filename'] = fnames
         for index, row in scans_data.iterrows():
             if row['filename'] == self.fpath:
-                row['original_filename'] = original_filename
+                scans_data['original_filename'][index] = original_filename
+        self.writer.write_scans_tsv(scans_data)
 
     def append_channel_info(self, column_id: str, channel_id: str = None, value=None, channel_dict: Dict = None):
         """
+        Add a new column to the channels tsv file.
 
         Parameters
         ----------
-        column_id :
-        channel_id :
+        column_id : str
+            The name of the column to add
+        channel_id : str
+            The name of the singular channel to modify.
         value :
-        channel_dict :
-
-        Returns
-        -------
+            The new value for the channel_id.
+        channel_dict : Dict
+            A dictionary of names and values for the new column
 
         """
         if value is not None and channel_dict is not None:
@@ -265,6 +342,7 @@ class BidsRun(BaseBids):
 
     def modify_channel_info(self, column_id: str, channel_id: str, value=None):
         """
+        Modify some information about a single recording channel.
 
         Parameters
         ----------
@@ -274,9 +352,6 @@ class BidsRun(BaseBids):
             The channel to modify. Must exist for the recording
         value :
             The value to add for the channel and column
-
-        Returns
-        -------
 
         """
         channel_df = self.loader.load_channels_tsv()
@@ -290,12 +365,14 @@ class BidsRun(BaseBids):
 
     def find_bad_channels(self):
         """
-        Finds bad electrodes based on hardcoded rules of the electrode name. Uses markers encoded in
-        BAD_MARKERS
+        Find bad electrodes based on hardcoded rules of the electrode name.
+
+        Uses markers encoded in BAD_MARKERS (see config file)
 
         Returns
         -------
-        bad_channels_dict: A dictionary where the key is the electrode name and the value is a string description
+        A dictionary where the key is the electrode name and the value is a string description
+
         """
         channel_df = self.loader.load_channels_tsv()
         channel_scrub = ChannelScrub
@@ -308,11 +385,12 @@ class BidsRun(BaseBids):
 
     def find_channel_types(self):
         """
-        Finds the actual type of the electrode based on a regular expression of the electrode name
+        Find the actual type of the electrode based on a regular expression of the electrode name.
 
         Returns
         -------
         A dictionary where the key is the electrode name and the value is the type
+
         """
         channel_df = self.loader.load_channels_tsv()
         channel_scrub = ChannelScrub
@@ -325,6 +403,8 @@ class BidsRun(BaseBids):
     @staticmethod
     def modify_electrode_type(channel_df: pd.DataFrame, chlabel: str, chtype: str):
         """
+        Modify a single recording channel's type.
+
         Updates the run's channel information to be one of the ones in the following:
         https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
 
@@ -347,6 +427,7 @@ class BidsRun(BaseBids):
         Returns
         -------
         The modified DataFrame
+
         """
         channel_df.loc([channel_df["name"] == chlabel])['type'] = chtype
         # for ind, row in channel_df.iterrows():
@@ -357,7 +438,8 @@ class BidsRun(BaseBids):
     @staticmethod
     def modify_electrode_status(channel_df: pd.DataFrame, chlabel: str, chdescription: str):
         """
-        Updates the run's channel information by looking at the generated clinical electrode sheet annotations.
+        Update the run's channel information by looking at the generated clinical electrode sheet annotations.
+
         Electrode status can either be "good", or "bad"
 
         Parameters
@@ -385,13 +467,11 @@ class BidsRun(BaseBids):
 
     def _update_sidecar_json_channelcounts(self):
         """
-        Helper function to update sidecar json for channel counts.
+        Update sidecar json for channel counts.
+
         Reads the current tsv file for the run's channels and updates the sidecar json with the channel type.
 
-        Should be called everytime we modify anything in the sidecar json file.
-
-        Returns
-        -------
+        Should be called every time we modify anything in the sidecar json file.
 
         """
         # load in channel tsv file as a dataframe
@@ -410,9 +490,14 @@ class BidsRun(BaseBids):
 
     def _get_original_fileid(self):
         """
+        Get the original fileid for this run.
+
+        Returns false if there is none and raises a Value Error if not enough information is contained within the
+        BidsRun object to locate the original fileid.
 
         Returns
         -------
+        Boolean representing if the file is found.
 
         """
         scans_df = self.loader.load_scans_tsv()
