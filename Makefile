@@ -48,3 +48,8 @@ build-doc:
 pydocstyle:
 	@echo "Running pydocstyle"
 	@pydocstyle
+
+pycodestyle:
+	@echo "Running pycodestyle"
+	@pycodestyle
+
