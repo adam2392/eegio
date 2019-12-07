@@ -1,11 +1,10 @@
 import os
 import pathlib
-import warnings
 
 import pandas as pd
 import pytest
 
-from eegio.base.objects.clinical import PatientClinical, DatasetClinical
+from dev.clinical import PatientClinical, DatasetClinical
 from eegio.loaders import DataSheetLoader
 
 clinical_excel_fpath = os.path.join(

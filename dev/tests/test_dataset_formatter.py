@@ -6,7 +6,7 @@ import mne
 import pandas as pd
 import pytest
 
-from eegio.format.format_clinical_sheet import FormatClinicalSheet
+from dev.format_clinical_sheet import FormatClinicalSheet
 from eegio.base.config import COLS_TO_REGEXP_EXPAND
 from eegio import run_formatting_eeg
 

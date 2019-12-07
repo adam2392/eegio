@@ -4,17 +4,16 @@ Authors: Adam Li and Patrick Myers.
 Version: 1.0
 """
 import os
-import pickle
 import warnings
-from typing import Union
+from typing import Union, Dict
 
+import bids
 import mne_bids.utils
 from mne_bids import make_bids_basename
 
-from eegio.base.objects.bids.basebids import BaseBids
-from eegio.base.objects.bids.bids_run import BidsRun
+from eegio.loaders.bids.basebids import BaseBids
 from eegio.base.utils.bids_helper import BidsBuilder
-from eegio.loaders.bidsio import BidsWriter, BidsLoader
+from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
 
 class BidsPatient(BaseBids):
@@ -41,12 +40,12 @@ class BidsPatient(BaseBids):
     """
 
     def __init__(
-            self,
-            subject_id: str,
-            session_id: str = None,
-            datadir: Union[str, os.PathLike] = None,
-            managing_user: str = None,
-            modality: str = "ieeg",
+        self,
+        subject_id: str,
+        session_id: str = None,
+        datadir: Union[str, os.PathLike] = None,
+        managing_user: str = None,
+        modality: str = "ieeg",
     ):
         """
         Initialize BidsPatient object.
@@ -65,40 +64,31 @@ class BidsPatient(BaseBids):
         self.subject_id = subject_id
         self.session_id = session_id
         self.managing_user = managing_user
-        self.subjdir = os.path.join(self.datadir, 'sub-'+self.subject_id)
+        self.subjdir = os.path.join(self.datadir, "sub-" + self.subject_id)
 
         if not os.path.exists(self.subjdir):
-            warnings.warn(f"Subject directory does not exist at: {self.subjdir} "
-                          f"We are going to create it for you!")
+            warnings.warn(
+                f"Subject directory does not exist at: {self.subjdir} "
+                f"We are going to create it for you!"
+            )
             # create bids folder for this subject
-            BidsBuilder.make_bids_folder_struct(self.datadir, self.subject_id, self.modality, self.session_id)
+            BidsBuilder.make_bids_folder_struct(
+                self.datadir, self.subject_id, self.modality, self.session_id
+            )
 
         # run to cache and search to get all datasets available for this patient
         self._get_all_datasets()
 
-        # create derivative folders
-        self._create_derivative_folders()
-
         # instantiate a loader/writer
-        self.loader = BidsLoader(bidsdir=self.datadir,
-                                 subject_id=self.subject_id,
-                                 session_id=self.session_id,
-                                 )
-        self.writer = BidsWriter(bidsdir=self.datadir,
-                                 subject_id=self.subject_id,
-                                 session_id=self.session_id,
-                                 )
-        # if new_subject:
-        #     # Need to have subject in file in order to load and modify any metadata
-        #     BidsBuilder.add_subject_to_participants(self.subject_id, self.loader, self.writer)
-        #     # TODO: How do we add subject age/sex at this point
+        self.loader = BidsLoader(
+            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
+        )
+        self.writer = BidsWriter(
+            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
+        )
 
-        # metadata = self._create_metadata()
-        # self._load_metadata(metadata)
-
-        # if self.numdatasets > 0:
-        #     scans = self._create_scan_data()
-        #     self._load_scans(scans)
+        # run BIDS compatability checks
+        self._bids_compatible_check()
 
     def __str__(self):
         """
@@ -114,6 +104,39 @@ class BidsPatient(BaseBids):
             self.subject_id, self.numdatasets
         )
 
+    def _bids_compatible_check(self):
+        """
+        Checks that the BIDS patient has the necessary folders and files.
+
+        Returns
+        -------
+
+        """
+        validator = bids.BIDSValidator(index_associated=True)
+
+        valid_check = []
+        filepaths = {
+            "participant_tsv_fpath": self.loader.rel_participantstsv_fpath,
+            "participant_json_fpath": self.loader.rel_participantsjson_fpath,
+            "scans_tsv_fpath": self.loader.rel_scanstsv_fpath,
+        }
+
+        for bids_name, filepath in filepaths.items():
+            if not filepath.startswith("/"):
+                filepath = "/" + filepath
+            _check = validator.is_bids(filepath)
+            valid_check.append(_check)
+            if _check is False:
+                raise RuntimeError(
+                    f"Bids patient {self.subject_id} does not have valid filepaths associated at "
+                    f"{bids_name}: {filepath}."
+                )
+
+        if any(x is False for x in valid_check):
+            raise RuntimeError(
+                f"Bids patient {self.subject_id} does not have valid filepaths associated."
+            )
+
     def _loader(self, runid):
         """
         Create a BidsLoader for a specific runid.
@@ -125,10 +148,12 @@ class BidsPatient(BaseBids):
 
         """
         # instantiate a loader/writer
-        self.loader = BidsLoader(bidsdir=self.datadir,
-                                 subject_id=self.subject_id,
-                                 session_id=self.session_id,
-                                 run_id=runid)
+        self.loader = BidsLoader(
+            bidsdir=self.datadir,
+            subject_id=self.subject_id,
+            session_id=self.session_id,
+            run_id=runid,
+        )
 
     def _write(self, runid):
         """
@@ -140,10 +165,12 @@ class BidsPatient(BaseBids):
             Identifier for the desired recording
 
         """
-        self.writer = BidsWriter(bidsdir=self.datadir,
-                                 subject_id=self.subject_id,
-                                 session_id=self.session_id,
-                                 run_id=runid)
+        self.writer = BidsWriter(
+            bidsdir=self.datadir,
+            subject_id=self.subject_id,
+            session_id=self.session_id,
+            run_id=runid,
+        )
 
     def _create_derivative_folders(self, types="all"):
         """
@@ -156,10 +183,14 @@ class BidsPatient(BaseBids):
 
         """
         if types not in ["all", "preprocess", "results"]:
-            raise ValueError("Can only create two types of derivative folders right now.")
+            raise ValueError(
+                "Can only create two types of derivative folders right now."
+            )
 
         # create preprocess, results folders
-        BidsBuilder.make_preprocessed_folder(self.datadir, self.subject_id, self.session_id)
+        BidsBuilder.make_preprocessed_folder(
+            self.datadir, self.subject_id, self.session_id
+        )
         BidsBuilder.make_results_folder(self.datadir, self.subject_id, self.session_id)
 
     def get_subject_sessions(self):
@@ -171,7 +202,7 @@ class BidsPatient(BaseBids):
         The list of sessions
 
         """
-        return mne_bids.utils.get_entity_vals(self.subjdir, 'ses')
+        return mne_bids.utils.get_entity_vals(self.subjdir, "ses")
 
     def get_subject_runs(self):
         """
@@ -183,7 +214,7 @@ class BidsPatient(BaseBids):
             The list of runs
 
         """
-        return mne_bids.utils.get_entity_vals(self.subjdir, 'run')
+        return mne_bids.utils.get_entity_vals(self.subjdir, "run")
 
     def get_subject_kinds(self):
         """
@@ -208,18 +239,17 @@ class BidsPatient(BaseBids):
             The number of datasets
 
         """
-        # should be return len(self.dataset_fpaths). Fix updating _get_all_datasets
-        return len(self.scans)
+        return len(self.get_subject_runs())
 
     def _get_all_datasets(self):
         """Load in all the dataset paths."""
         # Should update after creating a run, but does not work currently
-        edffiles = self.query.get(extension='.edf', return_type='file')
-        fiffiles = self.query.get(extension='.fif', return_type='file')
+        edffiles = self.query.get(extension=".edf", return_type="file")
+        fiffiles = self.query.get(extension=".fif", return_type="file")
         self.edf_fpaths = edffiles
         self.dataset_fpaths = fiffiles
 
-    def load_subject_metadata(self):
+    def load_subject_metadata(self) -> Dict:
         """
         Find all the metadata corresponding to this subject.
 
@@ -233,8 +263,11 @@ class BidsPatient(BaseBids):
         participants_tsv = self.loader.load_participants_tsv()
 
         # json file describes columns for this patient
-        metadata = participants_tsv[participants_tsv["participant_id"] == self.subject_id].to_dict()
-        # metadata = participants_tsv.set_index('participant_id')[self.subject_id].to_dict(orient="index")
+        metadata = participants_tsv[
+            participants_tsv["participant_id"]
+            == make_bids_basename(subject=self.subject_id)
+        ].to_dict("r")[0]
+        # metadata = participants_tsv.set_index('participant_id')[self.subject_val].to_dict(orient="index")
         metadata["field_descriptions"] = participants_json
         return metadata
 
@@ -255,21 +288,25 @@ class BidsPatient(BaseBids):
 
         """
         # query for the run ids in the session based on factors
-        runs_in_session = self.query.get(target="run",
-                                         subject=self.subject_id,
-                                         session=self.session_id,
-                                         return_type="id",
-                                         datatype=kind,
-                                         extension=extension)
+        runs_in_session = self.query.get(
+            target="run",
+            subject=self.subject_id,
+            session=self.session_id,
+            return_type="id",
+            datatype=kind,
+            extension=extension,
+        )
 
         # load in all the mne_raw datasets
         rawlist = []
         for run_id in runs_in_session:
-            loader = BidsLoader(bidsdir=self.datadir,
-                                subject_id=self.subject_id,
-                                session_id=session_id,
-                                run_id=run_id,
-                                kind=kind)
+            loader = BidsLoader(
+                bidsdir=self.datadir,
+                subject_id=self.subject_id,
+                session_id=session_id,
+                run_id=run_id,
+                kind=kind,
+            )
             rawlist.append(loader.load_dataset())
         return rawlist
 
@@ -289,15 +326,17 @@ class BidsPatient(BaseBids):
             An object containing the raw EEG data
 
         """
-        loader = BidsLoader(bidsdir=self.datadir,
-                   subject_id=self.subject_id,
-                   session_id=session_id,
-                   run_id=run_id,
-                   kind=kind)
+        loader = BidsLoader(
+            bidsdir=self.datadir,
+            subject_id=self.subject_id,
+            session_id=session_id,
+            run_id=run_id,
+            kind=kind,
+        )
         raw = loader.load_dataset()
         return raw
 
-    def preprocess_edf_files(self, filelist: list = None, line_noise=60):
+    def preprocess_edf_files(self, filelist: list = None, line_noise=60, kind="eeg"):
         """
         Convert .edf files to .fif and .json file pair.
 
@@ -315,9 +354,24 @@ class BidsPatient(BaseBids):
             if not os.path.exists(fpath):
                 raise OSError(f"{fpath} doesn't exist. Please pass in valid filepaths.")
             if line_noise != 50:
-                sidecardict = self.loader.load_sidecar_json()
+                loader = BidsLoader(
+                    bidsdir=self.datadir,
+                    subject_id=self.subject_id,
+                    session_id=self.session_id,
+                    run_id=i,
+                    kind=kind,
+                )
+                sidecardict = loader.load_sidecar_json()
                 sidecardict["PowerLineFrequency"] = line_noise
-                self.writer.write_sidecar_json()
+
+                writer = BidsWriter(
+                    bidsdir=self.datadir,
+                    subject_id=self.subject_id,
+                    session_id=self.session_id,
+                    run_id=i,
+                    kind=kind,
+                )
+                writer.write_sidecar_json(sidecardict)
 
             # TODO: Check if .fif file already exists. Otherwise convert to fif
 
@@ -333,71 +387,9 @@ class BidsPatient(BaseBids):
         """
         scans_df = self.loader.load_scans_tsv()
         colnames = scans_df.columns
-        if 'original_filename' not in colnames:
-            return scans_df['filename'].tolist()
+        if "original_filename" not in colnames:
+            return scans_df["filename"].tolist()
         return scans_df[scans_df["original_filename"] == ""]["filename"].tolist()
-
-    def _create_run(self, scan):
-        """
-        Create files to put the data into a bids compatible format.
-
-        Instantiate a BidsRun object corresponding to the passed scan.
-
-        Parameters
-        ----------
-        scan :
-
-        Returns
-        -------
-        BidsRun
-            The BidsRun object containing functionality to parse run-level data
-
-        """
-        run_id = str(self.numdatasets).zfill(2)
-        bids_basename = make_bids_basename(subject=self.subject_id, session=self.session_id, run=run_id)
-        builder = BidsBuilder()
-        builder.convert_to_bids(edf_fpath=scan, bids_dir=self.datadir, bids_basename=bids_basename)
-        bidsrun = BidsRun(subject_id=self.subject_id,
-                          session_id=self.session_id,
-                          run_id=run_id,
-                          datadir=self.datadir,
-                          modality=self.modality)
-        builder.create_channel_info(bidsrun)
-        scans = self._create_scan_data()
-        self._load_scans(scans)
-        self._get_all_datasets()
-        return bidsrun
-
-    def add_scans(self, scans: list):
-        """
-        Add scans (runs) to the patient.
-
-        Parameters
-        ----------
-        scans : list[os.PathLike]
-
-        """
-        for scan in scans:
-            if not os.path.exists(scan):
-                raise OSError(f'{scan} does not exist. Please pass existing scans')
-            self._create_run(scan)
-
-    def load_dataset(self, session_id, run_id, kind):
-        """
-        Load in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure.
-
-        Parameters
-        ----------
-        session_id :
-        run_id :
-
-        """
-        # bids_fname = make_bids_basename(subject=self.subject_id,
-        #                                 session=self.session_id,
-        #                                 run=run_id)
-        # dataset = mne_bids.read_raw_bids(bids_fname=bids_fname, bids_root=self.datadir)
-        dataset = self.loader.load_dataset(session_id, run_id)
-        metadata = self.loader.load_sidecar_json()
 
     def get_filesizes(self):
         """
@@ -410,38 +402,9 @@ class BidsPatient(BaseBids):
 
         """
         size = 0
-        for f in self.dataset_fpaths():
+        for f in self.dataset_fpaths:
             size += os.path.getsize(f)
         return size
-
-    def _load_scans(self, scans: dict):
-        """
-        Load the scan dictionary into memory.
-
-        Parameters
-        ----------
-        scans :
-
-        """
-        self.scans = scans
-
-    def _create_scan_data(self):
-        """
-        Create the scans dictionary from whatever is in the scans.tsv file.
-
-        Returns
-        -------
-        dict
-            A dictionary representation of the scans
-
-        """
-        scans_df = self.loader.load_scans_tsv()
-        scans_dict = {}
-        for ind, row in scans_df.iterrows():
-            scans_dict[row['filename']] = {}
-            for index, value in row.iteritems():
-                scans_dict[row['filename']][index] = value
-        return scans_dict
 
     def _load_metadata(self, metadata: dict):
         """
@@ -454,7 +417,6 @@ class BidsPatient(BaseBids):
         """
         self.metadata = metadata
 
-
     def _create_metadata(self):
         """
         Create the metadata dictionary from whatever is in the participants.tsv file.
@@ -466,14 +428,26 @@ class BidsPatient(BaseBids):
 
         """
         participants_df = self.loader.load_participants_tsv()
-        participants_series = participants_df.loc[participants_df['participant_id'] == self.subject_id].squeeze()
-        series_dict = {'participant_id': participants_series.name}
+        participants_series = participants_df.loc[
+            participants_df["participant_id"]
+            == make_bids_basename(subject=self.subject_id)
+        ].squeeze()
+        series_dict = {"participant_id": participants_series.name}
         for index, value in participants_series.iteritems():
             series_dict[index] = value
         return series_dict
 
-    def add_participants_field(self, column_id, description: Union[str, dict], subject_val: str = 'n/a',
-                               default_val: str = 'n/a'):
+    def _write_to_participants_tsv(self, participants_df):
+        participants_df.reset_index(inplace=True)
+        self.writer.write_participants_tsv(participants_df)
+
+    def add_participants_field(
+        self,
+        column_id,
+        description: Union[str, dict],
+        subject_val: str = "n/a",
+        default_val: str = "n/a",
+    ):
         """
         Add a field to the participants files (tsv and json).
 
@@ -489,27 +463,36 @@ class BidsPatient(BaseBids):
             The value of column_id to fill for the rest of subjects in participants.tsv
 
         """
+        # write to participants json
         participants_dict = self.loader.load_participants_json()
         participants_df = self.loader.load_participants_tsv()
-        participants_df = participants_df.set_index('participant_id')
+        participants_df = participants_df.set_index("participant_id")
         if column_id not in participants_dict.keys():
-            participants_dict = BidsBuilder.add_field_to_dict(participants_dict, column_id, description)
+            participants_dict = BidsBuilder.add_field_to_participants_json(
+                participants_dict, column_id, description
+            )
             self.writer.write_participants_json(participants_dict)
 
+        # write to participants tsv file
         colnames = participants_df.columns
         if column_id not in colnames:
-            add_list = [default_val]*participants_df.shape[0]
+            add_list = [default_val] * participants_df.shape[0]
             participants_df[column_id] = add_list
             if subject_val != default_val:
-                participants_df.at[self.subject_id, column_id] = subject_val
-            self.writer.write_participants_tsv(participants_df)
+                participants_df.at[
+                    make_bids_basename(subject=self.subject_id), column_id
+                ] = subject_val
+            self._write_to_participants_tsv(participants_df)
         else:
-            warnings.warn('Field already exists for the participants file. Modifying instead')
+            warnings.warn(
+                "Field already exists for the participants file. Modifying instead"
+            )
             self.modify_participants_file(column_id, subject_val)
+
         metadata = self._create_metadata()
         self._load_metadata(metadata)
 
-    def remove_participants_field(self, column_id: str):
+    def remove_participants_field(self, column_id: str) -> Dict:
         """
         Remove a field from the participants files (tsv and json).
 
@@ -519,17 +502,27 @@ class BidsPatient(BaseBids):
             The name of the column to remove from the json and tsv files
 
         """
+        # modify at the JSON level
         participants_dict = self.loader.load_participants_json()
         participants_df = self.loader.load_participants_tsv()
+        participants_df = participants_df.set_index("participant_id")
         if column_id not in participants_dict.keys():
-            raise LookupError(f'The field {column_id} does not exist in the participants file')
-        del participants_dict[column_id]
+            raise LookupError(
+                f"The field {column_id} does not exist in the participants file"
+            )
+        participants_dict.pop(column_id, None)
         self.writer.write_participants_json(participants_dict)
+
+        # modify at the TSV level
         colnames = participants_df.columns
         if column_id not in colnames:
-            raise ValueError(f'The field {column_id} does not exist in the participants file')
-        participants_df = participants_df.drop(column_id, axis=1)
-        self.writer.write_participants_tsv(participants_df)
+            raise ValueError(
+                f"The field {column_id} does not exist in the participants file"
+            )
+        participants_df.drop(column_id, axis=1, inplace=True)
+        self._write_to_participants_tsv(participants_df)
+
+        # recreate metadata
         metadata = self._create_metadata()
         self._load_metadata(metadata)
 
@@ -545,38 +538,21 @@ class BidsPatient(BaseBids):
             The new value of the column_id for this BidsPatient
 
         """
+        # load in the data and do error check and set index
         participants_df = self.loader.load_participants_tsv()
+        participants_df = participants_df.set_index("participant_id")
         colnames = participants_df.columns
         if column_id not in colnames:
-            raise ValueError(f'{column_id} not in the existing participants file. Add it first.')
-        participants_df.at[self.subject_id, column_id] = new_value
-        self.writer.write_participants_tsv(participants_df)
+            raise ValueError(
+                f"{column_id} not in the existing participants file. Add it first."
+            )
+
+        # modify at the TSV level and reset_index
+        participants_df.at[
+            make_bids_basename(subject=self.subject_id), column_id
+        ] = new_value
+        self._write_to_participants_tsv(participants_df)
+
+        # recreate metadata
         metadata = self._create_metadata()
         self._load_metadata(metadata)
-
-    def add_resected_contacts(self, resected_list):
-        """
-        Add the resected contacts to the participants files (tsv and json) and loads in memory.
-
-        Parameters
-        ----------
-        resected_list :
-
-        """
-        resected_str = " ".join(resected_list)
-        self.add_participants_field('resected_contacts', 'The list of contacts corresponding to resected regions',
-                                    resected_str, 'n/a')
-        self.resected_contacts = resected_list
-
-    def add_original_subject_id(self, original_subject_id):
-        """
-        Add the original subject id to the participants files (tsv and json) and loads into memory.
-
-        Parameters
-        ----------
-        original_subject_id :
-
-        """
-        self.add_participants_field('original_subjectid', 'The subjectid in the clinical data source',
-                                    original_subject_id, 'n/a')
-        self.original_subject_id = original_subject_id

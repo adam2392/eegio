@@ -7,6 +7,8 @@ from natsort import natsorted
 class ContactsHelper:
     @staticmethod
     def expand_bipolar_chans(ch_list):
+        if isinstance(ch_list, np.ndarray):
+            ch_list = ch_list.tolist()
         if ch_list == []:
             return None
 
@@ -27,6 +29,8 @@ class ContactsHelper:
 
     @staticmethod
     def expand_ablated_chans(ch_list):
+        if isinstance(ch_list, np.ndarray):
+            ch_list = ch_list.tolist()
         if ch_list == []:
             return None
 

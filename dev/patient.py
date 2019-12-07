@@ -1,7 +1,7 @@
 import os
 import warnings
 
-from typing import List, Dict
+from typing import List
 
 
 class Patient(object):
@@ -112,7 +112,7 @@ class Patient(object):
     @classmethod
     def create_fake_example(self):
         import tempfile
-        from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+        from dev.dataset import EEGTimeSeries
 
         eegts = EEGTimeSeries.create_fake_example()
         patientid = "testid"

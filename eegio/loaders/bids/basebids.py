@@ -3,21 +3,18 @@ Authors: Adam Li and Patrick Myers.
 
 Version: 1.0
 """
-from abc import abstractmethod, abstractclassmethod, abstractproperty, abstractstaticmethod
 
-from collections import OrderedDict
 import os
-from typing import Union
 import warnings
-import pandas as pd
-import json
+from collections import OrderedDict
+from typing import Union
+
 import bids
 import bids.reports
 import mne_bids
-
-from eegio.base.utils.bids_helper import write_json, write_tsv
 from mne_bids.utils import print_dir_tree
-from mne_bids import make_bids_basename
+
+from eegio.base.utils.bids_helper import write_json
 
 
 class BaseBids(object):
@@ -57,11 +54,7 @@ class BaseBids(object):
 
     """
 
-    def __init__(
-            self,
-            datadir: Union[os.PathLike, str],
-            modality: str,
-    ):
+    def __init__(self, datadir: Union[os.PathLike, str], modality: str):
         """
         Initialize a BaseBids Object.
 
@@ -82,8 +75,7 @@ class BaseBids(object):
         self._store_params()
 
         if not os.path.exists(self.description_fpath):
-            self.create_dataset_folder(self.datadir,
-                                       name="BIDS_DATASET")
+            self.create_dataset_folder(self.datadir, name="BIDS_DATASET")
 
         # if not os.path.exists(self.participants_tsv_fpath):
         #     self.create_participants_files(self.participants_tsv_fpath, self.participants_json_fpath)
@@ -167,10 +159,10 @@ class BaseBids(object):
 
         Returns
         -------
-        A list of subject_id values.
+        A list of subject_val values.
 
         """
-        return mne_bids.utils.get_entity_vals(self.datadir, 'sub')
+        return mne_bids.utils.get_entity_vals(self.datadir, "sub")
 
     @property
     def num_subjects(self):
@@ -191,10 +183,7 @@ class BaseBids(object):
 
     def _store_params(self):
         """Store parameters into a dict object."""
-        self.parameter_dict.update(
-            datadir=self.datadir,
-            modality=self.modality,
-        )
+        self.parameter_dict.update(datadir=self.datadir, modality=self.modality)
 
     def create_dataset_folder(self, fpath, **dataset_description_kwargs):
         """
@@ -221,14 +210,6 @@ class BaseBids(object):
         main_report = counter.most_common()
         print(main_report)
 
-    # def create_participants_files(self, tsv_fpath, json_fpath):
-    #
-    #     empty_df = pd.DataFrame(columns=['participant_id', 'age', 'sex'])
-    #     empty_df.to_csv(tsv_fpath, sep='\t', index=False)
-    #     with open(json_fpath, 'w') as fp:
-    #         json.dump(participants_json, fp, indent=4)
-    #         fp.close()
-
     def _create_participants_json(self, fname, overwrite=False, verbose=False):
         """
         Create the participants json file for Bids compliance.
@@ -244,15 +225,19 @@ class BaseBids(object):
 
         """
         cols = OrderedDict()
-        cols['participant_id'] = {'Description': 'Unique participant identifier'}
-        cols['age'] = {'Description': 'Age of the participant at time of testing',
-                       'Units': 'years'}
-        cols['sex'] = {'Description': 'Biological sex of the participant',
-                       'Levels': {'F': 'female', 'M': 'male'}}
+        cols["participant_id"] = {"Description": "Unique participant identifier"}
+        cols["age"] = {
+            "Description": "Age of the participant at time of testing",
+            "Units": "years",
+        }
+        cols["sex"] = {
+            "Description": "Biological sex of the participant",
+            "Levels": {"F": "female", "M": "male"},
+        }
 
         write_json(fname, cols, overwrite, verbose)
 
-    # def _participants_tsv(self, raw, subject_id, fname, overwrite=False,
+    # def _participants_tsv(self, raw, subject_val, fname, overwrite=False,
     #                       verbose=True):
     #     """Create a participants.tsv file and save it.
     #
@@ -263,21 +248,21 @@ class BaseBids(object):
     #     ----------
     #     raw : instance of Raw
     #         The data as MNE-Python Raw object.
-    #     subject_id : str
+    #     subject_val : str
     #         The subject name in BIDS compatible format ('01', '02', etc.)
     #     fname : str
     #         Filename to save the participants.tsv to.
     #     overwrite : bool
     #         Whether to overwrite the existing file.
     #         Defaults to False.
-    #         If there is already data for the given `subject_id` and overwrite is
+    #         If there is already data for the given `subject_val` and overwrite is
     #         False, an error will be raised.
     #     verbose : bool
     #         Set verbose output to true or false.
     #
     #     """
-    #     subject_id = 'sub-' + subject_id
-    #     data = OrderedDict(participant_id=[subject_id])
+    #     subject_val = 'sub-' + subject_val
+    #     data = OrderedDict(participant_id=[subject_val])
     #
     #     subject_age = "n/a"
     #     sex = "n/a"
@@ -305,17 +290,17 @@ class BaseBids(object):
     #         orig_data = _from_tsv(fname)
     #         # whether the new data exists identically in the previous data
     #         exact_included = _contains_row(orig_data,
-    #                                        {'participant_id': subject_id,
+    #                                        {'participant_id': subject_val,
     #                                         'age': subject_age,
     #                                         'sex': sex})
     #         # whether the subject id is in the previous data
-    #         sid_included = subject_id in orig_data['participant_id']
+    #         sid_included = subject_val in orig_data['participant_id']
     #         # if the subject data provided is different to the currently existing
     #         # data and overwrite is not True raise an error
     #         if (sid_included and not exact_included) and not overwrite:
     #             raise FileExistsError('"%s" already exists in the participant '  # noqa: E501 F821
     #                                   'list. Please set overwrite to '
-    #                                   'True.' % subject_id)
+    #                                   'True.' % subject_val)
     #         # otherwise add the new data
     #         data = _combine(orig_data, data, 'participant_id')
     #
@@ -351,179 +336,3 @@ class BaseBids(object):
     #     write_json(fname, cols, overwrite, verbose)
     #
     #     return fname
-
-
-class BidsIO(object):
-    """
-    BIDS IO for EEG data base class.
-
-    Attributes
-    ----------
-    bidsdir : Union[str, os.PathLike]
-        The base directory for Bids data
-    subject_id : str
-        The unique identifier for the corresponding BidsPatient
-    session_id : str
-        The identifier for the BidsPatient session
-    run_id : str
-        The identifier for the snapshot recording
-    kind : str
-        The type of data in the snapshot recording
-
-    """
-
-    def __init__(self, bidsdir, subject_id, session_id, kind, run_id=None, datatype="edf"):
-        """
-        Initialize a BidsIO Object.
-
-        Should raise a ValueError if datatype is not supported
-
-        Parameters
-        ----------
-        bidsdir :
-        subject_id :
-        session_id :
-        kind :
-        run_id :
-        datatype :
-
-        """
-        self.rootdir = bidsdir
-        self.subject_id = subject_id
-        self.run_id = run_id
-        self.session_id = session_id
-        self.subjdir = os.path.join(bidsdir, make_bids_basename(subject=self.subject_id))  # 'sub-' + self.subject_id)
-        self.sessiondir = os.path.join(self.subjdir,
-                                       make_bids_basename(session=self.session_id))  # 'ses-' + self.session_id)
-        self.datadir = os.path.join(self.sessiondir, kind)
-        self.kind = kind
-        self.datatype = datatype
-
-        SUPPORTED_DATATYPES = ["edf", "fif", "nii", "nii.gz", "mgz"]
-        if datatype not in SUPPORTED_DATATYPES:
-            raise ValueError(f"Supported data file types are: {SUPPORTED_DATATYPES}")
-
-    @property
-    def bids_parameters(self):
-        """
-        Return a list of basic Bids parameters.
-
-        Returns
-        -------
-        List of parameters
-
-        """
-        return [self.rootdir, self.subject_id, self.session_id, self.kind, self.run_id]
-
-    @property
-    def participantsjson_fpath(self):
-        """
-        Get the path of the participants json file.
-
-        Returns
-        -------
-        Participants json path
-
-        """
-        return os.path.join(self.rootdir, "participants.json")
-
-    @property
-    def participantstsv_fpath(self):
-        """
-        Get the path of the participants tsv file.
-
-        Returns
-        -------
-        Participants tsv path
-
-        """
-        return os.path.join(self.rootdir, "participants.tsv")
-
-    @property
-    def eventstsv_fpath(self):
-        """
-        Get the path of the events tsv file.
-
-        Returns
-        -------
-        Events tsv path
-
-        """
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix="events.tsv"))
-
-    @property
-    def datafile_fpath(self):
-        """
-        Get the path of the data file.
-
-        Returns
-        -------
-        Data file path
-
-        """
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix=f"{self.kind}.{self.datatype}"))
-
-    @property
-    def result_fpath(self):
-        """
-        Get the path of the results zipped numpy file.
-
-        Returns
-        -------
-        Results path
-
-        """
-        return os.path.join(self.datadir, 'results', make_bids_basename(subject=self.subject_id,
-                                                                        session=self.session_id,
-                                                                        run=self.run_id,
-                                                                        suffix="results.npz"))
-
-    @property
-    def sidecarjson_fpath(self):
-        """
-        Get the path of the sidecar json file.
-
-        Returns
-        -------
-        Sidecar json path
-
-        """
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix=f"{self.kind}.json"))
-
-    @property
-    def chanstsv_fpath(self):
-        """
-        Get the path of the channel tsv file.
-
-        Returns
-        -------
-        Channel tsv path
-
-        """
-        return os.path.join(self.datadir, make_bids_basename(subject=self.subject_id,
-                                                             session=self.session_id,
-                                                             run=self.run_id,
-                                                             suffix="channels.tsv"))
-
-    @property
-    def scanstsv_fpath(self):
-        """
-        Get the path of the scans tsv file.
-
-        Returns
-        -------
-        Scans tsv path
-
-        """
-        return os.path.join(self.sessiondir, make_bids_basename(subject=self.subject_id,
-                                                                session=self.session_id,
-                                                                suffix="scans.tsv"))

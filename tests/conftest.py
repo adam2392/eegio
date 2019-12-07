@@ -12,6 +12,12 @@ def bids_dir(tmp_path_factory):
     return str(fn)
 
 
+@pytest.fixture(scope="session")
+def test_dir(tmp_path_factory):
+    fn = tmp_path_factory.mktemp("bids_data")
+    return str(fn)
+
+
 @pytest.fixture(scope="class")
 def bidspatient(tmp_path_factory):
     """
@@ -19,16 +25,19 @@ def bidspatient(tmp_path_factory):
 
     :return:
     """
-    from eegio.base.objects.bids.bids_patient import BidsPatient
-    test_subjectid = '0001'
-    test_fpath = os.path.join(os.getcwd(), "./data/bids_layout/")
+    from eegio.loaders.bids import BidsPatient
+
+    test_subjectid = "0001"
+    test_fpath = os.path.join(os.getcwd(), "data/bids_layout/")
     # test_fpath_path = tmp_path_factory.mktemp('bids_data')
     # test_fpath = str(test_fpath_path)
-    bidspat = BidsPatient(subject_id=test_subjectid,
-                          session_id='seizure',
-                          datadir=test_fpath,
-                          managing_user="test",
-                          modality='eeg')
+    bidspat = BidsPatient(
+        subject_id=test_subjectid,
+        session_id="seizure",
+        datadir=test_fpath,
+        managing_user="test",
+        modality="eeg",
+    )
     return bidspat
 
 
@@ -40,9 +49,9 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
     -------
 
     """
-    from eegio.base.objects.bids.bids_patient import BidsPatient
-    from eegio.base.objects.bids.bids_run import BidsRun
-    test_subjectid = '0001'
+    from eegio.loaders.bids import BidsRun
+
+    test_subjectid = "0001"
     session_id = "seizure"
     kind = "eeg"
     run_id = "01"
@@ -52,17 +61,19 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
     # original_fileid = edf_fpath
     #
     # # Necessary within the temporary directory structure to first create the patient.
-    # bidspat = BidsPatient(subject_id=test_subjectid,
+    # bidspat = BidsPatient(subject_val=test_subjectid,
     #                       session_id=session_id,
     #                       datadir=test_fpath,
     #                       kind=kind)
     # bidspat.add_scans([original_fileid])
 
-    run = BidsRun(subject_id=test_subjectid,
-                  session_id=session_id,
-                  run_id=run_id,
-                  datadir=test_fpath,
-                  modality=kind)
+    run = BidsRun(
+        subject_id=test_subjectid,
+        session_id=session_id,
+        run_id=run_id,
+        datadir=test_fpath,
+        modality=kind,
+    )
     return run
 
 
@@ -99,7 +110,7 @@ def eegts():
     """
     import numpy as np
     from eegio.base.objects.electrodes.elecs import Contacts
-    from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+    from dev.dataset import EEGTimeSeries
 
     contactlist = np.hstack(
         (

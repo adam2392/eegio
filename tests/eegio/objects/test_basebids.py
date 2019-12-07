@@ -1,9 +1,9 @@
-import sys
 import os
 import tempfile
 import pytest
 
-from eegio.base.objects.bids.basebids import BaseBids
+from eegio.loaders.bids import BaseBids
+
 
 class TestBaseBids:
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")

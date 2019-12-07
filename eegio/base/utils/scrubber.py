@@ -45,9 +45,7 @@ class ChannelScrub:
         return raw
 
     @classmethod
-    def look_for_bad_channels(
-        self, ch_names, bad_markers: List[str] = BAD_MARKERS
-    ):
+    def look_for_bad_channels(self, ch_names, bad_markers: List[str] = BAD_MARKERS):
         """
         Helper function to allow hardcoding of what are "bad channels"
 

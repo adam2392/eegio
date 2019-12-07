@@ -21,7 +21,7 @@ class BaseDataset(ABC):
     All datasets have the following characteristics:
     1. multivariate time series data: CxT array
     2. contacts: C electrode contacts, characterized by the Contacts class
-    3. subject_id: str of the patient identifier
+    3. subject_val: str of the patient identifier
     4. datasetid: str of the dataset identifier
     5. timepoints: list of T time points, can be a list of T tuples if each element was a window of data. See networkanalysis.
     6. model_attributes: dictionary of model attributes applied if a model was applied to the data.
@@ -146,6 +146,7 @@ class BaseDataset(ABC):
             self.montage = montage_inst
         else:
             self.montage = montage
+
     # def set_invasive_montage(self, montage: Union[mne.channels.DigMontage, Dict]):
     #     if isinstance(montage, Dict):
     #         montage_inst = mne.channels.make_dig_montage(montage, coord_frame="head")

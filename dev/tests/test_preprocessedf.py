@@ -8,7 +8,7 @@ import pytest
 
 import eegio
 from eegio.base.config import COLS_TO_REGEXP_EXPAND
-from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+from dev.dataset import EEGTimeSeries
 from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.loaders import Loader, DataSheetLoader
 from eegio.writers import DataWriter

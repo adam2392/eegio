@@ -24,13 +24,7 @@ NON_EEG_MARKERS = [
     "rfc",
 ]
 
-BAD_MARKERS = [
-    "$",
-    "FZ",
-    "GZ",
-    "DC",
-    "STI",
-]
+BAD_MARKERS = ["$", "FZ", "GZ", "DC", "STI"]
 
 """ Clinical excel sheet configuration """
 COLS_TO_REGEXP_EXPAND = [
@@ -45,5 +39,5 @@ MB = 1e6
 GB = 1e9
 
 
-EEGIO_DIR = os.path.normpath(os.path.join(os.getcwd(),'../..'))
-TEST_DATA_DIR = os.path.join(EEGIO_DIR, 'data', 'ieeg_ecog_test.edf')
+EEGIO_DIR = os.path.normpath(os.path.join(os.getcwd(), "../.."))
+TEST_DATA_DIR = os.path.join(EEGIO_DIR, "data", "ieeg_ecog_test.edf")

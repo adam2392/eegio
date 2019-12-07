@@ -1,7 +1,7 @@
 {
     "TaskName": null,
     "Manufacturer": "nk",
-    "PowerLineFrequency": 50,
+    "PowerLineFrequency": 60,
     "SamplingFrequency": 200.0,
     "SoftwareFilters": "n/a",
     "RecordingDuration": 235.995,

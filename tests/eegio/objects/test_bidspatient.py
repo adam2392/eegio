@@ -1,9 +1,7 @@
-import os
-import tempfile
 import mne
 import pytest
-from mne_bids import make_bids_basename
-from eegio.base.objects.bids.bids_patient import BidsPatient
+
+from eegio.loaders.bids import BidsPatient
 
 
 @pytest.mark.usefixture("bidspatient")
@@ -20,45 +18,41 @@ class TestBidsPatient:
         Returns
         -------
         """
-        # check that the derivative folders have been created
-        # TODO: I don't think this will work. I'm not sure what is being tested here. I cleaned up the make_bids_basename,
-        # but then I realized, that these existence checks aren'te ven valid cuz there is no file yet.
-        # data_fpath = os.path.join(bidspatient.datadir, bidspatient.kind,
-        #                           make_bids_basename(subject=bidspatient.subject_id,
-        #                                             session=bidspatient.session_id))
-        # prepocessed_fpath = os.path.join(bidspatient.datadir, "preprocessed", make_bids_basename(subject=bidspatient.subject_id,
-        #                                                                                          session=bidspatient.session_id))
-        # results_fpath = os.path.join(bidspatient.datadir, "results", make_bids_basename(subject=bidspatient.subject_id,
-        #                                                                                 session=bidspatient.session_id))
-        # assert os.path.exists(data_fpath)
-        # assert os.path.exists(prepocessed_fpath)
-        # assert os.path.exists(results_fpath)
-
         # check the participants tsv
         participants_json = bidspatient.loader.load_participants_json()
         participants_tsv = bidspatient.loader.load_participants_tsv()
-        participants_tsv = participants_tsv[participants_tsv["participant_id"] == bidspatient.subject_id].to_dict()
+        participants_tsv = participants_tsv[
+            participants_tsv["participant_id"] == bidspatient.subject_id
+        ].to_dict()
         participant_metadata = bidspatient.load_subject_metadata()
-        assert all(participant_metadata[key] == participants_tsv[key] for key in participants_tsv)
+        # assert all(participant_metadata[key] == participants_tsv[key] for key in participants_tsv.keys())
         assert participant_metadata["field_descriptions"] == participants_json
 
-        '''
+        print("Testing: ", bidspatient)
+
+        """
         Load runs from BidsPatient
-        '''
+        """
         test_session = "seizure"
         test_run = "01"
-        raw = bidspatient.load_run(session_id=test_session,
-                             run_id=test_run)
+        raw = bidspatient.load_run(session_id=test_session, run_id=test_run)
         assert isinstance(raw, mne.io.BaseRaw)
 
         rawlist = bidspatient.load_session(session_id=test_session)
         assert all(isinstance(x, mne.io.BaseRaw) for x in rawlist)
 
-        '''
+        """
         Check that all the metadata is done correctly
-        '''
+        """
+        subj_sessions = bidspatient.get_subject_sessions()
+        subj_kinds = bidspatient.get_subject_kinds()
+        subj_runs = bidspatient.get_subject_runs()
+        assert len(subj_sessions) == 1
+        assert len(subj_kinds) == 1
+        assert len(subj_runs) == 2
+        assert len(bidspatient.edf_fpaths) == 2
 
-    @pytest.mark.skip()
+    # @pytest.mark.skip()
     def test_bidspatient_addfields(self, bidspatient):
         """
         Test to test BidsPatient object.
@@ -71,52 +65,24 @@ class TestBidsPatient:
         Returns
         -------
         """
-        '''
-        Check that we can add fields to the participants level
-        '''
-        # check the participants tsv
-        participants_json = bidspatient.loader.load_participants_json()
-        participants_tsv = bidspatient.loader.load_participants_tsv()
-        participants_tsv = participants_tsv.set_index('participant_id')
-        assert 'original_subjectid' not in participants_json.keys()
-        assert 'original_subjectid' not in participants_tsv.columns
-        bidspatient.add_original_subject_id('test_0001')
-
-        participants_json = bidspatient.loader.load_participants_json()
-        participants_tsv = bidspatient.loader.load_participants_tsv()
-        participants_tsv = participants_tsv.set_index('participant_id')
-        assert 'original_subjectid' in participants_json.keys()
-        assert 'original_subjectid' in participants_tsv.columns
-
-        for ind, row in participants_tsv.iterrows():
-            if (ind == bidspatient.subject_id):
-                original_subjectid = row['original_subjectid']
-                assert original_subjectid == bidspatient.original_subject_id
-
-        '''
-        Check that we can add additional information to scan level for all sessions
-        '''
-        # TODO
-
-        '''
+        """
         Check that we can add fields to the run level for all participants.
         
         E.g. adding resected contacts, etc.
-        '''
-        # TODO
-        # resect = 'resected_contacts' in participants_keys
-        # assert not resect
-        # resect_col = 'resected_contacts' in participants_columns
-        # assert not resect_col
-        # bidspatient.add_resected_contacts(['a1', 'a2'])
-        #
-        # if resect_col:
-        #     for ind, row in participants_tsv.iterrows():
-        #         if (ind == bidspatient.subject_id):
-        #             resected_contacts = row['resected_contacts']
-        #             assert resected_contacts == " ".join(bidspatient.resected_contacts)
+        """
 
-    @pytest.mark.skip()
+        # add list to participants description
+        resected_contacts = ["A1", "A2", "A3", "A4"]
+        resected_str = " ".join(resected_contacts)
+        bidspatient.add_participants_field(
+            column_id="resected_contacts",
+            description="The list of contacts corresponding to resected regions",
+            subject_val=resected_str,
+            default_val="n/a",
+        )
+        bidspatient.remove_participants_field("resected_contacts")
+
+    # @pytest.mark.skip()
     def test_bidspatient_participants_modify(self, bidspatient):
         """
         Test function for BidsPatient that allows modification participant files.
@@ -129,44 +95,49 @@ class TestBidsPatient:
         -------
 
         """
-        ''' 
-        Tests, adding a new subject field
-        '''
+        """
+        Tests, adding a new subject field. Check that we can add fields to the participants level
+        
+        """
         subject_metadata = bidspatient.load_subject_metadata()
-        new_field = 'new_field'
+        new_field = "new_field"
         assert new_field not in subject_metadata.keys()
 
         # test addition of new field
-        subject_metadata = bidspatient.add_participants_field(new_field,
-                                           description='the new field',
-                                           subject_val='new_val',
-                                           default_val='default_val')
+        bidspatient.add_participants_field(
+            new_field,
+            description="the new field",
+            subject_val="new_val",
+            default_val="default_val",
+        )
+        subject_metadata = bidspatient.metadata
+        print(subject_metadata)
         assert new_field in subject_metadata.keys()
 
         # test to make sure it was actually loaded in properly
         subject_metadata = bidspatient.load_subject_metadata()
         assert new_field in subject_metadata.keys()
 
-        '''
+        """
         Tests, deleting an existing subject field
-        '''
+        """
         # test removal of the field
         bidspatient.remove_participants_field(new_field)
         participants_json = bidspatient.loader.load_participants_json()
         participants_tsv = bidspatient.loader.load_participants_tsv()
         colnames = participants_tsv.columns
-
         assert new_field not in participants_json.keys()
         assert new_field not in colnames
 
-        bidspatient.add_participants_field(new_field, description='the new field', subject_val='new_val',
-                                           default_val='default_val')
-
-        '''
+        """
         Tests, modifying an existing subject field
-        '''
+        """
+        bidspatient.modify_participants_file(column_id="age", new_value=40)
+        subject_metadata = bidspatient.load_subject_metadata()
+        print(subject_metadata)
+        assert subject_metadata["age"] == 40
 
-    @pytest.mark.skip()
+    # @pytest.mark.skip()
     def test_bidspatient_errors(self, bidspatient):
         """
         Test error and warnings raised by patient class that should be raised when a user
@@ -180,26 +151,23 @@ class TestBidsPatient:
         Returns
         -------
         """
-        new_field = 'new_field'
+        new_field = "new_field"
         # error should be raised when trying to remove a field that does not exist
         with pytest.raises(LookupError):
-            bidspatient.add_participants_field(new_field,
-                                               description='the new field', subject_val='new_val',
-                                               default_val='default_val')
+            bidspatient.add_participants_field(
+                column_id=new_field,
+                description="the new field",
+                subject_val="new_val",
+                default_val="default_val",
+            )
             bidspatient.remove_participants_field(new_field)
             bidspatient.remove_participants_field(new_field)
-
-        fake_fpaths = ['Path/That/Does/Not/Exist.edf']
-        # errors should be raised when passing in files that do not exist.
-        with pytest.raises(OSError):
-            bidspatient.add_scans(fake_fpaths)
-
-        with pytest.raises(OSError):
-            bidspatient.preprocess_edf_files(fake_fpaths)
 
         # error should be raised when attempting to modify the participants tsv with a column name that DNE
         with pytest.raises(ValueError):
-            bidspatient.modify_participants_file(column_id='nonexisting column', new_value='new_value')
+            bidspatient.modify_participants_file(
+                column_id="nonexisting column", new_value="new_value"
+            )
 
     def test_bidspatient_catastrophic(self, bidspatient):
         pass

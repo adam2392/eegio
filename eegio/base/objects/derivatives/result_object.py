@@ -2,7 +2,7 @@ from typing import Dict
 
 import numpy as np
 
-from eegio.base.objects.dataset.basedataobject import BaseDataset
+from eegio.base.objects.derivatives.basedataobject import BaseDataset
 from eegio.base.objects.electrodes.elecs import Contacts
 
 

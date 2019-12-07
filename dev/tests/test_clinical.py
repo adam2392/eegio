@@ -6,7 +6,6 @@ import tempfile
 import pandas as pd
 import pytest
 
-from eegio.base.objects.clinical import PatientClinical, DatasetClinical
 from eegio.loaders import DataSheetLoader
 
 

@@ -4,19 +4,17 @@ Authors: Adam Li and Patrick Myers.
 Version: 1.0
 """
 
-import os
 import json
-import datetime
+import os
 from typing import Union
-import pandas as pd
-import bids
-import tempfile
-from mne_bids import make_bids_basename
-from mne_bids.utils import _parse_bids_filename
-import mne_bids
+
 import mne
-from mne_bids import write_raw_bids, make_bids_folders
+import mne_bids
 import numpy as np
+import pandas as pd
+from mne_bids import make_bids_basename
+from mne_bids import write_raw_bids, make_bids_folders
+from mne_bids.utils import _parse_bids_filename
 
 
 class BidsBuilder(object):
@@ -41,19 +39,25 @@ class BidsBuilder(object):
             datadir = str(datadir)
 
         # create bids folders for this subject
-        make_bids_folders(subject=subject,
-                          kind=kind,
-                          session=session_id,
-                          output_path=datadir,
-                          make_dir=True)
+        make_bids_folders(
+            subject=subject,
+            kind=kind,
+            session=session_id,
+            output_path=datadir,
+            make_dir=True,
+        )
 
     @staticmethod
-    def convert_to_bids(edf_fpath, bids_dir, bids_basename,
-                        excluded_contacts=None,
-                        eog_contacts=None,
-                        misc_contacts=None,
-                        overwrite=False,
-                        use_preprocess_pipeline=True):
+    def convert_to_bids(
+            edf_fpath,
+            bids_dir,
+            bids_basename,
+            excluded_contacts=None,
+            eog_contacts=None,
+            misc_contacts=None,
+            overwrite=False,
+            use_preprocess_pipeline=True,
+    ):
         """
         Convert the passed edf file into the Bids format.
 
@@ -89,10 +93,9 @@ class BidsBuilder(object):
             eog=eog_contacts,
             misc=misc_contacts,
         )
-        output_path = write_raw_bids(raw, bids_basename,
-                                     output_path=bids_dir,
-                                     overwrite=overwrite,
-                                     verbose=False)
+        output_path = write_raw_bids(
+            raw, bids_basename, output_path=bids_dir, overwrite=overwrite, verbose=False
+        )
         return output_path
 
     @staticmethod
@@ -123,48 +126,66 @@ class BidsBuilder(object):
 
         """
         params = _parse_bids_filename(bids_fname, verbose=False)
-        bids_basename = make_bids_basename(subject=params['sub'],
-                                           session=params['ses'],
-                                           run=params['run'],
-                                           suffix="eeg.edf")
+        bids_basename = make_bids_basename(
+            subject=params["sub"],
+            session=params["ses"],
+            run=params["run"],
+            suffix="eeg.edf",
+        )
         raw = mne_bids.read_raw_bids(bids_basename, bids_dir)
 
         # get events and convert to annotations
         events, events_id = mne.events_from_annotations(raw)
-        onsets = events[:, 0] / raw.info['sfreq']
+        onsets = events[:, 0] / raw.info["sfreq"]
         durations = np.zeros_like(onsets)  # assumes instantaneous events
         descriptions = events[:, 2]
-        annotations = mne.annotations.Annotations(onset=onsets, duration=durations,
-                                                  description=descriptions,
-                                                  orig_time=raw.info['meas_date'])
+        annotations = mne.annotations.Annotations(
+            onset=onsets,
+            duration=durations,
+            description=descriptions,
+            orig_time=raw.info["meas_date"],
+        )
 
         # add a bids run
-        preprocessed_dir = os.path.join(bids_dir,
-                                        make_bids_basename(subject=params['sub']),
-                                        make_bids_basename(session=params['ses']),
-                                        f"{kind}")
+        preprocessed_dir = os.path.join(
+            bids_dir,
+            make_bids_basename(subject=params["sub"]),
+            make_bids_basename(session=params["ses"]),
+            f"{kind}",
+        )
         if not os.path.exists(preprocessed_dir):
             os.makedirs(preprocessed_dir)
 
-        bids_basename = make_bids_basename(subject=params['sub'],
-                                           session=params['ses'],
-                                           run=params['run'],
-                                           processing="fif",
-                                           suffix="raw")
+        bids_basename = make_bids_basename(
+            subject=params["sub"],
+            session=params["ses"],
+            run=params["run"],
+            processing="fif",
+            suffix="raw",
+        )
         # save a fif copy and reload it
-        raw.save(os.path.join(preprocessed_dir, bids_basename + ".fif"), overwrite=overwrite)
-        raw = mne.io.read_raw_fif(os.path.join(preprocessed_dir, bids_basename + ".fif"))
+        raw.save(
+            os.path.join(preprocessed_dir, bids_basename + ".fif"), overwrite=overwrite
+        )
+        raw = mne.io.read_raw_fif(
+            os.path.join(preprocessed_dir, bids_basename + ".fif")
+        )
 
         # convert into fif
-        output_path = write_raw_bids(raw, bids_basename,
-                                     output_path=bids_dir,
-                                     overwrite=overwrite,
-                                     # events_data=events,
-                                     verbose=False)
+        output_path = write_raw_bids(
+            raw,
+            bids_basename,
+            output_path=bids_dir,
+            overwrite=overwrite,
+            # events_data=events,
+            verbose=False,
+        )
         return output_path
 
     @staticmethod
-    def make_preprocessed_folder(datadir, subject_id, session='one', preprocess_name='preprocessed'):
+    def make_preprocessed_folder(
+            datadir, subject_id, session="one", preprocess_name="preprocessed"
+    ):
         """
         Create the preproceesed data folder in the correct location if it does not already exist.
 
@@ -182,7 +203,9 @@ class BidsBuilder(object):
             The name of the preprocessed folder
 
         """
-        basedir = os.path.join(datadir, make_bids_basename(subject=subject_id, session=session))
+        basedir = os.path.join(
+            datadir, make_bids_basename(subject=subject_id, session=session)
+        )
         preprocessed_dir = os.path.join(basedir, preprocess_name)
         if os.path.exists(preprocessed_dir):
             return 1
@@ -190,7 +213,7 @@ class BidsBuilder(object):
             os.mkdir(preprocessed_dir)
 
     @staticmethod
-    def make_results_folder(datadir, subject_id, session='one', result_name='results'):
+    def make_results_folder(datadir, subject_id, session="one", result_name="results"):
         """
         Create the results folder in the correct location if it does not already exist.
 
@@ -204,7 +227,9 @@ class BidsBuilder(object):
         result_name :
 
         """
-        basedir = os.path.join(datadir, make_bids_basename(subject=subject_id, session=session))
+        basedir = os.path.join(
+            datadir, make_bids_basename(subject=subject_id, session=session)
+        )
         results_dir = os.path.join(basedir, result_name)
         if os.path.exists(results_dir):
             return 1
@@ -212,7 +237,9 @@ class BidsBuilder(object):
             os.mkdir(results_dir)
 
     @staticmethod
-    def add_field_to_dict(current_dict: dict, new_field: str, description: Union[str, dict]):
+    def add_field_to_participants_json(
+            current_dict: dict, new_field: str, description: Union[str, dict]
+    ):
         """
         Add a new field to the participants.json file.
 
@@ -229,7 +256,7 @@ class BidsBuilder(object):
         The modified dict object
 
         """
-        new_dict = {new_field: description}
+        new_dict = {new_field: {"Description": description}}
 
         current_dict.update(new_dict)
         return current_dict
@@ -251,12 +278,14 @@ class BidsBuilder(object):
         """
         participants_df = loader.load_participants_tsv()
         colnames = participants_df.columns
-        new_df = pd.DataFrame([[subject_id] + ['n/a'] * (len(colnames) - 1)], columns=colnames)
+        new_df = pd.DataFrame(
+            [[subject_id] + ["n/a"] * (len(colnames) - 1)], columns=colnames
+        )
         if participants_df.empty:
             participants_df = new_df
         else:
             participants_df.append(new_df)
-        participants_df = participants_df.set_index('participant_id')
+        participants_df = participants_df.set_index("participant_id")
         writer.write_participants_tsv(participants_df)
         return participants_df
 
@@ -295,9 +324,9 @@ class BidsBuilder(object):
         """
         channels_data = bidsrun.loader.load_channels_tsv()
         colnames = channels_data.columns
-        if 'notes' not in colnames:
-            notes = [''] * channels_data.shape[0]
-            channels_data['notes'] = notes
+        if "notes" not in colnames:
+            notes = [""] * channels_data.shape[0]
+            channels_data["notes"] = notes
         bidsrun.writer.write_channels_tsv(channels_data)
 
 
@@ -316,8 +345,8 @@ def _to_tsv(data, fname):
     n_rows = len(data[list(data.keys())[0]])
     output = _tsv_to_str(data, n_rows)
 
-    with open(fname, 'wb') as f:
-        f.write(output.encode('utf-8'))
+    with open(fname, "wb") as f:
+        f.write(output.encode("utf-8"))
 
 
 def _tsv_to_str(data, rows=5):
@@ -340,15 +369,15 @@ def _tsv_to_str(data, rows=5):
     n_rows = len(data[col_names[0]])
     output = list()
     # write headings.
-    output.append('\t'.join(col_names))
+    output.append("\t".join(col_names))
 
     # write column data.
     max_rows = min(n_rows, rows)
     for idx in range(max_rows):
         row_data = list(str(data[key][idx]) for key in data)
-        output.append('\t'.join(row_data))
+        output.append("\t".join(row_data))
 
-    return '\n'.join(output)
+    return "\n".join(output)
 
 
 def write_json(fname, dictionary, overwrite=False, verbose=False):
@@ -368,13 +397,15 @@ def write_json(fname, dictionary, overwrite=False, verbose=False):
 
     """
     if os.path.exists(fname) and not overwrite:
-        raise FileExistsError('"%s" already exists. Please set '  # noqa: F821
-                              'overwrite to True.' % fname)
+        raise FileExistsError(
+            '"%s" already exists. Please set '  # noqa: F821
+            "overwrite to True." % fname
+        )
 
     json_output = json.dumps(dictionary, indent=4)
-    with open(fname, 'w') as fid:
+    with open(fname, "w") as fid:
         fid.write(json_output)
-        fid.write('\n')
+        fid.write("\n")
 
     if verbose is True:
         print(os.linesep + "Writing '%s'..." % fname + os.linesep)
@@ -398,8 +429,10 @@ def write_tsv(fname, dictionary, overwrite=False, verbose=False):
 
     """
     if os.path.exists(fname) and not overwrite:
-        raise FileExistsError('"%s" already exists. Please set '  # noqa: F821
-                              'overwrite to True.' % fname)
+        raise FileExistsError(
+            '"%s" already exists. Please set '  # noqa: F821
+            "overwrite to True." % fname
+        )
     _to_tsv(dictionary, fname)
 
     if verbose:

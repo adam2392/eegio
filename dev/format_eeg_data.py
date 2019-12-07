@@ -4,7 +4,7 @@ import os
 from typing import List, Dict
 
 from eegio.base.utils.data_structures_utils import NumpyEncoder
-from eegio.loaders.loader import Loader
+from dev.loader import Loader
 from eegio.writers.saveas import DataWriter
 
 
@@ -21,7 +21,6 @@ def run_formatting_eeg_directory(
 ):
     import mne_bids
     from mne_bids import write_raw_bids, make_bids_basename
-    from mne_bids.utils import print_dir_tree
 
     # create study path
     study_path = os.path.join(datadir, study_name)
@@ -86,7 +85,6 @@ def run_formatting_eeg(
         clinical_metadata["bad_contacts"] = list(
             set(bad_contacts).union(set(bad_contacts_found))
         )
-
 
     # add all this additional metadata
     eegts.update_metadata(**clinical_metadata)

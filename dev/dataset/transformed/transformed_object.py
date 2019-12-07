@@ -1,7 +1,7 @@
 from enum import Enum
 
 import numpy as np
-from eegio.base.objects.dataset.result_object import Result
+from dev.dataset import Result
 
 deltaband = [0, 4]
 thetaband = [4, 8]

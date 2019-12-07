@@ -1,8 +1,8 @@
 import pytest
 
-from eegio.base.objects.dataset.eegts_object import EEGTimeSeries
+from dev.dataset import EEGTimeSeries
 from eegio.base.objects.electrodes.elecs import Contacts
-from eegio.loaders.loader import Loader
+from dev.loader import Loader
 
 
 @pytest.mark.usefixture("fif_fpath")

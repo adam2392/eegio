@@ -63,39 +63,41 @@ class TestBidsRun:
         # get the channel labels
         chs = bidsrun_scalp.chs
 
-        '''
+        """
         First test adding additional metadata using the sidecarjson.
-        '''
+        """
         # test field not default written into sidecar
         institution_name = "National institute of Health"
         bidsrun_scalp.delete_sidecar_field(key="InstitutionName")
-        run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName",
-                                                         value=institution_name,
-                                                         overwrite=False)
+        run_metadata = bidsrun_scalp.modify_sidecar_json(
+            key="InstitutionName", value=institution_name, overwrite=False
+        )
         assert bidsrun_scalp.get_run_metadata()["InstitutionName"] == institution_name
         # this should have been written
 
         # test for capitalization specificity
         manufacturer = "nk"
-        run_metadata = bidsrun_scalp.modify_sidecar_json(key="manufacturer",
-                                                         value=manufacturer,
-                                                         overwrite=True)
+        run_metadata = bidsrun_scalp.modify_sidecar_json(
+            key="manufacturer", value=manufacturer, overwrite=True
+        )
         assert bidsrun_scalp.get_run_metadata()["Manufacturer"] == manufacturer
         # Keynames should always start with capital letter when passed in
-        assert all(x in bidsrun_scalp.get_run_metadata().keys()
-                   for x in ["Manufacturer", "InstitutionName"])
+        assert all(
+            x in bidsrun_scalp.get_run_metadata().keys()
+            for x in ["Manufacturer", "InstitutionName"]
+        )
 
         # test for field that needs to be overwritten
         institution_name = "National institute of Health_v2"
-        run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName",
-                                                         value=institution_name,
-                                                         overwrite=True)
+        run_metadata = bidsrun_scalp.modify_sidecar_json(
+            key="InstitutionName", value=institution_name, overwrite=True
+        )
         # this should have been rewritten
         assert bidsrun_scalp.get_run_metadata()["InstitutionName"] == institution_name
 
-        '''
+        """
         Second test adding additional metadata using the channels tsv file.
-        '''
+        """
         # determine all the electrode types
         chtypes = bidsrun_scalp.get_channel_types()
         # determine all the channel status
@@ -105,13 +107,17 @@ class TestBidsRun:
         column_id = "low_cutoff"
         value = "0.0"
         for channel_id in chs:
-            bidsrun_scalp.modify_channel_info(channel_id=channel_id, column_id=column_id, value=value)
+            bidsrun_scalp.modify_channel_info(
+                channel_id=channel_id, column_id=column_id, value=value
+            )
 
         # append new channel information
         column_id = "resected"
         value = True
         for channel_id in chs:
-            bidsrun_scalp.append_channel_info(column_id=column_id, channel_id=channel_id, value=value)
+            bidsrun_scalp.append_channel_info(
+                column_id=column_id, channel_id=channel_id, value=value
+            )
 
     def testbidsrun_errors(self, bidsrun_scalp):
         # get the channel labels
@@ -120,25 +126,37 @@ class TestBidsRun:
         # assert errors that should arise when run tries to write certain data types
         with pytest.raises(RuntimeError):
             institution_name = "National institute of Health"
-            run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName", value=institution_name)
+            run_metadata = bidsrun_scalp.modify_sidecar_json(
+                key="InstitutionName", value=institution_name
+            )
             institution_name = "National institute of Health_v2"
-            run_metadata = bidsrun_scalp.modify_sidecar_json(key="InstitutionName", value=institution_name)
+            run_metadata = bidsrun_scalp.modify_sidecar_json(
+                key="InstitutionName", value=institution_name
+            )
 
         # error should be raised when both dictionary mapping and channel w/ default value is passed in
-        with pytest.raises(TypeError, match="Passed in both value and channel dictionary. "
-                                            "Only pass in one!"):
-            bidsrun_scalp.append_channel_info(column_id="test",
-                                              channel_id=chs[0],
-                                              value="test",
-                                              channel_dict={ch: "test" for ch in chs})
+        with pytest.raises(
+            TypeError,
+            match="Passed in both value and channel dictionary. " "Only pass in one!",
+        ):
+            bidsrun_scalp.append_channel_info(
+                column_id="test",
+                channel_id=chs[0],
+                value="test",
+                channel_dict={ch: "test" for ch in chs},
+            )
 
         # error should be raised when attempting to modify a channel that does not exist
         with pytest.raises(LookupError):
-            bidsrun_scalp.modify_channel_info(column_id='low_cutoff', channel_id='Nonexisting channel', value='2.0')
+            bidsrun_scalp.modify_channel_info(
+                column_id="low_cutoff", channel_id="Nonexisting channel", value="2.0"
+            )
 
         # error should be raised when attempting to modify a column that does not exist
         with pytest.raises(ValueError):
-            bidsrun_scalp.modify_channel_info(column_id='Nonexisting column', channel_id='EEG C4-Ref', value=True)
+            bidsrun_scalp.modify_channel_info(
+                column_id="Nonexisting column", channel_id="EEG C4-Ref", value=True
+            )
 
         # run scrubber through "good channels" and make sure internal functionality didn't mess things up
         # get the channel labels

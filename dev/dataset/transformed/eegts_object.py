@@ -7,7 +7,7 @@ import numpy as np
 from deprecated import deprecated
 
 from eegio.base import config
-from eegio.base.objects.dataset.basedataobject import BaseDataset
+from dev.dataset import BaseDataset
 from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.base.utils.data_structures_utils import compute_samplepoints
 from eegio.base.utils.scrubber import ChannelScrub
