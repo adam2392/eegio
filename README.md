@@ -26,8 +26,8 @@ EEGio is intended to be a lightweight wrapper for easily analyzing large batches
     seaborn
     pandas
     mne
-    pyedflib
-    xlrd
+    pyedflib (deprecated)
+    xlrd (deprecated)
     
 Setup virtual environment via Conda inside your Unix-friendly terminal (aka Mac, or Linux) is recommended (see https://docs.anaconda.com/anaconda/install/):
 
@@ -120,17 +120,11 @@ easily, so that raw EEG ts are readily accessible in Python friendly format.
 Stores configuration files for the settings. Stores utility and helper functions. In addition, defines dataset objects
 that we use in this module: mainly Contacts, EEGTimeSeries, and Result
 
-2. format/
-Stores class objects for how you should preformat any incoming raw data. This defines the interface for the raw time series eeg, and clinical metadata.
-
-3. loaders/
+2. loaders/
 This defines code that links together different parts of the eegio API to allow easy data pipelines to be setup.
 
-4. writers/
+3. writers/
 This defines writers of data to save into hdf, npy, mat files.
-
-5. dataset_test/
-A dataset tester that is hardcoded to check quality of certain labeling and annotations.
 
 # Contributing
 We welcome contributions from anyone. Our [issues](https://github.com/adam2392/eegio/issues) page is full of places we could use help! 
