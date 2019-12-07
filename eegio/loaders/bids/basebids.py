@@ -202,7 +202,7 @@ class BaseBids(object):
 
     def print_summary(self):
         """Print a summary of the patient in the form of a directory tree showing all available data."""
-        if self.modality is not "MRI":
+        if self.modality != "MRI":
             warnings.warn("Print summary only works for neuroimaging type datasets.")
             return
         report = bids.reports.BIDSReport(self.query)

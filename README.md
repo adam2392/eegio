@@ -26,6 +26,7 @@ EEGio is intended to be a lightweight wrapper for easily analyzing large batches
     pandas
     mne
     mne-bids
+    pybids
     pyedflib (deprecated)
     xlrd (deprecated)
     
