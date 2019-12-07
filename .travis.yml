@@ -16,7 +16,7 @@ install:
 # run conda /pip installation of packages
   - conda config --add channels conda-forge
   - conda install numpy pandas scikit-learn scipy mne mne-bids natsort
-  - pip pybids
+  - pip install pybids
   - conda install pytest black check-manifest
   - conda install pyedflib xlrd
   - pip install codecov

@@ -48,6 +48,7 @@ class BidsRun(BaseBids):
         run_id: str,
         datadir: Union[str, os.PathLike] = None,
         modality: str = "ieeg",
+        montage: str = None,
     ):
         """
         Initialize a BidsRun object.
