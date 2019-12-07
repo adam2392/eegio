@@ -1,6 +1,8 @@
 language: python
 python:
   - "3.7"
+env:
+  - CODECOV_TOKEN="9dc663c6-d351-41f4-8bab-b27b6c4cc6b3"
 # command to install dependencies
 install:
   # commands to get Miniconda3 setup
@@ -18,7 +20,6 @@ install:
   - pip install codecov
 #  - pip install -r requirements.txt
 # command to run tests
-# CODECOV_TOKEN="9dc663c6-d351-41f4-8bab-b27b6c4cc6b3"
 script:
   - pytest ./tests/
   - codecov
