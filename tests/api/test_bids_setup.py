@@ -2,7 +2,7 @@ import mne_bids
 import pytest
 from mne_bids import make_bids_basename
 
-from eegio.base.utils.bids_helper import BidsBuilder
+from eegio.base.utils.bids_helper import BidsBuilder, BidsUtils, BidsConverter
 
 
 @pytest.mark.usefixture(["bids_dir", "edf_fpath"])
@@ -40,7 +40,7 @@ class TestBidsPatient:
             subject=test_subjectid, session=test_sessionid, run=test_runid
         )
         # call bidsbuilder pipeline
-        bids_path = BidsBuilder.convert_to_bids(
+        bids_path = BidsConverter.convert_to_bids(
             edf_fpath=edf_fpath,
             bids_dir=bids_dir,
             bids_basename=bids_basename,
@@ -48,18 +48,18 @@ class TestBidsPatient:
         )
         # convert this into a fif format
         edf_fname = bids_basename
-        bids_path = BidsBuilder.preprocess_into_fif(edf_fname, bids_path)
+        bids_path = BidsConverter.preprocess_into_fif(edf_fname, bids_path)
 
         # load it in using mne_bids again
         bids_basename = (
-                make_bids_basename(
-                    subject=test_subjectid,
-                    session=test_sessionid,
-                    processing="fif",
-                    run=test_runid,
-                    suffix="raw_eeg",
-                )
-                + ".fif"
+            make_bids_basename(
+                subject=test_subjectid,
+                session=test_sessionid,
+                processing="fif",
+                run=test_runid,
+                suffix="raw_eeg",
+            )
+            + ".fif"
         )
         raw = mne_bids.read_raw_bids(bids_basename, bids_path)
 

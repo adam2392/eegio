@@ -36,7 +36,7 @@ class BidsIO(object):
     """
 
     def __init__(
-            self, bidsdir, subject_id, session_id, kind, run_id=None, datatype="edf"
+        self, bidsdir, subject_id, session_id, kind, run_id=None, datatype="edf"
     ):
         """
         Initialize a BidsIO Object.

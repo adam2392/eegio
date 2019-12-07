@@ -12,7 +12,7 @@ import mne_bids.utils
 from mne_bids import make_bids_basename
 
 from eegio.loaders.bids.basebids import BaseBids
-from eegio.base.utils.bids_helper import BidsBuilder
+from eegio.base.utils.bids_helper import BidsBuilder, BidsConverter, BidsUtils
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
 
@@ -468,7 +468,7 @@ class BidsPatient(BaseBids):
         participants_df = self.loader.load_participants_tsv()
         participants_df = participants_df.set_index("participant_id")
         if column_id not in participants_dict.keys():
-            participants_dict = BidsBuilder.add_field_to_participants_json(
+            participants_dict = BidsUtils.add_field_to_participants_json(
                 participants_dict, column_id, description
             )
             self.writer.write_participants_json(participants_dict)

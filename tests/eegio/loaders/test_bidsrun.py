@@ -69,7 +69,7 @@ class TestBidsRun:
         # test field not default written into sidecar
         institution_name = "National institute of Health"
         bidsrun_scalp.delete_sidecar_field(key="InstitutionName")
-        run_metadata = bidsrun_scalp.modify_sidecar_json(
+        run_metadata = bidsrun_scalp.modify_sidecar_field(
             key="InstitutionName", value=institution_name, overwrite=False
         )
         assert bidsrun_scalp.get_run_metadata()["InstitutionName"] == institution_name
@@ -77,7 +77,7 @@ class TestBidsRun:
 
         # test for capitalization specificity
         manufacturer = "nk"
-        run_metadata = bidsrun_scalp.modify_sidecar_json(
+        run_metadata = bidsrun_scalp.modify_sidecar_field(
             key="manufacturer", value=manufacturer, overwrite=True
         )
         assert bidsrun_scalp.get_run_metadata()["Manufacturer"] == manufacturer
@@ -89,7 +89,7 @@ class TestBidsRun:
 
         # test for field that needs to be overwritten
         institution_name = "National institute of Health_v2"
-        run_metadata = bidsrun_scalp.modify_sidecar_json(
+        run_metadata = bidsrun_scalp.modify_sidecar_field(
             key="InstitutionName", value=institution_name, overwrite=True
         )
         # this should have been rewritten
@@ -126,11 +126,11 @@ class TestBidsRun:
         # assert errors that should arise when run tries to write certain data types
         with pytest.raises(RuntimeError):
             institution_name = "National institute of Health"
-            run_metadata = bidsrun_scalp.modify_sidecar_json(
+            run_metadata = bidsrun_scalp.modify_sidecar_field(
                 key="InstitutionName", value=institution_name
             )
             institution_name = "National institute of Health_v2"
-            run_metadata = bidsrun_scalp.modify_sidecar_json(
+            run_metadata = bidsrun_scalp.modify_sidecar_field(
                 key="InstitutionName", value=institution_name
             )
 

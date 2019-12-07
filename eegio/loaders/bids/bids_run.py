@@ -48,7 +48,6 @@ class BidsRun(BaseBids):
         run_id: str,
         datadir: Union[str, os.PathLike] = None,
         modality: str = "ieeg",
-        original_fileid: Union[str, os.PathLike] = None,
     ):
         """
         Initialize a BidsRun object.
@@ -60,7 +59,6 @@ class BidsRun(BaseBids):
         run_id :
         datadir :
         modality :
-        original_fileid :
 
         """
         super(BidsRun, self).__init__(datadir=datadir, modality=modality)
@@ -68,10 +66,8 @@ class BidsRun(BaseBids):
         self.session_id = session_id
         self.run_id = run_id
         self.result_fpath = None
-        self.original_fileid = original_fileid
 
         # instantiate a loader/writer
-
         self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
         self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
 
@@ -258,7 +254,7 @@ class BidsRun(BaseBids):
         self.writer.write_sidecar_json(sidecar_dict)
         return sidecar_dict
 
-    def modify_sidecar_json(self, key, value, overwrite=False):
+    def modify_sidecar_field(self, key, value, overwrite=False):
         """
         Modify the sidecar json to have the new value in the passed field.
 
@@ -291,27 +287,8 @@ class BidsRun(BaseBids):
         sidecar_dict[key] = value
         self.writer.write_sidecar_json(sidecar_dict)
 
-    def modify_original_scan_filename(self, original_filename: str):
-        """
-        Add the passed original filename to the scans tsv file.
-
-        Parameters
-        ----------
-        original_filename :
-            The path to the file from the source.
-
-        """
-        scans_data = self.loader.load_scans_tsv()
-        colnames = scans_data.columns
-        if "original_filename" not in colnames:
-            fnames = []
-            for index, row in scans_data.iterrows():
-                fnames.append("")
-            scans_data["original_filename"] = fnames
-        for index, row in scans_data.iterrows():
-            if row["filename"] == self.fpath:
-                scans_data["original_filename"][index] = original_filename
-        self.writer.write_scans_tsv(scans_data)
+    def add_sidecar_field(self, key, value):
+        pass
 
     def append_channel_info(
         self,
@@ -419,6 +396,51 @@ class BidsRun(BaseBids):
             channel_dict[key] = value.upper()
         return channel_dict
 
+    def _update_sidecar_json_channelcounts(self):
+        """
+        Update sidecar json for channel counts.
+
+        Reads the current tsv file for the run's channels and updates the sidecar json with the channel type.
+
+        Should be called every time we modify anything in the sidecar json file.
+
+        """
+        # load in channel tsv file as a dataframe
+        channels_data = self.loader.load_channels_tsv()
+        types = channels_data["type"]
+
+        # load in sidecar json as a dictionary
+        sidecar_dict = self.loader.load_sidecar_json()
+        numbers = types.value_counts()
+
+        # go through each possible electrode type and update the count in sidecar json
+        for chtype, count in zip(types, numbers):
+            sidecar_dict[f"{chtype}ChannelCount"] = int(count)
+
+        self.writer.write_sidecar_json(sidecar_dict)
+
+        def modify_original_scan_filename(self, original_filename: str):
+            """
+            Add the passed original filename to the scans tsv file.
+
+            Parameters
+            ----------
+            original_filename :
+                The path to the file from the source.
+
+            """
+            scans_data = self.loader.load_scans_tsv()
+            colnames = scans_data.columns
+            if "original_filename" not in colnames:
+                fnames = []
+                for index, row in scans_data.iterrows():
+                    fnames.append("")
+                scans_data["original_filename"] = fnames
+            for index, row in scans_data.iterrows():
+                if row["filename"] == self.fpath:
+                    scans_data["original_filename"][index] = original_filename
+            self.writer.write_scans_tsv(scans_data)
+
     @staticmethod
     def modify_electrode_type(channel_df: pd.DataFrame, chlabel: str, chtype: str):
         """
@@ -482,26 +504,3 @@ class BidsRun(BaseBids):
     #             channel_df["status"][ind] = "bad"
     #             channel_df["notes"][ind] = chdescription
     #     return channel_df
-
-    def _update_sidecar_json_channelcounts(self):
-        """
-        Update sidecar json for channel counts.
-
-        Reads the current tsv file for the run's channels and updates the sidecar json with the channel type.
-
-        Should be called every time we modify anything in the sidecar json file.
-
-        """
-        # load in channel tsv file as a dataframe
-        channels_data = self.loader.load_channels_tsv()
-        types = channels_data["type"]
-
-        # load in sidecar json as a dictionary
-        sidecar_dict = self.loader.load_sidecar_json()
-        numbers = types.value_counts()
-
-        # go through each possible electrode type and update the count in sidecar json
-        for chtype, count in zip(types, numbers):
-            sidecar_dict[f"{chtype}ChannelCount"] = int(count)
-
-        self.writer.write_sidecar_json(sidecar_dict)

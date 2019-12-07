@@ -18,7 +18,7 @@ from mne_bids.utils import _parse_bids_filename
 
 
 class BidsBuilder(object):
-    """Suite of helper functions to build out a bids data directory."""
+    """Suite of helper functions to build out a bids data directory. Makes folder directories and stuff"""
 
     @staticmethod
     def make_bids_folder_struct(datadir, subject, kind, session_id="one"):
@@ -48,15 +48,71 @@ class BidsBuilder(object):
         )
 
     @staticmethod
+    def make_preprocessed_folder(
+        datadir, subject_id, session="one", preprocess_name="preprocessed"
+    ):
+        """
+        Create the preproceesed data folder in the correct location if it does not already exist.
+
+        Assumes session is 'one'.
+
+        Parameters
+        ----------
+        datadir : Union[str, os.PathLike]
+            The base directory for bids data
+        subject_id : str
+            The unique identifier for the BidsPatient
+        session : str
+            The identifier for this BidsPatient session
+        preprocess_name : str
+            The name of the preprocessed folder
+
+        """
+        basedir = os.path.join(
+            datadir, make_bids_basename(subject=subject_id, session=session)
+        )
+        preprocessed_dir = os.path.join(basedir, preprocess_name)
+        if os.path.exists(preprocessed_dir):
+            return 1
+        else:
+            os.mkdir(preprocessed_dir)
+
+    @staticmethod
+    def make_results_folder(datadir, subject_id, session="one", result_name="results"):
+        """
+        Create the results folder in the correct location if it does not already exist.
+
+        Assumes session is 'one'.
+
+        Parameters
+        ----------
+        datadir :
+        subject_id :
+        session :
+        result_name :
+
+        """
+        basedir = os.path.join(
+            datadir, make_bids_basename(subject=subject_id, session=session)
+        )
+        results_dir = os.path.join(basedir, result_name)
+        if os.path.exists(results_dir):
+            return 1
+        else:
+            os.mkdir(results_dir)
+
+
+class BidsConverter:
+    @staticmethod
     def convert_to_bids(
-            edf_fpath,
-            bids_dir,
-            bids_basename,
-            excluded_contacts=None,
-            eog_contacts=None,
-            misc_contacts=None,
-            overwrite=False,
-            use_preprocess_pipeline=True,
+        edf_fpath,
+        bids_dir,
+        bids_basename,
+        excluded_contacts=None,
+        eog_contacts=None,
+        misc_contacts=None,
+        overwrite=False,
+        use_preprocess_pipeline=True,
     ):
         """
         Convert the passed edf file into the Bids format.
@@ -182,63 +238,11 @@ class BidsBuilder(object):
         )
         return output_path
 
-    @staticmethod
-    def make_preprocessed_folder(
-            datadir, subject_id, session="one", preprocess_name="preprocessed"
-    ):
-        """
-        Create the preproceesed data folder in the correct location if it does not already exist.
 
-        Assumes session is 'one'.
-
-        Parameters
-        ----------
-        datadir : Union[str, os.PathLike]
-            The base directory for bids data
-        subject_id : str
-            The unique identifier for the BidsPatient
-        session : str
-            The identifier for this BidsPatient session
-        preprocess_name : str
-            The name of the preprocessed folder
-
-        """
-        basedir = os.path.join(
-            datadir, make_bids_basename(subject=subject_id, session=session)
-        )
-        preprocessed_dir = os.path.join(basedir, preprocess_name)
-        if os.path.exists(preprocessed_dir):
-            return 1
-        else:
-            os.mkdir(preprocessed_dir)
-
-    @staticmethod
-    def make_results_folder(datadir, subject_id, session="one", result_name="results"):
-        """
-        Create the results folder in the correct location if it does not already exist.
-
-        Assumes session is 'one'.
-
-        Parameters
-        ----------
-        datadir :
-        subject_id :
-        session :
-        result_name :
-
-        """
-        basedir = os.path.join(
-            datadir, make_bids_basename(subject=subject_id, session=session)
-        )
-        results_dir = os.path.join(basedir, result_name)
-        if os.path.exists(results_dir):
-            return 1
-        else:
-            os.mkdir(results_dir)
-
+class BidsUtils:
     @staticmethod
     def add_field_to_participants_json(
-            current_dict: dict, new_field: str, description: Union[str, dict]
+        current_dict: dict, new_field: str, description: Union[str, dict]
     ):
         """
         Add a new field to the participants.json file.

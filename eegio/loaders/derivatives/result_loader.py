@@ -5,7 +5,7 @@ import numpy as np
 
 from eegio.base.objects import Result, Contacts
 from eegio.base.utils.data_structures_utils import loadjsonfile
-from eegio.loaders.baseloader import BaseLoader
+from eegio.loaders.derivatives.baseloader import BaseLoader
 
 
 class ResultLoader(BaseLoader):
