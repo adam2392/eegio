@@ -15,11 +15,18 @@ install:
   - source activate eegio
 # run conda /pip installation of packages
   - conda config --add channels conda-forge
-  - conda install numpy pandas scikit-learn scipy mne mne-bids natsort pytest
+  - conda install numpy pandas scikit-learn scipy mne mne-bids natsort
+  - conda install pytest black check-manifest
   - conda install pyedflib xlrd
   - pip install codecov
 #  - pip install -r requirements.txt
+cache:
+    - pip
+    - yarn
+
 # command to run tests
 script:
   - pytest ./tests/
   - codecov
+  - black --check eegio
+#  - check-manifest --ignore .circleci*,doc,paper,coverage.svg,.zenodo*
