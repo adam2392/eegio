@@ -28,6 +28,6 @@ cache:
 # command to run tests
 script:
   - pytest --cov=./tests/
-  - codecov
+#  - codecov --token CODECOV_TOKEN
   - black --check eegio
 #  - check-manifest --ignore .circleci*,doc,paper,coverage.svg,.zenodo*
