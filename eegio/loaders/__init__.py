@@ -1,3 +1,1 @@
-from .loader import Loader
-from .result_loader import ResultLoader
-from .datasheet_loader import DataSheetLoader
+from eegio.loaders.derivatives.result_loader import ResultLoader

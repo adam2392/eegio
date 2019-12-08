@@ -8,13 +8,12 @@
 <a href="https://codeclimate.com/github/adam2392/eegio/maintainability"><img src="https://api.codeclimate.com/v1/badges/2c7d5910e89350b967c8/maintainability" /></a>
 ![GitHub repo size](https://img.shields.io/github/repo-size/adam2392/eegio)
 
-For an easy-to-use API interfacing with EEG data in EDF, or FIF format.
+For an easy-to-use API interfacing with EEG data in EDF, or FIF format in the BIDS-EEG layout.
 
 This module stores the code for IO of EEG data for human patients, and pipelining code to convert clinical center data (i.e. time series eeg, clinical metadata) into a developer-friendly dataset that is also invertible and debug-friendly.
 
 ## Dev Process - TODO
 
-- [ ] Add documentation
 - [ ] Add support for adding structural context via neuroimaging processed data (e.g. FreeSurfer)
 
 # Installation Guide
@@ -26,8 +25,10 @@ EEGio is intended to be a lightweight wrapper for easily analyzing large batches
     seaborn
     pandas
     mne
-    pyedflib
-    xlrd
+    mne-bids
+    pybids
+    pyedflib (deprecated)
+    xlrd (deprecated)
     
 Setup virtual environment via Conda inside your Unix-friendly terminal (aka Mac, or Linux) is recommended (see https://docs.anaconda.com/anaconda/install/):
 
@@ -45,92 +46,30 @@ To install, run this command inside your virtual environment:
 
 ## Intended Users / Usage
 
-Epilepsy researchers dealing with EEG data. Anyone with human patient EEG data. The main data workflow is to maintain a running Excel sheet with variables related to your patient population. 
+Epilepsy researchers dealing with EEG data compliant with BIDS and MNE formats. Anyone with human patient EEG data.  
 See example and docs for info on how to format this.
 
 https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
-
-## Formatting
-User can create BIDS directory structure to house all the data
-
-    # create file directory structure if not already made
-    eegio.create_bids_struct(bidsdir, patids=['pat01', 'pat02'])
-    
-User can run:
-
-    formatted_df = eegio.format_clinical_sheet(excelfilepath,
-                                            cols_to_reg_expand=["bad_channels"])
-
-User can run preprocessing on .edf files to create .fif + .json files:
-
-    rawmne, metadata = eegio.format_eegdata(in_fpath=edffilepath,
-                        out_fpath=outputfilepath,
-                        json_fpath=jsonfpath)
-
-## Loading
-User can then load datasets, or patient (i.e. grouped datasets) data:
-    
-    # create a patient object that looks through hard coded directory
-    patientobj = eegio.get_patients(bidsdir)
-    
-    # actually load an EEG Time series from .fif/.edf,etc.
-    datasetobj = eegio.load_file(patid, snapshotid)
-    
-    # read in metadata related from an excel file
-    clin_dict = eegio.load_clinicalmetadata(patid)
-    
-    # attach clinical data to metadata for EEG TimeSeries
-    datasetobj.update_metadata(**clin_dict)
-    
-    print(datasetobj)
-    print(patientobj)
-    print(clin_dict
-    
-### Reading Clinical Data From Excel
-Most clinical data is stored in excel format. And changing between these two is ideal. We provide examples of
-clinical data in table formats for multiple patients, single patient, or single snapshot. These
-can be stored in a single Excel file if necessary. It just light-weight wraps Pandas, but
-will provide additional functionality in terms of:
-
-1. expanding channels using regex
-2. preprocessing column names
-3. caching/storing data in a Python object
-
     
 ### Reading EEG Data From EDF/FiF
 These are just lightweight wrappers of MNE/pyedflib reading to load in EDF/FiF data
 easily, so that raw EEG ts are readily accessible in Python friendly format.    
 
-    edf_fpath = "./data/scalp_test.edf"
-    read_kwargs = {
-        "fname": edf_fpath,
-        "backend": "mne",
-        "montage": None,
-        "eog": None,
-        "misc": None,
-    }
-    loader = Loader(edf_fpath, metadata={})
-    raw_mne, annotations = loader.read_edf(**read_kwargs)
-    info = raw_mne.info
-    chlabels = raw_mne.ch_names
-    n_times = raw_mne.n_times
+    TODO: example read using bidsrun, bidspatient
+    
+### Setting Up the BIDS Directory
+See tutorials and documentation.
 
 ## Submodules
 1. base/
 Stores configuration files for the settings. Stores utility and helper functions. In addition, defines dataset objects
 that we use in this module: mainly Contacts, EEGTimeSeries, and Result
 
-2. format/
-Stores class objects for how you should preformat any incoming raw data. This defines the interface for the raw time series eeg, and clinical metadata.
-
-3. loaders/
+2. loaders/
 This defines code that links together different parts of the eegio API to allow easy data pipelines to be setup.
 
-4. writers/
+3. writers/
 This defines writers of data to save into hdf, npy, mat files.
-
-5. dataset_test/
-A dataset tester that is hardcoded to check quality of certain labeling and annotations.
 
 # Contributing
 We welcome contributions from anyone. Our [issues](https://github.com/adam2392/eegio/issues) page is full of places we could use help! 

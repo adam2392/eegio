@@ -1,0 +1,24 @@
+include *.rst
+include LICENSE
+include eegio/__init__.py
+
+recursive-include examples *.py
+recursive-include examples *.txt
+
+recursive-include eegio *.py
+
+### Exclude
+
+exclude .zenodo
+exclude .github
+exclude .github/PULL_REQUEST_TEMPLATE.md
+exclude Makefile
+exclude CONTRIBUTING.md
+exclude .coveragerc
+exclude *.yml
+exclude .mailmap
+exclude annonymize
+recursive-exclude eegio *.pyc
+
+recursive-exclude doc *
+recursive-exclude paper *

@@ -26,6 +26,8 @@ REQUIRED_PACKAGES = [
     "scikit-learn>=0.21.3",
     "pandas>=0.25.1",
     "mne>=0.19",
+    "mne_bids>=0.3",
+    "pybids>=0.5.1",
     "pyEDFlib == 0.1.14",
     "xlrd >= 1.2.0",
 ]

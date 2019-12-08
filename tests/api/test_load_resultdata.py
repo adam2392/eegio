@@ -21,7 +21,7 @@ def test_load_resultdata(result_fpath):
     """
     Second, convert to and object
     """
-    # modality = "scalp"
+    # kind = "scalp"
     # data, times = raw_mne.get_data(return_times=True)
     # contacts = Contacts(chlabels, require_matching=False)
-    # result = Result(data, times, contacts, samplerate, modality)
+    # result = Result(data, times, contacts, samplerate, kind)

@@ -1,7 +1,9 @@
 [run]
-omit=./eegio/writers/database/*,eegio/writers/pickle/*,eegio/writers/ppt/*,eegio/base/utils/*,eegio/dataset_test/*,*__init__.py,eegio/*config*,eegio/format/baseadapter.py,*electrode.py
+omit=./eegio/base/utils/*,eegio/base/dataset_test/*,eegio/*config*,eegio/base/format/*,*electrode.py,*basedataobject.py,tests/*
 
 [report]
+omit=tests/*
+
 exclude_lines =
     pragma: no cover
     @deprecated

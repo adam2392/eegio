@@ -1,6 +1,8 @@
 language: python
 python:
   - "3.7"
+env:
+  - CODECOV_TOKEN="9dc663c6-d351-41f4-8bab-b27b6c4cc6b3"
 # command to install dependencies
 install:
   # commands to get Miniconda3 setup
@@ -9,13 +11,23 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-#  - conda update -q conda
   - conda create -q -n eegio
   - source activate eegio
 # run conda /pip installation of packages
   - conda config --add channels conda-forge
-  - conda install numpy pandas scikit-learn scipy mne pyedflib xlrd
-  - pip install -r requirements.txt
+  - conda install numpy pandas scikit-learn scipy mne mne-bids natsort
+  - pip install pybids
+  - conda install pytest black check-manifest pytest-cov
+  - conda install pyedflib xlrd
+  - pip install codecov
+#  - pip install -r requirements.txt
+cache:
+    - pip
+    - yarn
+
 # command to run tests
 script:
-  - pytest ./tests/
+  - pytest --cov=tests
+  - codecov --token CODECOV_TOKEN
+  - black --check eegio
+#  - check-manifest --ignore .circleci*,docs,paper,coverage.svg,.zenodo*

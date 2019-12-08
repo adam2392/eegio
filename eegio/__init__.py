@@ -5,8 +5,6 @@ import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=PendingDeprecationWarning)
 
-from .format.format_eeg_data import run_formatting_eeg
-from .format.format_clinical_sheet import format_clinical_sheet
 import eegio.base.objects as objects
 
 import eegio.base.utils as utils
@@ -16,3 +14,4 @@ __all__ = [
     basename(f)[:-3] for f in modules if isfile(f) and not f.endswith("__init__.py")
 ]
 name = "eegio"
+__version__ = "0.1"

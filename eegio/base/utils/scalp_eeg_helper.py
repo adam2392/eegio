@@ -46,7 +46,10 @@ class ScalpMontageHelper:
 
         """
 
+        # get all the MNE built in montages for scalp EEG data
         montages = mne.channels.get_builtin_montages()
+
+        # initialize a scoring mechanism to determine the best fitting montage
         best_montage = None
         best_montage_score = 0
 
@@ -56,10 +59,10 @@ class ScalpMontageHelper:
 
             # get the channels and score for this montage wrt channels
             montage_score = 0
-            montage_chs = [ch.lower() for ch in montage.ch_names]
+            montage_chs = [ch for ch in montage.ch_names]
 
             # score this montage
-            montage_score = len([ch for ch in chanlabels if ch.lower() in montage_chs])
+            montage_score = len([ch for ch in chanlabels if ch in montage_chs])
 
             if montage_score > best_montage_score:
                 best_montage = montage_name
