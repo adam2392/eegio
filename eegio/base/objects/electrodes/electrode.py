@@ -115,9 +115,11 @@ class Electrode(object):
         self.electrode_dict = collections.defaultdict(list)
 
         # separate electrode name and number
-        contacts, electrode_names, contact_numbers = self._separate_electrode_name_number(
-            self.contact_list
-        )
+        (
+            contacts,
+            electrode_names,
+            contact_numbers,
+        ) = self._separate_electrode_name_number(self.contact_list)
 
         # create dictionary for the contact list
         self.electrode_dict[electrode_names[0]] = contacts
@@ -125,9 +127,11 @@ class Electrode(object):
 
     def _process_out_contacts(self):
         # make sure if contacts ar outside, then everything after is outside
-        contacts, electrode_names, contact_numbers = self._separate_electrode_name_number(
-            self.out_contacts
-        )
+        (
+            contacts,
+            electrode_names,
+            contact_numbers,
+        ) = self._separate_electrode_name_number(self.out_contacts)
 
         """ Doesn't do anything w/ errors yet. Assumes that min out contact -> everything after is outside """
         error_list = []
@@ -146,14 +150,18 @@ class Electrode(object):
 
     def _process_wm_contacts(self):
         # make sure if contacts ar outside, then everything after is outside
-        contacts, electrode_names, contact_numbers = self._separate_electrode_name_number(
-            self.wm_contacts
-        )
+        (
+            contacts,
+            electrode_names,
+            contact_numbers,
+        ) = self._separate_electrode_name_number(self.wm_contacts)
 
     def _process_bad_contacts(self):
-        contacts, electrode_names, contact_numbers = self._separate_electrode_name_number(
-            self.bad_contacts
-        )
+        (
+            contacts,
+            electrode_names,
+            contact_numbers,
+        ) = self._separate_electrode_name_number(self.bad_contacts)
 
     def _get_good_contacts(self):
         good_contacts = []
