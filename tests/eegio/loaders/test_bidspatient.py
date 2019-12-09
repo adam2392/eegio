@@ -24,7 +24,7 @@ class TestBidsPatient:
         participants_tsv = bidspatient.loader.load_participants_tsv()
         participants_tsv = participants_tsv[
             participants_tsv["participant_id"] == bidspatient.subject_id
-            ].to_dict()
+        ].to_dict()
         participant_metadata = bidspatient.load_subject_metadata()
         # assert all(participant_metadata[key] == participants_tsv[key] for key in participants_tsv.keys())
         assert participant_metadata["field_descriptions"] == participants_json

@@ -34,51 +34,58 @@ class BidsIO(object):
         Use verbose.
     """
 
-    def __init__(self, bids_root, bids_basename,
-                 kind=None,
-                 datatype="fif",
-                 verbose: bool = True):
+    def __init__(
+        self, bids_root, bids_basename, kind=None, datatype="fif", verbose: bool = True
+    ):
         self.bids_root = bids_root
 
         self.bids_basename = bids_basename
         # extract BIDS parameters from the bids filename to be loaded/modified
         # gets: subjectid, sessionid, acquisition type, task name, run, file extension
         params = _parse_bids_filename(self.bids_basename, verbose=verbose)
-        self.subject_id, self.session_id = params['sub'], params['ses']
-        self.acquisition, self.task, self.run = params['acq'], params['task'], params['run']
+        self.subject_id, self.session_id = params["sub"], params["ses"]
+        self.acquisition, self.task, self.run = (
+            params["acq"],
+            params["task"],
+            params["run"],
+        )
         self.ext = datatype.strip(".")
 
         if kind:
             self.kind = kind
         else:
             self.kind = self.acquisition
-        if 'meg' in self.kind:
-            self.kind = 'meg'
-        elif 'ieeg' in self.kind or 'ecog' in self.kind or 'seeg' in self.kind:
-            self.kind = 'ieeg'
-        elif 'eeg' in self.kind:
-            self.kind = 'eeg'
+        if "meg" in self.kind:
+            self.kind = "meg"
+        elif "ieeg" in self.kind or "ecog" in self.kind or "seeg" in self.kind:
+            self.kind = "ieeg"
+        elif "eeg" in self.kind:
+            self.kind = "eeg"
 
         self.subjdir = os.path.join(
             bids_root, make_bids_basename(subject=self.subject_id)
         )
         self.sessiondir = os.path.join(
             self.subjdir, make_bids_basename(session=self.session_id)
-        )  # 'ses-' + self.session_id)        
+        )  # 'ses-' + self.session_id)
         self.runs_datadir = os.path.join(self.sessiondir, self.kind)
 
         SUPPORTED_DATATYPES = ["edf", "fif", "nii", "nii.gz", "mgz"]
         if self.ext.strip(".") not in SUPPORTED_DATATYPES:
-            raise ValueError(f"Supported data file types are: {SUPPORTED_DATATYPES}. "
-                             f"You passed {self.ext}")
+            raise ValueError(
+                f"Supported data file types are: {SUPPORTED_DATATYPES}. "
+                f"You passed {self.ext}"
+            )
 
     def _make_bids_basename(self, suffix):
-        return make_bids_basename(subject=self.subject_id,
-                                  session=self.session_id,
-                                  acquisition=self.acquisition,
-                                  task=self.task,
-                                  run=self.run,
-                                  suffix=suffix)
+        return make_bids_basename(
+            subject=self.subject_id,
+            session=self.session_id,
+            acquisition=self.acquisition,
+            task=self.task,
+            run=self.run,
+            suffix=suffix,
+        )
 
     @property
     def participantsjson_fpath(self):
@@ -115,10 +122,7 @@ class BidsIO(object):
 
         """
         return os.path.join(
-            self.runs_datadir,
-            self._make_bids_basename(
-                suffix="events.tsv",
-            ),
+            self.runs_datadir, self._make_bids_basename(suffix="events.tsv",),
         )
 
     @property
@@ -133,9 +137,7 @@ class BidsIO(object):
         """
         return os.path.join(
             self.runs_datadir,
-            self._make_bids_basename(
-                suffix=f"{self.kind}.{self.ext}",
-            ),
+            self._make_bids_basename(suffix=f"{self.kind}.{self.ext}",),
         )
 
     @property
@@ -149,10 +151,7 @@ class BidsIO(object):
 
         """
         return os.path.join(
-            self.runs_datadir,
-            self._make_bids_basename(
-                suffix=f"{self.kind}.json",
-            ),
+            self.runs_datadir, self._make_bids_basename(suffix=f"{self.kind}.json",),
         )
 
     @property
@@ -166,10 +165,7 @@ class BidsIO(object):
 
         """
         return os.path.join(
-            self.runs_datadir,
-            self._make_bids_basename(
-                suffix="channels.tsv",
-            ),
+            self.runs_datadir, self._make_bids_basename(suffix="channels.tsv",),
         )
 
     @property
@@ -229,9 +225,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            self._make_bids_basename(
-                suffix="events.tsv",
-            ),
+            self._make_bids_basename(suffix="events.tsv",),
         )
 
     @property
@@ -248,9 +242,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            self._make_bids_basename(
-                suffix=f"{self.kind}.{self.ext}",
-            ),
+            self._make_bids_basename(suffix=f"{self.kind}.{self.ext}",),
         )
 
     @property
@@ -267,9 +259,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            self._make_bids_basename(
-                suffix=f"{self.kind}.json",
-            ),
+            self._make_bids_basename(suffix=f"{self.kind}.json",),
         )
 
     @property
@@ -286,9 +276,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            self._make_bids_basename(
-                suffix="channels.tsv",
-            ),
+            self._make_bids_basename(suffix="channels.tsv",),
         )
 
     @property
@@ -315,15 +303,12 @@ class BidsLoader(BidsIO):
     A class containing loading methods for various required BIDS files.
     """
 
-    def __init__(self, bids_root, bids_basename,
-                 kind=None,
-                 datatype="fif",
-                 verbose: bool = True
-                 ):
-        super(BidsLoader, self).__init__(bids_root, bids_basename,
-                                         kind=kind,
-                                         datatype=datatype,
-                                         verbose=verbose)
+    def __init__(
+        self, bids_root, bids_basename, kind=None, datatype="fif", verbose: bool = True
+    ):
+        super(BidsLoader, self).__init__(
+            bids_root, bids_basename, kind=kind, datatype=datatype, verbose=verbose
+        )
 
     def load_sidecar_json(self):
         """
@@ -441,12 +426,12 @@ class BidsWriter(BidsIO):
     A class containing writing methods for various required BIDS files.
     """
 
-    def __init__(self, bids_root, bids_basename, kind=None,
-                 datatype="fif",
-                 verbose: bool = True):
-        super(BidsWriter, self).__init__(bids_root, bids_basename, kind=kind,
-                                         datatype=datatype,
-                                         verbose=verbose)
+    def __init__(
+        self, bids_root, bids_basename, kind=None, datatype="fif", verbose: bool = True
+    ):
+        super(BidsWriter, self).__init__(
+            bids_root, bids_basename, kind=kind, datatype=datatype, verbose=verbose
+        )
 
     def write_channels_tsv(self, metadata, fpath=None, overwrite=True):
         """

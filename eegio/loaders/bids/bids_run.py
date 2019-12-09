@@ -75,27 +75,35 @@ class BidsRun(BaseBids):
         self.bids_fname = os.path.basename(bids_fname)
 
         # what is the modality -- meg, eeg, ieeg to read
-        self.bids_basename = '_'.join(bids_fname.split('_')[:-1])
-        self.kind = bids_fname.split('_')[-1].split('.')[0]
+        self.bids_basename = "_".join(bids_fname.split("_")[:-1])
+        self.kind = bids_fname.split("_")[-1].split(".")[0]
 
         # extract BIDS parameters from the bids filename to be loaded/modified
         # gets: subjectid, sessionid, acquisition type, task name, runid, file extension
         params = _parse_bids_filename(self.bids_fname, verbose=verbose)
-        self.subject_id, self.session_id = params['sub'], params['ses']
-        self.acquisition, self.task, self.run = params['acq'], params['task'], params['run']
+        self.subject_id, self.session_id = params["sub"], params["ses"]
+        self.acquisition, self.task, self.run = (
+            params["acq"],
+            params["task"],
+            params["run"],
+        )
         _, self.ext = _parse_ext(self.bids_fname)
 
         self.result_fpath = None
 
         # instantiate a loader/writer
-        self.loader = BidsLoader(bids_root=self.bids_root,
-                                 bids_basename=self.bids_basename,
-                                 kind=self.kind,
-                                 datatype=self.ext)
-        self.writer = BidsWriter(bids_root=self.bids_root,
-                                 bids_basename=self.bids_basename,
-                                 kind=self.kind,
-                                 datatype=self.ext)
+        self.loader = BidsLoader(
+            bids_root=self.bids_root,
+            bids_basename=self.bids_basename,
+            kind=self.kind,
+            datatype=self.ext,
+        )
+        self.writer = BidsWriter(
+            bids_root=self.bids_root,
+            bids_basename=self.bids_basename,
+            kind=self.kind,
+            datatype=self.ext,
+        )
 
         if not os.path.exists(self.loader.datafile_fpath):
             raise RuntimeError(
@@ -305,11 +313,7 @@ class BidsRun(BaseBids):
         pass
 
     def append_channel_info(
-            self,
-            column_id: str,
-            channel_id: str,
-            value,
-            channel_dict: Dict = None,
+        self, column_id: str, channel_id: str, value, channel_dict: Dict = None,
     ):
         """
         Add a new column to the channels tsv file.
@@ -333,8 +337,10 @@ class BidsRun(BaseBids):
         channel_df = self.loader.load_channels_tsv()
         colnames = channel_df.columns
         if column_id in colnames:
-            raise RuntimeError(f"Already added in the column: {column_id}. Call modify_channel_info to"
-                               f"modify.")
+            raise RuntimeError(
+                f"Already added in the column: {column_id}. Call modify_channel_info to"
+                f"modify."
+            )
 
         if channel_dict is not None:
             new_data = []

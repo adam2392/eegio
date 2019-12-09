@@ -12,6 +12,7 @@ class ChannelScrub:
     @classmethod
     def channel_text_scrub(cls, raw: mne.io.BaseRaw):
         """TODO: ACCOUNT FOR - BEING IN BIPOLAR MONTAGE CHANNEL LABELS. """
+
         def _reformatchanlabel(label):
             """
             Helper function to process a single channel label to make sure it is:

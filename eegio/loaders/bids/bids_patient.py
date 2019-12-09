@@ -46,7 +46,6 @@ class BidsPatient(BaseBids):
         self.managing_user = managing_user
         self.subjdir = os.path.join(self.bids_root, "sub-" + self.subject_id)
 
-
         if not os.path.exists(self.subjdir):
             warnings.warn(
                 f"Subject directory does not exist at: {self.subjdir} "
@@ -164,7 +163,9 @@ class BidsPatient(BaseBids):
         BidsBuilder.make_preprocessed_folder(
             self.bids_root, self.subject_id, self.session_id
         )
-        BidsBuilder.make_results_folder(self.bids_root, self.subject_id, self.session_id)
+        BidsBuilder.make_results_folder(
+            self.bids_root, self.subject_id, self.session_id
+        )
 
     def get_subject_sessions(self):
         """

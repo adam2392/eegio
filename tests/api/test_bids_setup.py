@@ -45,7 +45,8 @@ class TestBidsPatient:
             subject=test_subjectid,
             acquisition=modality,
             session=test_sessionid,
-            run=test_runid)
+            run=test_runid,
+        )
 
         # call bidsbuilder pipeline
         bids_root = BidsConverter.convert_to_bids(

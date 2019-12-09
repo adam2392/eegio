@@ -53,8 +53,7 @@ class BaseBids(object):
         self.bids_root = bids_root
 
         if not os.path.exists(self.description_fpath):
-            self.create_dataset_description(self.bids_root,
-                                            name="BIDS_DATASET")
+            self.create_dataset_description(self.bids_root, name="BIDS_DATASET")
         # if not os.path.exists(self.participants_tsv_fpath):
         #     self.create_participants_files(self.participants_tsv_fpath, self.participants_json_fpath)
 

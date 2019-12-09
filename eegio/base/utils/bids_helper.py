@@ -56,7 +56,7 @@ class BidsBuilder(object):
 
     @staticmethod
     def make_preprocessed_folder(
-            datadir, subject_id, session="one", preprocess_name="preprocessed"
+        datadir, subject_id, session="one", preprocess_name="preprocessed"
     ):
         """
         Create the preproceesed data folder in the correct location if it does not already exist.
@@ -112,16 +112,16 @@ class BidsBuilder(object):
 class BidsConverter:
     @staticmethod
     def convert_to_bids(
-            edf_fpath,
-            bids_root,
-            bids_basename,
-            acquisition,
-            excluded_contacts=None,
-            eog_contacts=None,
-            misc_contacts=None,
-            overwrite=False,
-            line_freq=None,
-            use_preprocess_pipeline=True,
+        edf_fpath,
+        bids_root,
+        bids_basename,
+        acquisition,
+        excluded_contacts=None,
+        eog_contacts=None,
+        misc_contacts=None,
+        overwrite=False,
+        line_freq=None,
+        use_preprocess_pipeline=True,
     ):
         """
         Convert the passed edf file into the Bids format.
@@ -159,7 +159,7 @@ class BidsConverter:
             misc=misc_contacts,
         )
         if line_freq is not None:
-            raw.info['line_freq'] = line_freq
+            raw.info["line_freq"] = line_freq
 
         # read in the events from the EDF file
         events_data, events_id = mne.events_from_annotations(raw)
@@ -183,32 +183,34 @@ class BidsConverter:
             bad_channels_dict[
                 bad
             ] = f"Scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
-        raw.info['bads'] = bad_channels
+        raw.info["bads"] = bad_channels
 
         # save a fif copy and reload it
         params = _parse_bids_filename(bids_basename, True)
         kind = _handle_kind(raw)
-        fif_data_path = make_bids_folders(subject=params['sub'],
-                                          session=params['ses'],
-                                          kind=kind,
-                                          output_path=bids_root,
-                                          overwrite=False,
-                                          verbose=True)
+        fif_data_path = make_bids_folders(
+            subject=params["sub"],
+            session=params["ses"],
+            kind=kind,
+            output_path=bids_root,
+            overwrite=False,
+            verbose=True,
+        )
 
         bids_fname = bids_basename + f"_{kind}.fif"
         with tempfile.TemporaryDirectory() as tmp_bids_root:
-            raw.save(
-                os.path.join(tmp_bids_root, bids_fname), overwrite=overwrite
-            )
-            raw = mne.io.read_raw_fif(
-                os.path.join(tmp_bids_root, bids_fname)
-            )
+            raw.save(os.path.join(tmp_bids_root, bids_fname), overwrite=overwrite)
+            raw = mne.io.read_raw_fif(os.path.join(tmp_bids_root, bids_fname))
 
             # actually perform write_raw bids
             bids_root = write_raw_bids(
-                raw, bids_basename, output_path=bids_root,
-                events_data=events_data, event_id=events_id,
-                overwrite=overwrite, verbose=False
+                raw,
+                bids_basename,
+                output_path=bids_root,
+                events_data=events_data,
+                event_id=events_id,
+                overwrite=overwrite,
+                verbose=False,
             )
         return bids_root
 
@@ -300,7 +302,7 @@ class BidsConverter:
 class BidsUtils:
     @staticmethod
     def add_field_to_participants_json(
-            current_dict: dict, new_field: str, description: Union[str, dict]
+        current_dict: dict, new_field: str, description: Union[str, dict]
     ):
         """
         Add a new field to the participants.json file.
@@ -408,7 +410,7 @@ if __name__ == "__main__":
         modality = "ecog"
         # bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
 
-        ''' Create folder structure '''
+        """ Create folder structure """
         if not os.path.exists(bids_root):
             print("Making bids root directory.")
             BidsBuilder.make_bids_folder_struct(
@@ -418,7 +420,7 @@ if __name__ == "__main__":
                 session_id=test_sessionid,
             )
 
-        ''' Write data file into BIDS format '''
+        """ Write data file into BIDS format """
         # add a bids run
         bids_basename = make_bids_basename(
             subject=test_subjectid,
@@ -448,7 +450,7 @@ if __name__ == "__main__":
             modality = "eeg"
             # bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
 
-            ''' Create folder structure '''
+            """ Create folder structure """
             if not os.path.exists(bids_root):
                 print("Making bids root directory.")
                 BidsBuilder.make_bids_folder_struct(
@@ -458,7 +460,7 @@ if __name__ == "__main__":
                     session_id=test_sessionid,
                 )
 
-            ''' Write data file into BIDS format '''
+            """ Write data file into BIDS format """
             # add a bids run
             bids_basename = make_bids_basename(
                 subject=test_subjectid,
