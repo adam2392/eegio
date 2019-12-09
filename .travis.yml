@@ -22,7 +22,7 @@ install:
   - conda install numpy pandas scikit-learn scipy mne mne-bids natsort
   - pip install pybids
   - conda install pytest black check-manifest pytest-cov
-  - conda install xlrd
+  - conda install xlrd pyedflib
   - pip install codecov
 #  - pip install -r requirements.txt
 

@@ -298,7 +298,7 @@ class BidsRun(BaseBids):
         pass
 
     def append_channel_info(
-            self, column_id: str, channel_id: str, value, channel_dict: Dict = None,
+        self, column_id: str, channel_id: str, value, channel_dict: Dict = None,
     ):
         """
         Add a new column to the channels tsv file.

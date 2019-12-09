@@ -50,8 +50,8 @@ from eegio.loaders.bids.bids_run import BidsRun
 # Conveniently, there is already a data loading function available with
 # MNE-Python:
 
-DATADIR = "/Users/Adam2392/Documents/eegio/"
-bids_root = os.path.join(DATADIR, "./data/bids_layout/")
+DATADIR = os.getcwd()
+bids_root = os.path.join(DATADIR, "../data/bids_layout/")
 RUN_IEEG = True  # either run scalp, or iEEG
 line_freq = 60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
 test_subjectid = "0001"
