@@ -44,6 +44,14 @@ class TestBidsRun:
         raw = bidsrun_scalp.load_data()
         assert isinstance(raw, mne.io.base.BaseRaw)
 
+        # check that basic properties are checked
+        print(bidsrun_scalp.fpath)
+        print(bidsrun_scalp.sfreq)
+        print(bidsrun_scalp.linefreq)
+        print(bidsrun_scalp.get_channels_metadata())
+        print(bidsrun_scalp.get_channel_types())
+        print(bidsrun_scalp.get_channels_status())
+
     def testbidsrun_modifyfunc(self, bidsrun_scalp):
         """
         Tests the BidsRun functionality to modify metadata in the context of a sidecar json and channels.tsv

@@ -10,11 +10,8 @@ from typing import Dict
 
 import mne
 import mne_bids
-import pandas as pd
 from mne_bids.utils import _parse_bids_filename, _parse_ext
 
-from eegio.base.config import BAD_MARKERS
-from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.bids.basebids import BaseBids
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
@@ -102,10 +99,6 @@ class BidsRun(BaseBids):
                 f"Bids dataset run does not exist at {self.loader.datafile_fpath}. "
                 f"Please first create the dataset in BIDS format."
             )
-
-        # upon loading a BidsRun, update the sidecar json's channel counts. This makes
-        # it BIDS-compatible since these fields are required.
-        # self._update_sidecar_json_channelcounts()
 
     def _create_bidsrun(self, data_fpath):
         """
@@ -305,7 +298,7 @@ class BidsRun(BaseBids):
         pass
 
     def append_channel_info(
-        self, column_id: str, channel_id: str, value, channel_dict: Dict = None,
+            self, column_id: str, channel_id: str, value, channel_dict: Dict = None,
     ):
         """
         Add a new column to the channels tsv file.
@@ -385,45 +378,6 @@ class BidsRun(BaseBids):
         print("Inside delete: ", channel_df)
         self.writer.write_channels_tsv(channel_df)
 
-    def find_bad_channels(self):
-        """
-        Find bad electrodes based on hardcoded rules of the electrode name.
-
-        Uses markers encoded in BAD_MARKERS (see config file)
-
-        Returns
-        -------
-        A dictionary where the key is the electrode name and the value is a string description
-
-        """
-        channel_df = self.loader.load_channels_tsv()
-        channel_scrub = ChannelScrub
-        channel_names = channel_df["name"]
-        bad_channels = channel_scrub.look_for_bad_channels(channel_names)
-        bad_channels_dict = {}
-        for bad in bad_channels:
-            bad_channels_dict[
-                bad
-            ] = f"Scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
-        return bad_channels_dict
-
-    def find_channel_types(self):
-        """
-        Find the actual type of the electrode based on a regular expression of the electrode name.
-
-        Returns
-        -------
-        A dictionary where the key is the electrode name and the value is the type
-
-        """
-        channel_df = self.loader.load_channels_tsv()
-        channel_scrub = ChannelScrub
-        channel_names = channel_df["name"]
-        channel_dict = channel_scrub.label_channel_types(channel_names)
-        for key, value in channel_dict.items():
-            channel_dict[key] = value.upper()
-        return channel_dict
-
     def _update_sidecar_json_channelcounts(self):
         """
         Update sidecar json for channel counts.
@@ -447,88 +401,24 @@ class BidsRun(BaseBids):
 
         self.writer.write_sidecar_json(sidecar_dict)
 
-        def modify_original_scan_filename(self, original_filename: str):
-            """
-            Add the passed original filename to the scans tsv file.
-
-            Parameters
-            ----------
-            original_filename :
-                The path to the file from the source.
-
-            """
-            scans_data = self.loader.load_scans_tsv()
-            colnames = scans_data.columns
-            if "original_filename" not in colnames:
-                fnames = []
-                for index, row in scans_data.iterrows():
-                    fnames.append("")
-                scans_data["original_filename"] = fnames
-            for index, row in scans_data.iterrows():
-                if row["filename"] == self.fpath:
-                    scans_data["original_filename"][index] = original_filename
-            self.writer.write_scans_tsv(scans_data)
-
-    @staticmethod
-    def modify_electrode_type(channel_df: pd.DataFrame, chlabel: str, chtype: str):
-        """
-        Modify a single recording channel's type.
-
-        Updates the run's channel information to be one of the ones in the following:
-        https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
-
-        Right now, we support EEG, ECOG, SEEG, ECG (i.e. EKG), EMG, EOG, MISC.
-
-        All others are categorized as OTHER for now.
-
-        TODO:
-        1. add support for other types.
-
-        Parameters
-        ----------
-        channel_df: pandas.DataFrame
-            The current DataFrame containing electrode contact information
-        chlabel: str
-            The label of the electrode to modify
-        chtype: str
-            The type to change the electrode to
-
-        Returns
-        -------
-        The modified DataFrame
-
-        """
-        channel_df.loc([channel_df["name"] == chlabel])["type"] = chtype
-        return channel_df
-
-    # @staticmethod
-    # def modify_electrode_status(
-    #     channel_df: pd.DataFrame, chlabel: str, chdescription: str
-    # ):
+    # def modify_original_scan_filename(self, original_filename: str):
     #     """
-    #     Update the run's channel information by looking at the generated clinical electrode sheet annotations.
-    #
-    #     Electrode status can either be "good", or "bad"
+    #     Add the passed original filename to the scans tsv file.
     #
     #     Parameters
     #     ----------
-    #     channel_df: pandas.DataFrame
-    #         The current DataFrame containing electrode contact information
-    #     chlabel: str
-    #         The label of the electrode to modify
-    #     chdescription: str
-    #         The description to fill in the 'notes' column of the DataFrame
-    #
-    #
-    #     Returns
-    #     -------
-    #     The modified DataFrame
+    #     original_filename :
+    #         The path to the file from the source.
     #
     #     """
-    #     # channel_df[channel_df["name"] == chlabel]["status"] = "bad"
-    #     # channel_df[channel_df["name"] == chlabel]["notes"] = chdescription
-    #     for ind, row in channel_df.iterrows():
-    #         if row["name"] == chlabel:
-    #             channel_df["status"][ind] = "bad"
-    #             channel_df["notes"][ind] = chdescription
-    #     return channel_df
+    #     scans_data = self.loader.load_scans_tsv()
+    #     colnames = scans_data.columns
+    #     if "original_filename" not in colnames:
+    #         fnames = []
+    #         for index, row in scans_data.iterrows():
+    #             fnames.append("")
+    #         scans_data["original_filename"] = fnames
+    #     for index, row in scans_data.iterrows():
+    #         if row["filename"] == self.fpath:
+    #             scans_data["original_filename"][index] = original_filename
+    #     self.writer.write_scans_tsv(scans_data)

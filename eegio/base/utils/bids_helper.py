@@ -353,28 +353,6 @@ class BidsUtils:
         writer.write_participants_tsv(participants_df)
         return participants_df
 
-    def create_channel_info(self, bidsrun):
-        """
-        Find and add necessary data to modify the channels file.
-
-        This method searches for automatic patterns in the electrode names to modify the channels.tsv file
-
-        Parameters
-        ----------
-        bidsrun: eegio.BidsRun
-            The object containing information about this snapshot recording.
-
-        """
-        self.add_notes_to_channels(bidsrun)
-        channel_data = bidsrun.loader.load_channels_tsv()
-        bad_channel_dict = bidsrun.find_bad_channels()
-        for key, value in bad_channel_dict.items():
-            channel_data = bidsrun.modify_electrode_status(channel_data, key, value)
-        channel_types_dict = bidsrun.find_channel_types()
-        for key, value in channel_types_dict.items():
-            channel_data = bidsrun.modify_electrode_type(channel_data, key, value)
-        bidsrun.writer.write_channels_tsv(channel_data)
-
     @staticmethod
     def add_notes_to_channels(bidsrun):
         """

@@ -5,7 +5,9 @@ Version: 1.0
 """
 import os
 import warnings
-from typing import Union, Dict
+from collections import OrderedDict
+from typing import Dict
+from typing import Union
 
 import bids
 import mne_bids.utils
@@ -228,7 +230,7 @@ class BidsPatient(BaseBids):
         metadata = participants_tsv[
             participants_tsv["participant_id"]
             == make_bids_basename(subject=self.subject_id)
-        ].to_dict("r")[0]
+            ].to_dict("r")[0]
         # metadata = participants_tsv.set_index('participant_id')[self.subject_val].to_dict(orient="index")
         metadata["field_descriptions"] = participants_json
         return metadata
@@ -369,7 +371,7 @@ class BidsPatient(BaseBids):
         participants_series = participants_df.loc[
             participants_df["participant_id"]
             == make_bids_basename(subject=self.subject_id)
-        ].squeeze()
+            ].squeeze()
         series_dict = {"participant_id": participants_series.name}
         for index, value in participants_series.iteritems():
             series_dict[index] = value
@@ -380,11 +382,11 @@ class BidsPatient(BaseBids):
         self.writer.write_participants_tsv(participants_df)
 
     def add_participants_field(
-        self,
-        column_id,
-        description: Union[str, dict],
-        subject_val: str = "n/a",
-        default_val: str = "n/a",
+            self,
+            column_id,
+            description: Union[str, dict],
+            subject_val: str = "n/a",
+            default_val: str = "n/a",
     ):
         """
         Add a field to the participants files (tsv and json).
@@ -494,3 +496,32 @@ class BidsPatient(BaseBids):
         # recreate metadata
         metadata = self._create_metadata()
         self._load_metadata(metadata)
+
+    def _create_participants_json(self, fname, overwrite=False, verbose=False):
+        """
+        Create the participants json file for Bids compliance. an Extension of what is present in MNE-BIDS.
+
+        TODO:
+        1. determine how to incorporate into MNE-BIDS
+
+        Parameters
+        ----------
+        fname : Union[str, os.PathLike]
+            The path of the participants json file
+        overwrite : bool
+            Whether to overwrite an existing participants json file
+        verbose : bool
+            Whether to print the data from the participants json file to stdout
+
+        """
+        cols = OrderedDict()
+        cols["participant_id"] = {"Description": "Unique participant identifier"}
+        cols["age"] = {
+            "Description": "Age of the participant at time of testing",
+            "Units": "years",
+        }
+        cols["sex"] = {
+            "Description": "Biological sex of the participant",
+            "Levels": {"F": "female", "M": "male"},
+        }
+        _write_json(fname, cols, overwrite, verbose)

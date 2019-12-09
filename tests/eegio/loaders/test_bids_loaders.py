@@ -2,9 +2,9 @@ import os
 import tempfile
 import mne
 import mne_bids
-from eegio.loaders.bids import BaseBids
-from eegio.loaders.bids import BidsRun
-from eegio.loaders.bids import BidsPatient
+from eegio.loaders import BaseBids
+from eegio.loaders import BidsRun
+from eegio.loaders import BidsPatient
 from mne_bids import make_bids_basename
 
 test_fpath = os.path.join(os.getcwd(), "./data/bids_layout/")

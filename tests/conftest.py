@@ -4,6 +4,12 @@ import os.path
 
 import numpy as np
 import pytest
+from mne_bids import make_bids_basename
+
+from eegio.base.objects.electrodes.elecs import Contacts
+from eegio.base.utils.data_structures_utils import compute_samplepoints
+from eegio.loaders import BidsPatient
+from eegio.loaders import BidsRun
 
 
 @pytest.fixture(scope="session")
@@ -25,8 +31,6 @@ def bidspatient(tmp_path_factory):
 
     :return:
     """
-    from eegio.loaders.bids import BidsPatient
-
     test_subjectid = "0001"
     test_fpath = os.path.join(os.getcwd(), "data/bids_layout/")
     # test_fpath_path = tmp_path_factory.mktemp('bids_data')
@@ -53,9 +57,6 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
     -------
 
     """
-    from eegio.loaders.bids import BidsRun
-    from mne_bids import read_raw_bids, make_bids_folders, make_bids_basename
-
     test_subjectid = "0001"
     session_id = "seizure"
     kind = "eeg"
@@ -79,9 +80,6 @@ def contacts():
 
     :return:
     """
-    import numpy as np
-    from eegio.base.objects.electrodes.elecs import Contacts
-
     contactlist = np.hstack(
         (
             [f"A{i}" for i in range(16)],
@@ -137,8 +135,6 @@ def fif_fpath():
 
 @pytest.fixture(scope="class")
 def test_arr():
-    from eegio.base.utils.data_structures_utils import compute_samplepoints
-
     test_arr = np.random.random(size=(50, 2500))
 
     samplepoints = compute_samplepoints(250, 125, test_arr.shape[1])

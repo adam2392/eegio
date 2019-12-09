@@ -394,11 +394,7 @@ class BidsLoader(BidsIO):
 
     def load_dataset(self):
         """
-<<<<<<< HEAD
         Load in mne.io.Raw dataset based on the sessionid and run of the dataset.
-=======
-        Load in mne.io.Raw dataset based on the sessionid and runid of the dataset.
->>>>>>> master
 
         TODO:
         1. Allow exotic return types in the form of easy to use data structures? or keep as MNE.io.Raw.
@@ -433,7 +429,7 @@ class BidsWriter(BidsIO):
             bids_root, bids_basename, kind=kind, datatype=datatype, verbose=verbose
         )
 
-    def write_channels_tsv(self, metadata, fpath=None, overwrite=True):
+    def write_channels_tsv(self, metadata):
         """
         Write the updated channel information to a file.
 
@@ -447,8 +443,7 @@ class BidsWriter(BidsIO):
             Whether to overwrite the existing channels tsv file
 
         """
-        if fpath is None:
-            fpath = self.chanstsv_fpath
+        fpath = self.chanstsv_fpath
         metadata.to_csv(fpath, sep="\t", index=False)
 
     def write_sidecar_json(self, sidecar_dict):
@@ -478,7 +473,7 @@ class BidsWriter(BidsIO):
         scans_df = scans_df.replace(np.nan, "n/a", regex=True)
         scans_df.to_csv(outfile, sep="\t", index=True)
 
-    def write_electrode_coords(self, coords_dict, channels_df):
+    def write_electrode_coords(self, channels_df):
         """
         Write the coordinates for the electrodes in the channels tsv file.
 
@@ -494,7 +489,13 @@ class BidsWriter(BidsIO):
         The modified channel dataframe.
 
         """
-        return channels_df
+        channels_df_df = channels_df.replace(np.nan, "n/a", regex=True)
+        channels_df.to_csv(
+            self.chanstsv_fpath,
+            sep="\t",
+            # index_label=True,
+            index=False,
+        )
 
     def write_participants_tsv(self, participants_df):
         """

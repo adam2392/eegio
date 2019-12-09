@@ -1,7 +1,7 @@
 import mne
 import pytest
 
-from eegio.loaders.bids import BidsPatient
+from eegio.loaders import BidsPatient
 
 
 @pytest.mark.usefixture("bidspatient")
