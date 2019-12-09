@@ -80,12 +80,8 @@ class BidsPatient(BaseBids):
         self._get_all_datasets()
 
         # instantiate a loader/writer
-        self.loader = BidsLoader(
-            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
-        )
-        self.writer = BidsWriter(
-            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
-        )
+        self.loader = BidsLoader(bids_root=self.datadir, subject_id=self.subject_id, session_id=self.session_id)
+        self.writer = BidsWriter(bids_root=self.datadir, subject_id=self.subject_id, session_id=self.session_id)
 
         # run BIDS compatability checks
         self._bids_compatible_check()
@@ -148,12 +144,12 @@ class BidsPatient(BaseBids):
 
         """
         # instantiate a loader/writer
-        self.loader = BidsLoader(
-            bidsdir=self.datadir,
-            subject_id=self.subject_id,
-            session_id=self.session_id,
-            run_id=runid,
-        )
+        self.loader = BidsLoader(bids_root=self.datadir,
+                                 subject_id=self.subject_id,
+                                 session_id=self.session_id,
+                                 kind=self.modality,
+                                 acquisition=self.modality,
+                                 run_id=runid)
 
     def _write(self, runid):
         """
@@ -165,12 +161,12 @@ class BidsPatient(BaseBids):
             Identifier for the desired recording
 
         """
-        self.writer = BidsWriter(
-            bidsdir=self.datadir,
-            subject_id=self.subject_id,
-            session_id=self.session_id,
-            run_id=runid,
-        )
+        self.writer = BidsWriter(bids_root=self.datadir,
+                                 subject_id=self.subject_id,
+                                 session_id=self.session_id,
+                                 kind=self.modality,
+                                 acquisition=self.modality,
+                                 run_id=runid)
 
     def _create_derivative_folders(self, types="all"):
         """
@@ -300,13 +296,12 @@ class BidsPatient(BaseBids):
         # load in all the mne_raw datasets
         rawlist = []
         for run_id in runs_in_session:
-            loader = BidsLoader(
-                bidsdir=self.datadir,
-                subject_id=self.subject_id,
-                session_id=session_id,
-                run_id=run_id,
-                kind=kind,
-            )
+            loader = BidsLoader(bids_root=self.datadir,
+                                subject_id=self.subject_id,
+                                session_id=session_id,
+                                kind=kind,
+                                acquisition=self.modality,
+                                run_id=run_id)
             rawlist.append(loader.load_dataset())
         return rawlist
 
@@ -326,13 +321,12 @@ class BidsPatient(BaseBids):
             An object containing the raw EEG data
 
         """
-        loader = BidsLoader(
-            bidsdir=self.datadir,
-            subject_id=self.subject_id,
-            session_id=session_id,
-            run_id=run_id,
-            kind=kind,
-        )
+        loader = BidsLoader(bids_root=self.datadir,
+                                 subject_id=self.subject_id,
+                                 session_id=session_id,
+                                 kind=kind,
+                                 acquisition=self.modality,
+                                 run_id=run_id)
         raw = loader.load_dataset()
         return raw
 
@@ -354,23 +348,21 @@ class BidsPatient(BaseBids):
             if not os.path.exists(fpath):
                 raise OSError(f"{fpath} doesn't exist. Please pass in valid filepaths.")
             if line_noise != 50:
-                loader = BidsLoader(
-                    bidsdir=self.datadir,
-                    subject_id=self.subject_id,
-                    session_id=self.session_id,
-                    run_id=i,
-                    kind=kind,
-                )
+                loader = BidsLoader(bids_root=self.datadir,
+                                    subject_id=self.subject_id,
+                                    session_id=self.session_id,
+                                    kind=kind,
+                                    acquisition=self.modality,
+                                    run_id=i)
                 sidecardict = loader.load_sidecar_json()
                 sidecardict["PowerLineFrequency"] = line_noise
 
-                writer = BidsWriter(
-                    bidsdir=self.datadir,
-                    subject_id=self.subject_id,
-                    session_id=self.session_id,
-                    run_id=i,
-                    kind=kind,
-                )
+                writer = BidsWriter(bids_root=self.datadir,
+                                    subject_id=self.subject_id,
+                                    session_id=self.session_id,
+                                    kind=kind,
+                                    acquisition=self.modality,
+                                    run_id=i)
                 writer.write_sidecar_json(sidecardict)
 
             # TODO: Check if .fif file already exists. Otherwise convert to fif

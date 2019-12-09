@@ -5,7 +5,7 @@ from mne_bids import make_bids_basename
 from eegio.base.utils.bids_helper import BidsBuilder, BidsUtils, BidsConverter
 
 
-@pytest.mark.usefixture(["bids_dir", "edf_fpath"])
+@pytest.mark.usefixture(["bids_root", "edf_fpath"])
 class TestBidsPatient:
     def test_bids_setup(self, bids_dir, edf_fpath):
         """
@@ -28,7 +28,7 @@ class TestBidsPatient:
         modality = "eeg"
         test_sessionid = "seizure"
         test_runid = "01"
-        # bids_dir = os.path.join(os.getcwd(), "./data/bids_layout/")
+        # bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
         BidsBuilder.make_bids_folder_struct(
             datadir=bids_dir,
             subject=test_subjectid,
@@ -42,7 +42,7 @@ class TestBidsPatient:
         # call bidsbuilder pipeline
         bids_path = BidsConverter.convert_to_bids(
             edf_fpath=edf_fpath,
-            bids_dir=bids_dir,
+            bids_root=bids_dir,
             bids_basename=bids_basename,
             overwrite=True,
         )

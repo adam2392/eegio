@@ -22,7 +22,7 @@ class BidsIO(object):
 
     Attributes
     ----------
-    bidsdir : Union[str, os.PathLike]
+    bids_root : Union[str, os.PathLike]
         The base directory for Bids data
     subject_id : str
         The unique identifier for the corresponding BidsPatient
@@ -35,9 +35,13 @@ class BidsIO(object):
 
     """
 
-    def __init__(
-        self, bidsdir, subject_id, session_id, kind, run_id=None, datatype="edf"
-    ):
+    def __init__(self, bids_root,
+                 subject_id,
+                 session_id,
+                 kind,
+                 acquisition,
+                 run_id=None,
+                 datatype="fif"):
         """
         Initialize a BidsIO Object.
 
@@ -45,7 +49,8 @@ class BidsIO(object):
 
         Parameters
         ----------
-        bidsdir :
+        acquisition :
+        bids_root :
         subject_id :
         session_id :
         kind :
@@ -53,23 +58,37 @@ class BidsIO(object):
         datatype :
 
         """
-        self.rootdir = bidsdir
+        self.rootdir = bids_root
         self.subject_id = subject_id
         self.run_id = run_id
         self.session_id = session_id
         self.subjdir = os.path.join(
-            bidsdir, make_bids_basename(subject=self.subject_id)
+            bids_root, make_bids_basename(subject=self.subject_id)
         )  # 'sub-' + self.subject_val)
         self.sessiondir = os.path.join(
             self.subjdir, make_bids_basename(session=self.session_id)
         )  # 'ses-' + self.session_id)
+        if 'meg' in kind:
+            kind = 'meg'
+        elif 'ecog' in kind or 'seeg' in kind:
+            kind = 'ieeg'
+        elif 'eeg' in kind:
+            kind = 'eeg'
         self.datadir = os.path.join(self.sessiondir, kind)
         self.kind = kind
+        self.acquisition = acquisition
         self.datatype = datatype
 
         SUPPORTED_DATATYPES = ["edf", "fif", "nii", "nii.gz", "mgz"]
         if datatype not in SUPPORTED_DATATYPES:
             raise ValueError(f"Supported data file types are: {SUPPORTED_DATATYPES}")
+
+    def _make_bids_basename(self, suffix):
+        return make_bids_basename(subject=self.subject_id,
+                                  session=self.session_id,
+                                  acquisition=self.acquisition,
+                                  run=self.run_id,
+                                  suffix=suffix)
 
     @property
     def bids_parameters(self):
@@ -81,7 +100,7 @@ class BidsIO(object):
         List of parameters
 
         """
-        return [self.rootdir, self.subject_id, self.session_id, self.kind, self.run_id]
+        return [self.rootdir, self.subject_id, self.session_id, self.acquisition, self.kind, self.run_id]
 
     @property
     def participantsjson_fpath(self):
@@ -119,10 +138,7 @@ class BidsIO(object):
         """
         return os.path.join(
             self.datadir,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix="events.tsv",
             ),
         )
@@ -139,10 +155,7 @@ class BidsIO(object):
         """
         return os.path.join(
             self.datadir,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix=f"{self.kind}.{self.datatype}",
             ),
         )
@@ -160,10 +173,7 @@ class BidsIO(object):
         return os.path.join(
             self.datadir,
             "results",
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix="results.npz",
             ),
         )
@@ -180,10 +190,7 @@ class BidsIO(object):
         """
         return os.path.join(
             self.datadir,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix=f"{self.kind}.json",
             ),
         )
@@ -200,10 +207,7 @@ class BidsIO(object):
         """
         return os.path.join(
             self.datadir,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix="channels.tsv",
             ),
         )
@@ -265,10 +269,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix="events.tsv",
             ),
         )
@@ -287,10 +288,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix=f"{self.kind}.{self.datatype}",
             ),
         )
@@ -309,10 +307,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             "results",
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix="results.npz",
             ),
         )
@@ -331,10 +326,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix=f"{self.kind}.json",
             ),
         )
@@ -353,10 +345,7 @@ class BidsIO(object):
             make_bids_basename(subject=self.subject_id),
             make_bids_basename(session=self.session_id),
             self.kind,
-            make_bids_basename(
-                subject=self.subject_id,
-                session=self.session_id,
-                run=self.run_id,
+            self._make_bids_basename(
                 suffix="channels.tsv",
             ),
         )
@@ -386,7 +375,7 @@ class BidsLoader(BidsIO):
 
     Attributes
     ----------
-    bidsdir : Union[str, os.PathLike]
+    bids_root : Union[str, os.PathLike]
         The base directory for bids data
     subject_id : str
         The unique identifier for the BidsPatient
@@ -399,20 +388,21 @@ class BidsLoader(BidsIO):
 
     """
 
-    def __init__(self, bidsdir, subject_id, session_id, run_id=None, kind="eeg"):
+    def __init__(self, bids_root, subject_id, session_id, kind, acquisition, run_id=None):
         """
         Initialize a BidsLoader object.
 
         Parameters
         ----------
-        bidsdir :
+        acquisition : 
+        bids_root :
         subject_id :
         session_id :
         run_id :
         kind :
 
         """
-        super(BidsLoader, self).__init__(bidsdir, subject_id, session_id, kind, run_id)
+        super(BidsLoader, self).__init__(bids_root, subject_id, session_id, kind, acquisition, run_id)
 
     def load_sidecar_json(self):
         """
@@ -527,7 +517,7 @@ class BidsWriter(BidsIO):
 
     Attributes
     ----------
-    bidsdir : Union[str, os.PathLike]
+    bids_root : Union[str, os.PathLike]
         The base directory for bids data
     subject_id : str
         The unique identifier for the BidsPatient
@@ -540,20 +530,21 @@ class BidsWriter(BidsIO):
 
     """
 
-    def __init__(self, bidsdir, subject_id, session_id, run_id=None, kind="eeg"):
+    def __init__(self, bids_root, subject_id, session_id, kind, acquisition, run_id=None):
         """
         Initialize a BidsWriter Object.
 
         Parameters
         ----------
-        bidsdir :
+        acquisition : 
+        bids_root :
         subject_id :
         session_id :
         run_id :
         kind :
 
         """
-        super(BidsWriter, self).__init__(bidsdir, subject_id, session_id, kind, run_id)
+        super(BidsWriter, self).__init__(bids_root, subject_id, session_id, kind, acquisition, run_id)
 
     def write_channels_tsv(self, metadata, fpath=None, overwrite=True):
         """

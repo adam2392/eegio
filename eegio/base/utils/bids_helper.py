@@ -5,16 +5,18 @@ Version: 1.0
 """
 
 import json
-import os
 from typing import Union
-
+import os
 import mne
 import mne_bids
 import numpy as np
 import pandas as pd
 from mne_bids import make_bids_basename
-from mne_bids import write_raw_bids, make_bids_folders
+from mne_bids import write_raw_bids, make_bids_folders, read_raw_bids
 from mne_bids.utils import _parse_bids_filename
+
+from eegio.base.config import BAD_MARKERS
+from eegio.base.utils.scrubber import ChannelScrub
 
 
 class BidsBuilder(object):
@@ -49,7 +51,7 @@ class BidsBuilder(object):
 
     @staticmethod
     def make_preprocessed_folder(
-        datadir, subject_id, session="one", preprocess_name="preprocessed"
+            datadir, subject_id, session="one", preprocess_name="preprocessed"
     ):
         """
         Create the preproceesed data folder in the correct location if it does not already exist.
@@ -105,14 +107,16 @@ class BidsBuilder(object):
 class BidsConverter:
     @staticmethod
     def convert_to_bids(
-        edf_fpath,
-        bids_dir,
-        bids_basename,
-        excluded_contacts=None,
-        eog_contacts=None,
-        misc_contacts=None,
-        overwrite=False,
-        use_preprocess_pipeline=True,
+            edf_fpath,
+            bids_root,
+            bids_basename,
+            modality,
+            excluded_contacts=None,
+            eog_contacts=None,
+            misc_contacts=None,
+            overwrite=False,
+            line_freq=None,
+            use_preprocess_pipeline=True,
     ):
         """
         Convert the passed edf file into the Bids format.
@@ -121,7 +125,7 @@ class BidsConverter:
         ----------
         edf_fpath : Union[str, os.PathLike]
             The location the edf file.
-        bids_dir : Union[str, os.PathLike]
+        bids_root : Union[str, os.PathLike]
             The base directory for newly created bids files.
         bids_basename : str
             The base name of the new data files
@@ -149,13 +153,53 @@ class BidsConverter:
             eog=eog_contacts,
             misc=misc_contacts,
         )
+        if line_freq is not None:
+            raw.info['line_freq'] = line_freq
+
+        # read in the events from the EDF file
+        events_data, events_id = mne.events_from_annotations(raw)
+
+        channel_scrub = ChannelScrub
+
+        # convert the channel types based on acquisition if necessary
+        if modality is not None:
+            ch_modality_map = {ch: modality for ch in raw.ch_names}
+            raw.set_channel_types(ch_modality_map)
+            ch_type_mapping = channel_scrub.label_channel_types(raw.ch_names)
+            raw.set_channel_types((ch_type_mapping))
+
+        # reformat channel text if necessary
+        channel_scrub.channel_text_scrub(raw)
+
+        # look for bad channels that are obvious
+        channel_names = raw.ch_names
+        bad_channels = channel_scrub.look_for_bad_channels(channel_names)
+        bad_channels_dict = {}
+        for bad in bad_channels:
+            bad_channels_dict[
+                bad
+            ] = f"Scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
+        raw.info['bads'] = bad_channels
+
+
+        # save a fif copy and reload it
+        raw.save(
+            os.path.join(bids_root, bids_basename + ".fif"), overwrite=overwrite
+        )
+        raw = mne.io.read_raw_fif(
+            os.path.join(bids_root, bids_basename + ".fif")
+        )
+
+        # actually perform write_raw bids
         output_path = write_raw_bids(
-            raw, bids_basename, output_path=bids_dir, overwrite=overwrite, verbose=False
+            raw, bids_basename, output_path=bids_root,
+            events_data=events_data, event_id=events_id,
+            overwrite=overwrite, verbose=False
         )
         return output_path
 
     @staticmethod
-    def preprocess_into_fif(bids_fname, bids_dir, kind="eeg", overwrite=True):
+    def preprocess_into_fif(bids_fname, bids_root, kind="eeg", overwrite=True):
         """
         Preprocess the edf file into fif format for easier manipulation.
 
@@ -169,7 +213,7 @@ class BidsConverter:
         ----------
         bids_fname : Union[str, os.PathLike]
             The path to the bids format edf file
-        bids_dir : Union[str, os.PathLike]
+        bids_root : Union[str, os.PathLike]
             The base directory for bids data
         kind : str
             The type of data contained in the edf file.
@@ -188,7 +232,7 @@ class BidsConverter:
             run=params["run"],
             suffix="eeg.edf",
         )
-        raw = mne_bids.read_raw_bids(bids_basename, bids_dir)
+        raw = mne_bids.read_raw_bids(bids_basename, bids_root)
 
         # get events and convert to annotations
         events, events_id = mne.events_from_annotations(raw)
@@ -204,7 +248,7 @@ class BidsConverter:
 
         # add a bids run
         preprocessed_dir = os.path.join(
-            bids_dir,
+            bids_root,
             make_bids_basename(subject=params["sub"]),
             make_bids_basename(session=params["ses"]),
             f"{kind}",
@@ -231,7 +275,7 @@ class BidsConverter:
         output_path = write_raw_bids(
             raw,
             bids_basename,
-            output_path=bids_dir,
+            output_path=bids_root,
             overwrite=overwrite,
             # events_data=events,
             verbose=False,
@@ -242,7 +286,7 @@ class BidsConverter:
 class BidsUtils:
     @staticmethod
     def add_field_to_participants_json(
-        current_dict: dict, new_field: str, description: Union[str, dict]
+            current_dict: dict, new_field: str, description: Union[str, dict]
     ):
         """
         Add a new field to the participants.json file.
@@ -442,3 +486,112 @@ def write_tsv(fname, dictionary, overwrite=False, verbose=False):
     if verbose:
         print(os.linesep + "Writing '%s'..." % fname + os.linesep)
         print(_tsv_to_str(dictionary))
+
+
+if __name__ == "__main__":
+    import os
+
+    DATADIR = "/Users/Adam2392/Documents/eegio/"
+    bids_root = os.path.join(DATADIR, "./data/bids_layout/")
+    RUN_IEEG = True
+    line_freq = 60
+
+    test_subjectid = "0001"
+    test_sessionid = "seizure"
+    test_runid = "01"
+    if RUN_IEEG:
+        edf_fpath = os.path.join(bids_root, "raw", "ieeg_ecog_test.edf")
+
+        # create the BIDS directory structure
+        modality = "ecog"
+        # bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
+
+        ''' Create folder structure '''
+        if not os.path.exists(bids_root):
+            print("Making bids root directory.")
+            BidsBuilder.make_bids_folder_struct(
+                datadir=bids_root,
+                subject=test_subjectid,
+                kind=modality,
+                session_id=test_sessionid,
+            )
+
+        ''' Write data file into BIDS format '''
+        # add a bids run
+        bids_basename = make_bids_basename(
+            subject=test_subjectid,
+            session=test_sessionid,
+            run=test_runid,
+            acquisition=modality,
+        )
+        print("Loading filepath: ", edf_fpath)
+        print("Writing to bidsroot: ", bids_root)
+        print("Bids basenmae; ", bids_basename)
+        # call bidsbuilder pipeline
+        bids_path = BidsConverter.convert_to_bids(
+            edf_fpath=edf_fpath,
+            bids_root=bids_root,
+            bids_basename=bids_basename,
+            modality=modality,
+            line_freq=60,
+            overwrite=True,
+        )
+    else:
+        edf_fpath1 = os.path.join(bids_root, "raw", "scalp_test.edf")
+        edf_fpath2 = os.path.join(bids_root, "raw", "scalp_test_2.edf")
+        edf_fpaths = [edf_fpath1, edf_fpath2]
+
+        for edf_fpath in edf_fpaths:
+            # create the BIDS directory structure
+            modality = "eeg"
+            # bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
+
+            ''' Create folder structure '''
+            if not os.path.exists(bids_root):
+                print("Making bids root directory.")
+                BidsBuilder.make_bids_folder_struct(
+                    datadir=bids_root,
+                    subject=test_subjectid,
+                    kind=modality,
+                    session_id=test_sessionid,
+                )
+
+            ''' Write data file into BIDS format '''
+            # add a bids run
+            bids_basename = make_bids_basename(
+                subject=test_subjectid,
+                session=test_sessionid,
+                run=test_runid,
+                acquisition=modality,
+            )
+            print("Loading filepath: ", edf_fpath)
+            print("Writing to bidsroot: ", bids_root)
+            print("Bids basenmae; ", bids_basename)
+            # call bidsbuilder pipeline
+            bids_path = BidsConverter.convert_to_bids(
+                edf_fpath=edf_fpath,
+                bids_root=bids_root,
+                bids_basename=bids_basename,
+                modality=modality,
+                line_freq=line_freq,
+                overwrite=True,
+            )
+
+    from eegio.loaders.bids.bids_run import BidsRun
+    if modality in ["ecog", "seeg"]:
+        kind = "ieeg"
+    elif modality == "eeg":
+        kind = "eeg"
+    bids_fname = bids_basename + f"_{kind}.fif"
+
+    raw = read_raw_bids(bids_fname, bids_root)
+
+    bidsrun = BidsRun(subject_id=test_subjectid,
+                      session_id=test_sessionid,
+                      run_id=test_runid,
+                      bids_root=bids_root,
+                      acquisition=modality,
+                      )
+    raw = bidsrun.load_data()
+
+    print(raw)

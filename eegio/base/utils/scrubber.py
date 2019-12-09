@@ -11,19 +11,20 @@ from eegio.base.config import NON_EEG_MARKERS, BAD_MARKERS
 class ChannelScrub:
     @classmethod
     def channel_text_scrub(cls, raw: mne.io.BaseRaw):
+        """TODO: ACCOUNT FOR - BEING IN BIPOLAR MONTAGE CHANNEL LABELS. """
         def _reformatchanlabel(label):
             """
             Helper function to process a single channel label to make sure it is:
 
-            - lower case
+            - upper case
             - removed unnecessary strings (POL, eeg, -ref)
             - removed empty spaces
 
             :param label: (str) a contact label that may have extra chars, or be improperly cased
-            :return: label (str) the reformatted string that is lowercase and w/o spaces
+            :return: label (str) the reformatted string that is uppercase and w/o spaces
             """
             # hard coded replacement rules
-            label = str(label).replace("POL", "").replace(" ", "").lower()
+            label = str(label).replace("POL", "").replace(" ", "").upper()
             label = label.replace("EEG", "").replace("-REF", "")
 
             # replace "Grid" with 'G' label
@@ -93,7 +94,7 @@ class ChannelScrub:
         return bad_channels
 
     @classmethod
-    def label_channel_types(cls, labels: List[str], mapping: dict = None):
+    def label_channel_types(cls, labels: List[str]):
         """
         Function to load in the channel types. The possibilities are: EEG, STIM, EOG, EKG, Misc.
         that are from MNE-Python.
@@ -125,35 +126,34 @@ class ChannelScrub:
 
         # create hash dictionary to store label of each channel
         channeltypes = {}
-
         for chanlabel in contacts.chanlabels:
+            eleclabel = chanlabel
             # get electrode label for this channel
-            eleclabel = contacts.get_elec(chanlabel)
-
+            # eleclabel = contacts.get_elec(chanlabel)
             # get rest of electrode labels
-            elec_contacts_nums = [
-                int(remove_letters(labels[ind]))
-                for ind in contacts.electrodes[eleclabel]
-            ]
+            # elec_contacts_nums = [
+            #     int(remove_letters(labels[ind]))
+            #     for ind in contacts.electrodes[eleclabel]
+            # ]
 
-            if elec_contacts_nums == []:
-                channeltypes[chanlabel] = "BAD"
-            elif any(x in eleclabel for x in ["EKG", "ECG"]):
-                channeltypes[chanlabel] = "EKG"
+            # if elec_contacts_nums == []:
+            #     channeltypes[chanlabel] = "BAD"
+            if any(x in eleclabel for x in ["EKG", "ECG"]):
+                channeltypes[chanlabel] = "ecg"
             elif "EOG" in eleclabel:
-                channeltypes[chanlabel] = "EOG"
+                channeltypes[chanlabel] = "eog"
             elif "EMG" in eleclabel:
-                channeltypes[chanlabel] = "EMG"
+                channeltypes[chanlabel] = "emg"
             elif "STIM" in eleclabel:
-                channeltypes[chanlabel] = "STIM"
-            elif eleclabel == "G":
-                channeltypes[chanlabel] = "GRID"
-            elif max(elec_contacts_nums) <= 6:
-                channeltypes[chanlabel] = "STRIP"
-            elif max(elec_contacts_nums) > 6 and max(elec_contacts_nums) < 20:
-                channeltypes[chanlabel] = "SEEG"
-            else:
-                channeltypes[chanlabel] = "EEG"
+                channeltypes[chanlabel] = "stim"
+            # elif eleclabel == "G":
+            #     channeltypes[chanlabel] = "GRID"
+            # elif max(elec_contacts_nums) <= 6:
+            #     channeltypes[chanlabel] = "STRIP"
+            # elif max(elec_contacts_nums) > 6 and max(elec_contacts_nums) < 20:
+            #     channeltypes[chanlabel] = "SEEG"
+            # else:
+            #     channeltypes[chanlabel] = "EEG"
 
         return channeltypes
 
@@ -197,7 +197,7 @@ class EventScrub:
 
         # if not, then parse through possible markers
         for name, eventid in event_ids.items():
-            name = ",".join(name.lower().split(" "))
+            name = ",".join(name.upper().split(" "))
 
             # search for onset markers
             if any(re.search(r"\b{}\b".format(x), name) for x in onsetmarks):
@@ -261,7 +261,7 @@ class EventScrub:
 
         # if not, then parse through possible markers
         for name, eventid in event_ids.items():
-            name = ",".join(name.lower().split(" "))
+            name = ",".join(name.upper().split(" "))
 
             # search for offset markers
             if any(re.search(r"\b{}\b".format(x), name) for x in offsetmarks):

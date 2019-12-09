@@ -44,13 +44,13 @@ class BaseBids(object):
 
     Notes
     -----
-    datadir should be named and formatted according to BIDS format. For example:
+    bids_root should be named and formatted according to BIDS format. For example:
 
-    datadir = <study_name>/raw/
+    bids_root = <study_name>/raw/
 
     maybe it will be:
 
-    datadir = <study_name>/derivatives/<derivative_category_name>
+    bids_root = <study_name>/derivatives/<derivative_category_name>
 
     """
 

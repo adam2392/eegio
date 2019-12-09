@@ -57,8 +57,8 @@ class Test_BidsLoader:
                 subject_id=test_subjectid,
                 session_id=session_id,
                 run_id=run_id,
-                datadir=test_dir,
-                modality=kind,
+                bids_root=test_dir,
+                acquisition=kind,
             )
             run._create_bidsrun(edf_fpath)
         else:
@@ -66,8 +66,8 @@ class Test_BidsLoader:
                 subject_id=test_subjectid,
                 session_id=session_id,
                 run_id=run_id,
-                datadir=test_fpath,
-                modality=kind,
+                bids_root=test_fpath,
+                acquisition=kind,
             )
             run._create_bidsrun(edf_fpath)
 

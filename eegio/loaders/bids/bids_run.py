@@ -32,9 +32,9 @@ class BidsRun(BaseBids):
         The identifier for this run's session.
     run_id:
         The identifier for the actual recording snapshot.
-    datadir: Union[str, os.PathLike]
+    bids_root: Union[str, os.PathLike]
         Where this dataset is located (base directory)
-    modality: str
+    acquisition: str
         The method of data recording.
     original_fileid: str
         The source's file path for backwards annotation.
@@ -46,8 +46,8 @@ class BidsRun(BaseBids):
         subject_id: str,
         session_id: str,
         run_id: str,
-        datadir: Union[str, os.PathLike] = None,
-        modality: str = "ieeg",
+        bids_root: Union[str, os.PathLike] = None,
+        acquisition: str = "ieeg",
         montage: str = None,
     ):
         """
@@ -58,19 +58,23 @@ class BidsRun(BaseBids):
         subject_id :
         session_id :
         run_id :
-        datadir :
-        modality :
+        bids_root :
+        acquisition :
 
         """
-        super(BidsRun, self).__init__(datadir=datadir, modality=modality)
+        super(BidsRun, self).__init__(datadir=bids_root, modality=acquisition)
         self.subject_id = subject_id
         self.session_id = session_id
         self.run_id = run_id
         self.result_fpath = None
 
         # instantiate a loader/writer
-        self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
-        self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
+        self.loader = BidsLoader(bids_root=bids_root,
+                                 subject_id=subject_id,
+                                 session_id=session_id,
+                                 kind=acquisition,
+                                 acquisition=acquisition, run_id=run_id)
+        self.writer = BidsWriter(bids_root=bids_root, subject_id=subject_id, session_id=session_id, kind=acquisition, acquisition=acquisition, run_id=run_id)
 
         if not os.path.exists(self.loader.datafile_fpath):
             raise RuntimeError(

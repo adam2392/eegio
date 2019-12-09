@@ -63,7 +63,7 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
     # # Necessary within the temporary directory structure to first create the patient.
     # bidspat = BidsPatient(subject_val=test_subjectid,
     #                       session_id=session_id,
-    #                       datadir=test_fpath,
+    #                       bids_root=test_fpath,
     #                       kind=kind)
     # bidspat.add_scans([original_fileid])
 
@@ -71,8 +71,8 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
         subject_id=test_subjectid,
         session_id=session_id,
         run_id=run_id,
-        datadir=test_fpath,
-        modality=kind,
+        bids_root=test_fpath,
+        acquisition=kind,
     )
     return run
 
@@ -102,39 +102,6 @@ def contacts():
 
 
 @pytest.fixture(scope="class")
-def eegts():
-    """
-    Creating a pytest fixture for a fake EEG Time series init.
-
-    :return:
-    """
-    import numpy as np
-    from eegio.base.objects.electrodes.elecs import Contacts
-    from dev.dataset import EEGTimeSeries
-
-    contactlist = np.hstack(
-        (
-            [f"A{i}" for i in range(16)],
-            [f"L{i}" for i in range(16)],
-            [f"B'{i}" for i in range(16)],
-            [f"D'{i}" for i in range(16)],
-            ["C'1", "C'2", "C'4", "C'8"],
-            ["C1", "C2", "C3", "C4", "C5", "C6"],
-        )
-    )
-    contacts = Contacts(contactlist)
-    N = len(contacts)
-    T = 2500
-    rawdata = np.random.random((N, T))
-    times = np.arange(T)
-    samplerate = 1000
-    modality = "ecog"
-
-    eegts = EEGTimeSeries(rawdata, times, contacts, samplerate, modality)
-    return eegts
-
-
-@pytest.fixture(scope="class")
 def clinical_fpath():
     """
     FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS
@@ -155,7 +122,7 @@ def edf_fpath():
     :return:
     """
     # load in edf data
-    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/")
+    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/raw/")
     filepath = os.path.join(testdatadir, "scalp_test.edf")
     return filepath
 
@@ -168,7 +135,7 @@ def fif_fpath():
     :return:
     """
     # load in edf data
-    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/")
+    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/raw/")
     filepath = os.path.join(testdatadir, "scalp_test_raw.fif")
     return filepath
 

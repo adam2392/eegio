@@ -1,7 +1,7 @@
 {
     "TaskName": null,
-    "Manufacturer": "n/a",
-    "PowerLineFrequency": 60,
+    "Manufacturer": "nk",
+    "PowerLineFrequency": 60.0,
     "SamplingFrequency": 200.0,
     "SoftwareFilters": "n/a",
     "RecordingDuration": 235.995,
@@ -9,10 +9,11 @@
     "EEGReference": "n/a",
     "EEGGround": "n/a",
     "EEGPlacementScheme": "n/a",
-    "EEGChannelCount": 42,
+    "EEGChannelCount": 2,
     "EOGChannelCount": 0,
-    "ECGChannelCount": 0,
+    "ECGChannelCount": 2,
     "EMGChannelCount": 0,
     "MiscChannelCount": 0,
-    "TriggerChannelCount": 0
+    "TriggerChannelCount": 0,
+    "InstitutionName": "National institute of Health_v2"
 }
