@@ -105,19 +105,26 @@ class TestBidsRun:
 
         # overwrite for all channels some column, by calling function
         column_id = "low_cutoff"
-        value = "0.0"
+        value = "0.5"
         for channel_id in chs:
             bidsrun_scalp.modify_channel_info(
                 channel_id=channel_id, column_id=column_id, value=value
+            )
+        for channel_id in chs:
+            bidsrun_scalp.modify_channel_info(
+                channel_id=channel_id, column_id=column_id, value="0.0"
             )
 
         # append new channel information
         column_id = "resected"
         value = True
-        for channel_id in chs:
-            bidsrun_scalp.append_channel_info(
-                column_id=column_id, channel_id=channel_id, value=value
-            )
+        channel_id = chs[-1]
+        bidsrun_scalp.append_channel_info(
+            column_id=column_id, channel_id=channel_id, value=value
+        )
+
+        # drop this new information
+        bidsrun_scalp.delete_channel_info(column_id=column_id)
 
     def testbidsrun_errors(self, bidsrun_scalp):
         # get the channel labels
@@ -167,8 +174,7 @@ class TestBidsRun:
         badinds = [i for i, ch in enumerate(chs) if chstatus["status"][ch] == "bad"]
         goodinds = [i for i in range(len(chs)) if i not in badinds]
         badchs = ChannelScrub.look_for_bad_channels(chs[goodinds])
-        with pytest.raises(Exception):
-            assert badchs == []
+        assert badchs == []
 
     def testbidsrun_catastrophic(self, bidsrun_scalp):
         """

@@ -12,8 +12,8 @@ import mne_bids
 import numpy as np
 import pandas as pd
 from mne_bids import make_bids_basename
-
-from eegio.base.utils.bids_helper import write_json
+from mne_bids.utils import _parse_bids_filename
+from mne_bids.utils import _write_json
 
 
 class BidsIO(object):
@@ -24,83 +24,61 @@ class BidsIO(object):
     ----------
     bids_root : Union[str, os.PathLike]
         The base directory for Bids data
-    subject_id : str
+    bids_basename : str
         The unique identifier for the corresponding BidsPatient
-    session_id : str
-        The identifier for the BidsPatient session
-    run_id : str
-        The identifier for the snapshot recording
     kind : str
-        The type of data in the snapshot recording
-
+        The kind (e.g. modality) of the BIDS dataset
+    datatype : str
+        The extension of the type of data stored.
+    verbose : bool
+        Use verbose.
     """
 
-    def __init__(self, bids_root,
-                 subject_id,
-                 session_id,
-                 kind,
-                 acquisition,
-                 run_id=None,
-                 datatype="fif"):
-        """
-        Initialize a BidsIO Object.
+    def __init__(self, bids_root, bids_basename,
+                 kind=None,
+                 datatype="fif",
+                 verbose: bool = True):
+        self.bids_root = bids_root
 
-        Should raise a ValueError if datatype is not supported
+        self.bids_basename = bids_basename
+        # extract BIDS parameters from the bids filename to be loaded/modified
+        # gets: subjectid, sessionid, acquisition type, task name, run, file extension
+        params = _parse_bids_filename(self.bids_basename, verbose=verbose)
+        self.subject_id, self.session_id = params['sub'], params['ses']
+        self.acquisition, self.task, self.run = params['acq'], params['task'], params['run']
+        self.ext = datatype.strip(".")
 
-        Parameters
-        ----------
-        acquisition :
-        bids_root :
-        subject_id :
-        session_id :
-        kind :
-        run_id :
-        datatype :
+        if kind:
+            self.kind = kind
+        else:
+            self.kind = self.acquisition
+        if 'meg' in self.kind:
+            self.kind = 'meg'
+        elif 'ieeg' in self.kind or 'ecog' in self.kind or 'seeg' in self.kind:
+            self.kind = 'ieeg'
+        elif 'eeg' in self.kind:
+            self.kind = 'eeg'
 
-        """
-        self.rootdir = bids_root
-        self.subject_id = subject_id
-        self.run_id = run_id
-        self.session_id = session_id
         self.subjdir = os.path.join(
             bids_root, make_bids_basename(subject=self.subject_id)
-        )  # 'sub-' + self.subject_val)
+        )
         self.sessiondir = os.path.join(
             self.subjdir, make_bids_basename(session=self.session_id)
-        )  # 'ses-' + self.session_id)
-        if 'meg' in kind:
-            kind = 'meg'
-        elif 'ecog' in kind or 'seeg' in kind:
-            kind = 'ieeg'
-        elif 'eeg' in kind:
-            kind = 'eeg'
-        self.datadir = os.path.join(self.sessiondir, kind)
-        self.kind = kind
-        self.acquisition = acquisition
-        self.datatype = datatype
+        )  # 'ses-' + self.session_id)        
+        self.runs_datadir = os.path.join(self.sessiondir, self.kind)
 
         SUPPORTED_DATATYPES = ["edf", "fif", "nii", "nii.gz", "mgz"]
-        if datatype not in SUPPORTED_DATATYPES:
-            raise ValueError(f"Supported data file types are: {SUPPORTED_DATATYPES}")
+        if self.ext.strip(".") not in SUPPORTED_DATATYPES:
+            raise ValueError(f"Supported data file types are: {SUPPORTED_DATATYPES}. "
+                             f"You passed {self.ext}")
 
     def _make_bids_basename(self, suffix):
         return make_bids_basename(subject=self.subject_id,
                                   session=self.session_id,
                                   acquisition=self.acquisition,
-                                  run=self.run_id,
+                                  task=self.task,
+                                  run=self.run,
                                   suffix=suffix)
-
-    @property
-    def bids_parameters(self):
-        """
-        Return a list of basic Bids parameters.
-
-        Returns
-        -------
-        List of parameters
-
-        """
-        return [self.rootdir, self.subject_id, self.session_id, self.acquisition, self.kind, self.run_id]
 
     @property
     def participantsjson_fpath(self):
@@ -112,7 +90,7 @@ class BidsIO(object):
         Participants json path
 
         """
-        return os.path.join(self.rootdir, "participants.json")
+        return os.path.join(self.bids_root, "participants.json")
 
     @property
     def participantstsv_fpath(self):
@@ -124,7 +102,7 @@ class BidsIO(object):
         Participants tsv path
 
         """
-        return os.path.join(self.rootdir, "participants.tsv")
+        return os.path.join(self.bids_root, "participants.tsv")
 
     @property
     def eventstsv_fpath(self):
@@ -137,7 +115,7 @@ class BidsIO(object):
 
         """
         return os.path.join(
-            self.datadir,
+            self.runs_datadir,
             self._make_bids_basename(
                 suffix="events.tsv",
             ),
@@ -154,27 +132,9 @@ class BidsIO(object):
 
         """
         return os.path.join(
-            self.datadir,
+            self.runs_datadir,
             self._make_bids_basename(
-                suffix=f"{self.kind}.{self.datatype}",
-            ),
-        )
-
-    @property
-    def result_fpath(self):
-        """
-        Get the path of the results zipped numpy file.
-
-        Returns
-        -------
-        Results path
-
-        """
-        return os.path.join(
-            self.datadir,
-            "results",
-            self._make_bids_basename(
-                suffix="results.npz",
+                suffix=f"{self.kind}.{self.ext}",
             ),
         )
 
@@ -189,7 +149,7 @@ class BidsIO(object):
 
         """
         return os.path.join(
-            self.datadir,
+            self.runs_datadir,
             self._make_bids_basename(
                 suffix=f"{self.kind}.json",
             ),
@@ -206,7 +166,7 @@ class BidsIO(object):
 
         """
         return os.path.join(
-            self.datadir,
+            self.runs_datadir,
             self._make_bids_basename(
                 suffix="channels.tsv",
             ),
@@ -289,26 +249,7 @@ class BidsIO(object):
             make_bids_basename(session=self.session_id),
             self.kind,
             self._make_bids_basename(
-                suffix=f"{self.kind}.{self.datatype}",
-            ),
-        )
-
-    @property
-    def rel_result_fpath(self):
-        """
-        Get the path of the results zipped numpy file.
-
-        Returns
-        -------
-        Results path
-
-        """
-        return os.path.join(
-            make_bids_basename(subject=self.subject_id),
-            make_bids_basename(session=self.session_id),
-            "results",
-            self._make_bids_basename(
-                suffix="results.npz",
+                suffix=f"{self.kind}.{self.ext}",
             ),
         )
 
@@ -372,37 +313,17 @@ class BidsIO(object):
 class BidsLoader(BidsIO):
     """
     A class containing loading methods for various required BIDS files.
-
-    Attributes
-    ----------
-    bids_root : Union[str, os.PathLike]
-        The base directory for bids data
-    subject_id : str
-        The unique identifier for the BidsPatient
-    session_id : str
-        The identifier for this BidsPatient session
-    run_id : str
-        The identifier for this snapshot recording
-    kind : str
-        The type of recording
-
     """
 
-    def __init__(self, bids_root, subject_id, session_id, kind, acquisition, run_id=None):
-        """
-        Initialize a BidsLoader object.
-
-        Parameters
-        ----------
-        acquisition : 
-        bids_root :
-        subject_id :
-        session_id :
-        run_id :
-        kind :
-
-        """
-        super(BidsLoader, self).__init__(bids_root, subject_id, session_id, kind, acquisition, run_id)
+    def __init__(self, bids_root, bids_basename,
+                 kind=None,
+                 datatype="fif",
+                 verbose: bool = True
+                 ):
+        super(BidsLoader, self).__init__(bids_root, bids_basename,
+                                         kind=kind,
+                                         datatype=datatype,
+                                         verbose=verbose)
 
     def load_sidecar_json(self):
         """
@@ -450,7 +371,7 @@ class BidsLoader(BidsIO):
                 f"{self.bids_parameters}"
             )
         channels = pd.read_table(self.chanstsv_fpath, index_col=None)
-        channels.dropna(inplace=True)
+        # channels.dropna(inplace=True)
         return channels
 
     def load_participants_tsv(self):
@@ -488,7 +409,7 @@ class BidsLoader(BidsIO):
 
     def load_dataset(self):
         """
-        Load in mne.io.Raw dataset based on the sessionid and runid of the dataset.
+        Load in mne.io.Raw dataset based on the sessionid and run of the dataset.
 
         TODO:
         1. Allow exotic return types in the form of easy to use data structures? or keep as MNE.io.Raw.
@@ -506,7 +427,7 @@ class BidsLoader(BidsIO):
             raw = mne.io.read_raw_edf(datafile_fpath)
 
         raw = mne_bids.read_raw_bids(
-            bids_fname=os.path.basename(self.datafile_fpath), bids_root=self.rootdir
+            bids_fname=os.path.basename(self.datafile_fpath), bids_root=self.bids_root
         )
         return raw
 
@@ -514,37 +435,14 @@ class BidsLoader(BidsIO):
 class BidsWriter(BidsIO):
     """
     A class containing writing methods for various required BIDS files.
-
-    Attributes
-    ----------
-    bids_root : Union[str, os.PathLike]
-        The base directory for bids data
-    subject_id : str
-        The unique identifier for the BidsPatient
-    session_id : str
-        The identifier for this BidsPatient session
-    run_id : str
-        The identifier for this snapshot recording
-    kind : str
-        The type of recording
-
     """
 
-    def __init__(self, bids_root, subject_id, session_id, kind, acquisition, run_id=None):
-        """
-        Initialize a BidsWriter Object.
-
-        Parameters
-        ----------
-        acquisition : 
-        bids_root :
-        subject_id :
-        session_id :
-        run_id :
-        kind :
-
-        """
-        super(BidsWriter, self).__init__(bids_root, subject_id, session_id, kind, acquisition, run_id)
+    def __init__(self, bids_root, bids_basename, kind=None,
+                 datatype="fif",
+                 verbose: bool = True):
+        super(BidsWriter, self).__init__(bids_root, bids_basename, kind=kind,
+                                         datatype=datatype,
+                                         verbose=verbose)
 
     def write_channels_tsv(self, metadata, fpath=None, overwrite=True):
         """
@@ -575,7 +473,7 @@ class BidsWriter(BidsIO):
 
         """
         outfile = self.sidecarjson_fpath
-        write_json(outfile, sidecar_dict, overwrite=True)
+        _write_json(outfile, sidecar_dict, overwrite=True)
 
     def write_scans_tsv(self, scans_df):
         """
@@ -638,4 +536,4 @@ class BidsWriter(BidsIO):
 
         """
         outfile = self.participantsjson_fpath
-        write_json(outfile, participants_dict, overwrite=True)
+        _write_json(outfile, participants_dict, overwrite=True)

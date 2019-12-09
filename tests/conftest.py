@@ -31,49 +31,35 @@ def bidspatient(tmp_path_factory):
     test_fpath = os.path.join(os.getcwd(), "data/bids_layout/")
     # test_fpath_path = tmp_path_factory.mktemp('bids_data')
     # test_fpath = str(test_fpath_path)
-    bidspat = BidsPatient(
-        subject_id=test_subjectid,
-        session_id="seizure",
-        datadir=test_fpath,
-        managing_user="test",
-        modality="eeg",
-    )
+    bidspat = BidsPatient(None, bids_fname="eeg")
     return bidspat
 
 
 @pytest.fixture(scope="class")
 def bidsrun_scalp(tmp_path_factory, edf_fpath):
     """
-    Creating a pytest fixture for a fake bidsRun data object
+    Creating a pytest fixture for a fake bidsRun data object.
+    This dataset should already work for the .fif dataset!
+
+    EDF will not match channel names.
+
     Returns
     -------
 
     """
     from eegio.loaders.bids import BidsRun
-
+    from mne_bids import read_raw_bids, make_bids_folders, make_bids_basename
     test_subjectid = "0001"
     session_id = "seizure"
     kind = "eeg"
     run_id = "01"
-    test_fpath = os.path.join(os.getcwd(), "./data/bids_layout/")
-    # test_fpath_path = tmp_path_factory.mktemp('bids_data')
-    # test_fpath = str(test_fpath_path)
-    # original_fileid = edf_fpath
-    #
-    # # Necessary within the temporary directory structure to first create the patient.
-    # bidspat = BidsPatient(subject_val=test_subjectid,
-    #                       session_id=session_id,
-    #                       bids_root=test_fpath,
-    #                       kind=kind)
-    # bidspat.add_scans([original_fileid])
-
-    run = BidsRun(
-        subject_id=test_subjectid,
-        session_id=session_id,
-        run_id=run_id,
-        bids_root=test_fpath,
-        acquisition=kind,
-    )
+    bids_fname = make_bids_basename(subject=test_subjectid,
+                                    session=session_id,
+                                    acquisition=kind,
+                                    run=run_id,
+                                    suffix=kind+".fif")
+    test_bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
+    run = BidsRun(bids_root=test_bids_root, bids_fname=bids_fname)
     return run
 
 

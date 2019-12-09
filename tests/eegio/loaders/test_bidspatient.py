@@ -6,6 +6,7 @@ from eegio.loaders.bids import BidsPatient
 
 @pytest.mark.usefixture("bidspatient")
 class TestBidsPatient:
+    @pytest.mark.skip(reason="TODO: dev")
     def test_bidspatient(self, bidspatient):
         """
         Test to test BidsPatient object.
@@ -52,7 +53,7 @@ class TestBidsPatient:
         assert len(subj_runs) == 2
         assert len(bidspatient.edf_fpaths) == 2
 
-    # @pytest.mark.skip()
+    @pytest.mark.skip(reason="TODO: dev")
     def test_bidspatient_addfields(self, bidspatient):
         """
         Test to test BidsPatient object.
@@ -82,7 +83,7 @@ class TestBidsPatient:
         )
         bidspatient.remove_participants_field("resected_contacts")
 
-    # @pytest.mark.skip()
+    @pytest.mark.skip(reason="TODO: dev")
     def test_bidspatient_participants_modify(self, bidspatient):
         """
         Test function for BidsPatient that allows modification participant files.
@@ -137,7 +138,7 @@ class TestBidsPatient:
         print(subject_metadata)
         assert subject_metadata["age"] == 40
 
-    # @pytest.mark.skip()
+    @pytest.mark.skip(reason="TODO: dev")
     def test_bidspatient_errors(self, bidspatient):
         """
         Test error and warnings raised by patient class that should be raised when a user
@@ -169,5 +170,6 @@ class TestBidsPatient:
                 column_id="nonexisting column", new_value="new_value"
             )
 
+    @pytest.mark.skip(reason="TODO: dev")
     def test_bidspatient_catastrophic(self, bidspatient):
         pass

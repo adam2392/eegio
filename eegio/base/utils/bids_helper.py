@@ -4,16 +4,17 @@ Authors: Adam Li and Patrick Myers.
 Version: 1.0
 """
 
-import json
-from typing import Union
 import os
+import tempfile
+from typing import Union
+
 import mne
 import mne_bids
 import numpy as np
 import pandas as pd
 from mne_bids import make_bids_basename
 from mne_bids import write_raw_bids, make_bids_folders, read_raw_bids
-from mne_bids.utils import _parse_bids_filename
+from mne_bids.utils import _parse_bids_filename, _handle_kind
 
 from eegio.base.config import BAD_MARKERS
 from eegio.base.utils.scrubber import ChannelScrub
@@ -110,7 +111,7 @@ class BidsConverter:
             edf_fpath,
             bids_root,
             bids_basename,
-            modality,
+            acquisition,
             excluded_contacts=None,
             eog_contacts=None,
             misc_contacts=None,
@@ -158,12 +159,11 @@ class BidsConverter:
 
         # read in the events from the EDF file
         events_data, events_id = mne.events_from_annotations(raw)
-
         channel_scrub = ChannelScrub
 
         # convert the channel types based on acquisition if necessary
-        if modality is not None:
-            ch_modality_map = {ch: modality for ch in raw.ch_names}
+        if acquisition is not None:
+            ch_modality_map = {ch: acquisition for ch in raw.ch_names}
             raw.set_channel_types(ch_modality_map)
             ch_type_mapping = channel_scrub.label_channel_types(raw.ch_names)
             raw.set_channel_types((ch_type_mapping))
@@ -181,22 +181,32 @@ class BidsConverter:
             ] = f"Scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
         raw.info['bads'] = bad_channels
 
-
         # save a fif copy and reload it
-        raw.save(
-            os.path.join(bids_root, bids_basename + ".fif"), overwrite=overwrite
-        )
-        raw = mne.io.read_raw_fif(
-            os.path.join(bids_root, bids_basename + ".fif")
-        )
+        params = _parse_bids_filename(bids_basename, True)
+        kind = _handle_kind(raw)
+        fif_data_path = make_bids_folders(subject=params['sub'],
+                                          session=params['ses'],
+                                          kind=kind,
+                                          output_path=bids_root,
+                                          overwrite=False,
+                                          verbose=True)
 
-        # actually perform write_raw bids
-        output_path = write_raw_bids(
-            raw, bids_basename, output_path=bids_root,
-            events_data=events_data, event_id=events_id,
-            overwrite=overwrite, verbose=False
-        )
-        return output_path
+        bids_fname = bids_basename + f"_{kind}.fif"
+        with tempfile.TemporaryDirectory() as tmp_bids_root:
+            raw.save(
+                os.path.join(tmp_bids_root, bids_fname), overwrite=overwrite
+            )
+            raw = mne.io.read_raw_fif(
+                os.path.join(tmp_bids_root, bids_fname)
+            )
+
+            # actually perform write_raw bids
+            bids_root = write_raw_bids(
+                raw, bids_basename, output_path=bids_root,
+                events_data=events_data, event_id=events_id,
+                overwrite=overwrite, verbose=False
+            )
+        return bids_root
 
     @staticmethod
     def preprocess_into_fif(bids_fname, bids_root, kind="eeg", overwrite=True):
@@ -378,119 +388,7 @@ class BidsUtils:
         bidsrun.writer.write_channels_tsv(channels_data)
 
 
-def _to_tsv(data, fname):
-    """
-    Write an OrderedDict into a tsv file.
-
-    Parameters
-    ----------
-    data : collections.OrderedDict
-        Ordered dictionary containing data to be written to a tsv file.
-    fname : str
-        Path to the file being written.
-
-    """
-    n_rows = len(data[list(data.keys())[0]])
-    output = _tsv_to_str(data, n_rows)
-
-    with open(fname, "wb") as f:
-        f.write(output.encode("utf-8"))
-
-
-def _tsv_to_str(data, rows=5):
-    """
-    Return a string representation of the OrderedDict.
-
-    Parameters
-    ----------
-    data : collections.OrderedDict
-        OrderedDict to return string representation of.
-    rows : int, optional
-        Maximum number of rows of data to output.
-
-    Returns
-    -------
-    String representation of the first `rows` lines of `data`.
-
-    """
-    col_names = list(data.keys())
-    n_rows = len(data[col_names[0]])
-    output = list()
-    # write headings.
-    output.append("\t".join(col_names))
-
-    # write column data.
-    max_rows = min(n_rows, rows)
-    for idx in range(max_rows):
-        row_data = list(str(data[key][idx]) for key in data)
-        output.append("\t".join(row_data))
-
-    return "\n".join(output)
-
-
-def write_json(fname, dictionary, overwrite=False, verbose=False):
-    """
-    Write JSON to a file.
-
-    Parameters
-    ----------
-    fname: Union[str, os.PathLike]
-        The path fo the new json file
-    dictionary: Dict
-        The data to write to the json file
-    overwrite: bool
-        Whether to overwrite an existing json file with name fname.
-    verbose: bool
-        Whether to print the data to stdout
-
-    """
-    if os.path.exists(fname) and not overwrite:
-        raise FileExistsError(
-            '"%s" already exists. Please set '  # noqa: F821
-            "overwrite to True." % fname
-        )
-
-    json_output = json.dumps(dictionary, indent=4)
-    with open(fname, "w") as fid:
-        fid.write(json_output)
-        fid.write("\n")
-
-    if verbose is True:
-        print(os.linesep + "Writing '%s'..." % fname + os.linesep)
-        print(json_output)
-
-
-def write_tsv(fname, dictionary, overwrite=False, verbose=False):
-    """
-    Write an ordered dictionary to a .tsv file.
-
-    Parameters
-    ----------
-    fname: Union[str, os.PathLike]
-        The path fo the new json file
-    dictionary: Dict
-        The data to write to the json file
-    overwrite: bool
-        Whether to overwrite an existing json file with name fname.
-    verbose: bool
-        Whether to print the data to stdout
-
-    """
-    if os.path.exists(fname) and not overwrite:
-        raise FileExistsError(
-            '"%s" already exists. Please set '  # noqa: F821
-            "overwrite to True." % fname
-        )
-    _to_tsv(dictionary, fname)
-
-    if verbose:
-        print(os.linesep + "Writing '%s'..." % fname + os.linesep)
-        print(_tsv_to_str(dictionary))
-
-
 if __name__ == "__main__":
-    import os
-
     DATADIR = "/Users/Adam2392/Documents/eegio/"
     bids_root = os.path.join(DATADIR, "./data/bids_layout/")
     RUN_IEEG = True
@@ -532,7 +430,7 @@ if __name__ == "__main__":
             edf_fpath=edf_fpath,
             bids_root=bids_root,
             bids_basename=bids_basename,
-            modality=modality,
+            acquisition=modality,
             line_freq=60,
             overwrite=True,
         )
@@ -572,12 +470,13 @@ if __name__ == "__main__":
                 edf_fpath=edf_fpath,
                 bids_root=bids_root,
                 bids_basename=bids_basename,
-                modality=modality,
+                acquisition=modality,
                 line_freq=line_freq,
                 overwrite=True,
             )
 
     from eegio.loaders.bids.bids_run import BidsRun
+
     if modality in ["ecog", "seeg"]:
         kind = "ieeg"
     elif modality == "eeg":
@@ -586,12 +485,7 @@ if __name__ == "__main__":
 
     raw = read_raw_bids(bids_fname, bids_root)
 
-    bidsrun = BidsRun(subject_id=test_subjectid,
-                      session_id=test_sessionid,
-                      run_id=test_runid,
-                      bids_root=bids_root,
-                      acquisition=modality,
-                      )
+    bidsrun = BidsRun(None, None)
     raw = bidsrun.load_data()
 
     print(raw)

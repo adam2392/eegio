@@ -18,7 +18,6 @@ class TestBaseBids:
 
         """
         # check that base bids initializes correct class attributes
-        modality = "ieeg"
-        with tempfile.TemporaryDirectory() as datadir:
-            basebids = BaseBids(datadir=datadir, modality=modality)
+        with tempfile.TemporaryDirectory() as bids_root:
+            basebids = BaseBids(bids_root=bids_root)
             assert os.path.exists(basebids.description_fpath)

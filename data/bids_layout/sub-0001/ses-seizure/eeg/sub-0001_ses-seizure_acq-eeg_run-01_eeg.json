@@ -9,7 +9,7 @@
     "EEGReference": "n/a",
     "EEGGround": "n/a",
     "EEGPlacementScheme": "n/a",
-    "EEGChannelCount": 2,
+    "EEGChannelCount": 40,
     "EOGChannelCount": 0,
     "ECGChannelCount": 2,
     "EMGChannelCount": 0,

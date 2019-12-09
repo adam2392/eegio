@@ -1,10 +1,12 @@
 """
 ===================================
-03. Convert EEG data to BIDS format
+01. Convert EEG data to BIDS format
 ===================================
 
 In this example, we use MNE-BIDS to create a BIDS-compatible directory of EEG
-data. Specifically, we will follow these steps:
+data. We copy some explicit example from MNE-BIDS and modify small details.
+
+Specifically, we will follow these steps:
 
 1. Download some EEG data from the
    `PhysioBank database <https://physionet.org/physiobank/database>`_.
@@ -15,8 +17,7 @@ data. Specifically, we will follow these steps:
 
 """
 
-# Authors: Stefan Appelhoff <stefan.appelhoff@mailbox.org>
-# License: BSD (3-clause)
+# Authors: Adam Li <adam2392@gmail.com>
 
 ###############################################################################
 # We are importing everything we need for this example:
@@ -108,7 +109,7 @@ print(raw)
 # which are however optional. The required inputs are:
 #
 # * :code:`raw`
-# * :code:`bids_basename`
+# * :code:`bids_fname`
 # * :code:`bids_root`
 #
 # ... as you can see in the docstring:

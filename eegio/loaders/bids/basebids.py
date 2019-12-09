@@ -7,40 +7,34 @@ Version: 1.0
 import os
 import warnings
 from collections import OrderedDict
-from typing import Union
 
 import bids
 import bids.reports
 import mne_bids
+from mne_bids.utils import _write_json
 from mne_bids.utils import print_dir_tree
-
-from eegio.base.utils.bids_helper import write_json
 
 
 class BaseBids(object):
     """
-    An instantiator class of the bids format that any BIDS derivative would use.
+    An instantiator class of the bids format that extends usage of BIDS
+    that any BIDS derivative would use.
 
     It handles:
      - the logistics of creating a bids format file structure
-     - extracting metadata from files stored in iEEG-BIDS format
+     - extracting metadata at the dataset level from files stored in iEEG-BIDS format
      - easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)
 
     Only supports iEEG/scalp EEG data. We assume you store data as a BIDS with sub_<###> as the
     identifiers. Allows easy querying of its own data structure via:
-
-    self.query.
-
-    TODO:
-    1. Add support for runs and acquisitions (https://mne.tools/mne-bids/generated/mne_bids.utils.get_entity_vals.html#mne_bids.utils.get_entity_vals)
-    2.
+    - self.query
 
     Attributes
     ----------
-    datadir: os.PathLike
-        The base directory for storing data
-    modality: str
-        The kind of data we are reading. For example, EEG, MRI, CT, etc.
+    bids_root: os.PathLike
+        The path of the root of the BIDS compatible folder. The session and
+        subject specific folders will be populated automatically by parsing
+        bids_basename.
 
     Notes
     -----
@@ -54,31 +48,43 @@ class BaseBids(object):
 
     """
 
-    def __init__(self, datadir: Union[os.PathLike, str], modality: str):
+    def __init__(self, bids_root):
+        self.bids_root = bids_root
+
+        if not os.path.exists(self.description_fpath):
+            self.create_dataset_description(self.bids_root,
+                                            name="BIDS_DATASET")
+        # if not os.path.exists(self.participants_tsv_fpath):
+        #     self.create_participants_files(self.participants_tsv_fpath, self.participants_json_fpath)
+
+    def _create_participants_json(self, fname, overwrite=False, verbose=False):
         """
-        Initialize a BaseBids Object.
+        Create the participants json file for Bids compliance. an Extension of what is present in MNE-BIDS.
+
+        TODO:
+        1. determine how to incorporate into MNE-BIDS
 
         Parameters
         ----------
-        datadir :
-        modality :
+        fname : Union[str, os.PathLike]
+            The path of the participants json file
+        overwrite : bool
+            Whether to overwrite an existing participants json file
+        verbose : bool
+            Whether to print the data from the participants json file to stdout
 
         """
-        self.rootdir = datadir
-        self.datadir = datadir
-        self.modality = modality
-
-        # initialize a dictionary to store all of our paramters
-        self.parameter_dict = {}
-
-        # store parameters
-        self._store_params()
-
-        if not os.path.exists(self.description_fpath):
-            self.create_dataset_folder(self.datadir, name="BIDS_DATASET")
-
-        # if not os.path.exists(self.participants_tsv_fpath):
-        #     self.create_participants_files(self.participants_tsv_fpath, self.participants_json_fpath)
+        cols = OrderedDict()
+        cols["participant_id"] = {"Description": "Unique participant identifier"}
+        cols["age"] = {
+            "Description": "Age of the participant at time of testing",
+            "Units": "years",
+        }
+        cols["sex"] = {
+            "Description": "Biological sex of the participant",
+            "Levels": {"F": "female", "M": "male"},
+        }
+        _write_json(fname, cols, overwrite, verbose)
 
     @property
     def description_fpath(self):
@@ -90,7 +96,7 @@ class BaseBids(object):
         Dataset description file path.
 
         """
-        return os.path.join(self.datadir, "dataset_description.json")
+        return os.path.join(self.bids_root, "dataset_description.json")
 
     @property
     def participants_tsv_fpath(self):
@@ -102,7 +108,7 @@ class BaseBids(object):
         Participants tsv file path.
 
         """
-        return os.path.join(self.datadir, "participants.tsv")
+        return os.path.join(self.bids_root, "participants.tsv")
 
     @property
     def participants_json_fpath(self):
@@ -114,7 +120,7 @@ class BaseBids(object):
         Participants json file path.
 
         """
-        return os.path.join(self.datadir, "participants.json")
+        return os.path.join(self.bids_root, "participants.json")
 
     @property
     def query(self):
@@ -126,7 +132,7 @@ class BaseBids(object):
         A BidsLayout object
 
         """
-        return bids.BIDSLayout(self.datadir)
+        return bids.BIDSLayout(self.bids_root)
 
     @property
     def parameters(self):
@@ -150,7 +156,7 @@ class BaseBids(object):
         A list of recording types
 
         """
-        return mne_bids.utils.get_kinds(self.datadir)
+        return mne_bids.utils.get_kinds(self.bids_root)
 
     @property
     def subject_nums(self):
@@ -162,7 +168,7 @@ class BaseBids(object):
         A list of subject_val values.
 
         """
-        return mne_bids.utils.get_entity_vals(self.datadir, "sub")
+        return mne_bids.utils.get_entity_vals(self.bids_root, "sub")
 
     @property
     def num_subjects(self):
@@ -178,14 +184,10 @@ class BaseBids(object):
 
     def print_dir_tree(self):
         """Print a directory tree for this Bids dataset."""
-        basepath = os.path.join(self.datadir)
+        basepath = os.path.join(self.bids_root)
         print_dir_tree(basepath)
 
-    def _store_params(self):
-        """Store parameters into a dict object."""
-        self.parameter_dict.update(datadir=self.datadir, modality=self.modality)
-
-    def create_dataset_folder(self, fpath, **dataset_description_kwargs):
+    def create_dataset_description(self, fpath, **dataset_description_kwargs):
         """
         Create a new Bids format dataset.
 
@@ -202,40 +204,13 @@ class BaseBids(object):
 
     def print_summary(self):
         """Print a summary of the patient in the form of a directory tree showing all available data."""
-        if self.modality != "MRI":
+        if "MRI" not in self.query.get_entities(self.bids_root):
             warnings.warn("Print summary only works for neuroimaging type datasets.")
             return
         report = bids.reports.BIDSReport(self.query)
         counter = report.generate()
         main_report = counter.most_common()
         print(main_report)
-
-    def _create_participants_json(self, fname, overwrite=False, verbose=False):
-        """
-        Create the participants json file for Bids compliance.
-
-        Parameters
-        ----------
-        fname : Union[str, os.PathLike]
-            The path of the participants json file
-        overwrite : bool
-            Whether to overwrite an existing participants json file
-        verbose : bool
-            Whether to print the data from the participants json file to stdout
-
-        """
-        cols = OrderedDict()
-        cols["participant_id"] = {"Description": "Unique participant identifier"}
-        cols["age"] = {
-            "Description": "Age of the participant at time of testing",
-            "Units": "years",
-        }
-        cols["sex"] = {
-            "Description": "Biological sex of the participant",
-            "Levels": {"F": "female", "M": "male"},
-        }
-
-        write_json(fname, cols, overwrite, verbose)
 
     # def _participants_tsv(self, raw, subject_val, fname, overwrite=False,
     #                       verbose=True):
@@ -333,6 +308,6 @@ class BaseBids(object):
     #     cols['sex'] = {'Description': 'Biological sex of the participant',
     #                    'Levels': {'F': 'female', 'M': 'male'}}
     #
-    #     write_json(fname, cols, overwrite, verbose)
+    #     _write_json(fname, cols, overwrite, verbose)
     #
     #     return fname
