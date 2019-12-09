@@ -52,7 +52,7 @@ from eegio.loaders.bids.bids_run import BidsRun
 
 DATADIR = "/Users/Adam2392/Documents/eegio/"
 bids_root = os.path.join(DATADIR, "./data/bids_layout/")
-RUN_IEEG = False  # either run scalp, or iEEG
+RUN_IEEG = True  # either run scalp, or iEEG
 line_freq = 60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
 test_subjectid = "0001"
 test_sessionid = "seizure"

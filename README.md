@@ -51,7 +51,7 @@ See example and docs for info on how to format this.
 
 https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
 https://github.com/bids-standard/bids-starter-kit/wiki/The-BIDS-folder-hierarchy
-
+    
 ### Reading EEG Data From EDF/FiF
 These are just lightweight wrappers of MNE/pyedflib reading to load in EDF/FiF data
 easily, so that raw EEG ts are readily accessible in Python friendly format.    

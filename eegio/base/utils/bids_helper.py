@@ -6,6 +6,8 @@ Version: 1.0
 
 import os
 import tempfile
+import json
+import os
 from typing import Union
 
 import mne
@@ -18,6 +20,8 @@ from mne_bids.utils import _parse_bids_filename, _handle_kind
 
 from eegio.base.config import BAD_MARKERS
 from eegio.base.utils.scrubber import ChannelScrub
+from mne_bids import write_raw_bids, make_bids_folders
+from mne_bids.utils import _parse_bids_filename
 
 
 class BidsBuilder(object):

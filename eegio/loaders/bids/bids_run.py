@@ -16,6 +16,14 @@ from mne_bids.utils import _parse_bids_filename, _parse_ext
 from eegio.base.config import BAD_MARKERS
 from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.bids.basebids import BaseBids
+from typing import Union, Dict
+
+import pandas as pd
+import mne
+import mne_bids
+from eegio.base.config import BAD_MARKERS
+from eegio.loaders.bids.basebids import BaseBids
+from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
 
@@ -61,16 +69,6 @@ class BidsRun(BaseBids):
     """
 
     def __init__(self, bids_root, bids_fname: str, verbose: bool = True):
-        """
-        Initialize a BidsRun object.
-
-        Parameters
-        ----------
-        verbose :
-        bids_fname :
-        bids_root :
-
-        """
         super(BidsRun, self).__init__(bids_root=bids_root)
 
         # ensures just base path
@@ -134,7 +132,7 @@ class BidsRun(BaseBids):
         output_path = mne_bids.write_raw_bids(
             raw, bids_basename, output_path=bids_dir, overwrite=True, verbose=False
         )
-        # return output_path
+        return output_path
 
     @property
     def fpath(self):
@@ -347,6 +345,7 @@ class BidsRun(BaseBids):
         channel_df[column_id] = new_data
 
         channel_df.loc[channel_df["name"] == channel_id, column_id] = value
+
         self.writer.write_channels_tsv(channel_df)
 
     def modify_channel_info(self, column_id: str, channel_id: str, value=None):

@@ -7,6 +7,7 @@ Version: 1.0
 import os
 import warnings
 from collections import OrderedDict
+from typing import Union
 
 import bids
 import bids.reports
@@ -22,7 +23,7 @@ class BaseBids(object):
 
     It handles:
      - the logistics of creating a bids format file structure
-     - extracting metadata at the dataset level from files stored in iEEG-BIDS format
+     - extracting metadata from files stored in iEEG-BIDS format
      - easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)
 
     Only supports iEEG/scalp EEG data. We assume you store data as a BIDS with sub_<###> as the
@@ -135,18 +136,6 @@ class BaseBids(object):
         return bids.BIDSLayout(self.bids_root)
 
     @property
-    def parameters(self):
-        """
-        Get a dictionary of parameters for this Bids object.
-
-        Returns
-        -------
-        The parameter dict.
-
-        """
-        return self.parameter_dict
-
-    @property
     def data_types(self):
         """
         Get a list of all recording types in this Bids dataset.
@@ -211,6 +200,33 @@ class BaseBids(object):
         counter = report.generate()
         main_report = counter.most_common()
         print(main_report)
+
+    def _create_participants_json(self, fname, overwrite=False, verbose=False):
+        """
+        Create the participants json file for Bids compliance.
+
+        Parameters
+        ----------
+        fname : Union[str, os.PathLike]
+            The path of the participants json file
+        overwrite : bool
+            Whether to overwrite an existing participants json file
+        verbose : bool
+            Whether to print the data from the participants json file to stdout
+
+        """
+        cols = OrderedDict()
+        cols["participant_id"] = {"Description": "Unique participant identifier"}
+        cols["age"] = {
+            "Description": "Age of the participant at time of testing",
+            "Units": "years",
+        }
+        cols["sex"] = {
+            "Description": "Biological sex of the participant",
+            "Levels": {"F": "female", "M": "male"},
+        }
+
+        _write_json(fname, cols, overwrite, verbose)
 
     # def _participants_tsv(self, raw, subject_val, fname, overwrite=False,
     #                       verbose=True):
@@ -282,32 +298,5 @@ class BaseBids(object):
     #     # overwrite is forced to True as all issues with overwrite == False have
     #     # been handled by this point
     #     _write_tsv(fname, data, True, verbose)
-    #
-    #     return fname
-    #
-    # def _participants_json(self, fname, overwrite=False, verbose=True):
-    #     """Create participants.json for non-default columns in accompanying TSV.
-    #
-    #     Parameters
-    #     ----------
-    #     fname : str
-    #         Filename to save the scans.tsv to.
-    #     overwrite : bool
-    #         Defaults to False.
-    #         Whether to overwrite the existing data in the file.
-    #         If there is already data for the given `fname` and overwrite is False,
-    #         an error will be raised.
-    #     verbose : bool
-    #         Set verbose output to true or false.
-    #
-    #     """
-    #     cols = OrderedDict()
-    #     cols['participant_id'] = {'Description': 'Unique participant identifier'}
-    #     cols['age'] = {'Description': 'Age of the participant at time of testing',
-    #                    'Units': 'years'}
-    #     cols['sex'] = {'Description': 'Biological sex of the participant',
-    #                    'Levels': {'F': 'female', 'M': 'male'}}
-    #
-    #     _write_json(fname, cols, overwrite, verbose)
     #
     #     return fname

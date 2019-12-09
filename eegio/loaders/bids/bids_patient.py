@@ -25,8 +25,6 @@ class BidsPatient(BaseBids):
 
     Attributes
     ----------
-    subject_id: str
-        Identifier for this patient
     bids_fname: str
         Identifier for the session
     bids_root: Union[str, os.PathLike]
@@ -40,22 +38,14 @@ class BidsPatient(BaseBids):
     """
 
     def __init__(self, bids_root, bids_fname: str, verbose):
-        """
-        Initialize BidsPatient object.
 
-        Parameters
-        ----------
-        verbose : 
-        bids_root :
-        bids_fname :
-
-        """
         super(BidsPatient, self).__init__(None, bids_fname=modality)
 
         self.subject_id = subject_id
         self.session_id = bids_fname
         self.managing_user = managing_user
         self.subjdir = os.path.join(self.bids_root, "sub-" + self.subject_id)
+
 
         if not os.path.exists(self.subjdir):
             warnings.warn(
@@ -73,6 +63,12 @@ class BidsPatient(BaseBids):
         # instantiate a loader/writer
         self.loader = BidsLoader(bids_root=self.bids_root, bids_basename=None)
         self.writer = BidsWriter(bids_root=self.bids_root, bids_basename=None)
+        self.loader = BidsLoader(
+            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
+        )
+        self.writer = BidsWriter(
+            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
+        )
 
         # run BIDS compatability checks
         self._bids_compatible_check()

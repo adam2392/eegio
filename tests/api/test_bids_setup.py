@@ -7,7 +7,7 @@ from mne_bids import make_bids_basename, make_bids_folders
 from eegio.base.utils.bids_helper import BidsConverter
 
 
-@pytest.mark.usefixture(["bids_root", "edf_fpath"])
+@pytest.mark.usefixture(["bids_dir", "edf_fpath"])
 class TestBidsPatient:
     def test_bids_setup(self, bids_dir, edf_fpath):
         """
@@ -45,10 +45,10 @@ class TestBidsPatient:
             subject=test_subjectid,
             acquisition=modality,
             session=test_sessionid,
-            run=test_runid
-        )
+            run=test_runid)
+
         # call bidsbuilder pipeline
-        bids_path = BidsConverter.convert_to_bids(
+        bids_root = BidsConverter.convert_to_bids(
             edf_fpath=edf_fpath,
             bids_root=bids_dir,
             bids_basename=bids_basename,
@@ -59,9 +59,7 @@ class TestBidsPatient:
 
         # load it in using mne_bids again
         bids_fname = bids_basename + f"_{modality}.fif"
-        print("bidspath: ", bids_path)
-        print("bids fname: ", bids_fname)
-        raw = mne_bids.read_raw_bids(bids_fname, bids_path)
+        raw = mne_bids.read_raw_bids(bids_fname, bids_root)
 
     @pytest.mark.skip()
     def test_bids_setup_errors(self):

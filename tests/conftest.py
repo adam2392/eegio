@@ -11,7 +11,6 @@ def bids_dir(tmp_path_factory):
     fn = tmp_path_factory.mktemp("bids_data")
     return str(fn)
 
-
 @pytest.fixture(scope="session")
 def test_dir(tmp_path_factory):
     fn = tmp_path_factory.mktemp("bids_data")
@@ -31,9 +30,14 @@ def bidspatient(tmp_path_factory):
     test_fpath = os.path.join(os.getcwd(), "data/bids_layout/")
     # test_fpath_path = tmp_path_factory.mktemp('bids_data')
     # test_fpath = str(test_fpath_path)
-    bidspat = BidsPatient(None, bids_fname="eeg")
+    bidspat = BidsPatient(
+        subject_id=test_subjectid,
+        session_id="seizure",
+        datadir=test_fpath,
+        managing_user="test",
+        modality="eeg",
+    )
     return bidspat
-
 
 @pytest.fixture(scope="class")
 def bidsrun_scalp(tmp_path_factory, edf_fpath):

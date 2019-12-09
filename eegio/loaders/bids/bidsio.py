@@ -409,7 +409,11 @@ class BidsLoader(BidsIO):
 
     def load_dataset(self):
         """
+<<<<<<< HEAD
         Load in mne.io.Raw dataset based on the sessionid and run of the dataset.
+=======
+        Load in mne.io.Raw dataset based on the sessionid and runid of the dataset.
+>>>>>>> master
 
         TODO:
         1. Allow exotic return types in the form of easy to use data structures? or keep as MNE.io.Raw.
