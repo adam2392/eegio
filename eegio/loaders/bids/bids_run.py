@@ -16,14 +16,6 @@ from mne_bids.utils import _parse_bids_filename, _parse_ext
 from eegio.base.config import BAD_MARKERS
 from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.bids.basebids import BaseBids
-from typing import Union, Dict
-
-import pandas as pd
-import mne
-import mne_bids
-from eegio.base.config import BAD_MARKERS
-from eegio.loaders.bids.basebids import BaseBids
-from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
 

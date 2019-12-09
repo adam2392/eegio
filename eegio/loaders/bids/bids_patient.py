@@ -11,8 +11,8 @@ import bids
 import mne_bids.utils
 from mne_bids import make_bids_basename
 
+from eegio.base.utils.bids_helper import BidsBuilder, BidsUtils
 from eegio.loaders.bids.basebids import BaseBids
-from eegio.base.utils.bids_helper import BidsBuilder, BidsConverter, BidsUtils
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
 
@@ -37,37 +37,25 @@ class BidsPatient(BaseBids):
 
     """
 
-    def __init__(self, bids_root, bids_fname: str, verbose):
+    def __init__(self, bids_root, subject_id: str, verbose):
+        super(BidsPatient, self).__init__(bids_root=bids_root)
 
-        super(BidsPatient, self).__init__(None, bids_fname=modality)
+        # what is the modality -- meg, eeg, ieeg to read
+        self.bids_basename = make_bids_basename(subject=subject_id)
 
+        # extract BIDS parameters from the bids filename to be loaded/modified
         self.subject_id = subject_id
-        self.session_id = bids_fname
-        self.managing_user = managing_user
-        self.subjdir = os.path.join(self.bids_root, "sub-" + self.subject_id)
 
-        if not os.path.exists(self.subjdir):
-            warnings.warn(
-                f"Subject directory does not exist at: {self.subjdir} "
-                f"We are going to create it for you!"
-            )
-            # create bids folder for this subject
-            BidsBuilder.make_bids_folder_struct(
-                self.bids_root, self.subject_id, self.modality, self.session_id
-            )
+        # instantiate a loader/writer
+        self.loader = BidsLoader(
+            bids_root=self.bids_root, bids_basename=self.bids_basename,
+        )
+        self.writer = BidsWriter(
+            bids_root=self.bids_root, bids_basename=self.bids_basename,
+        )
 
         # run to cache and search to get all datasets available for this patient
         self._get_all_datasets()
-
-        # instantiate a loader/writer
-        self.loader = BidsLoader(bids_root=self.bids_root, bids_basename=None)
-        self.writer = BidsWriter(bids_root=self.bids_root, bids_basename=None)
-        self.loader = BidsLoader(
-            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
-        )
-        self.writer = BidsWriter(
-            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
-        )
 
         # run BIDS compatability checks
         self._bids_compatible_check()
@@ -219,7 +207,7 @@ class BidsPatient(BaseBids):
         """Load in all the dataset paths."""
         # Should update after creating a run, but does not work currently
         edffiles = self.query.get(extension=".edf", return_type="file")
-        fiffiles = self.query.get(extension=".fif", return_type="file")
+        fiffiles = self.query.get(extension=self.ext, return_type="file")
         self.edf_fpaths = edffiles
         self.dataset_fpaths = fiffiles
 

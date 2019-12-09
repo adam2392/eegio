@@ -21,11 +21,12 @@ EEGio is intended to be a lightweight wrapper for easily analyzing large batches
     numpy
     scipy
     scikit-learn
-    seaborn
     pandas
     mne
     mne-bids
     pybids
+    seaborn
+    matplotlib
     pyedflib (deprecated)
     xlrd (deprecated)
     

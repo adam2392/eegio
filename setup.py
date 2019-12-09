@@ -13,6 +13,8 @@ To test on test pypi:
     
     twine upload --repository testpypi dist/*
     
+    twine upload dist/*
+    
 """
 
 PACKAGE_NAME = "eegio"
