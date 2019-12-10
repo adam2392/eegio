@@ -124,6 +124,7 @@ class BidsConverter:
         use_preprocess_pipeline=True,
     ):
         """
+        # TODO: Clean up how write_raw_bids is called - eliminate redundant writing/reading using temporaryDirectory
         Convert the passed edf file into the Bids format.
 
         Parameters
