@@ -124,6 +124,7 @@ class Result(BaseDataset):
 
     def compute_offsetwin(self, offsetind: int) -> int:
         """
+        Computes offset window from the corresponding index.
 
         Parameters
         ----------

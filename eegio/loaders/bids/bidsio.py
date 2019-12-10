@@ -299,9 +299,7 @@ class BidsIO(object):
 
 
 class BidsLoader(BidsIO):
-    """
-    A class containing loading methods for various required BIDS files.
-    """
+    """A class containing loading methods for various required BIDS files."""
 
     def __init__(
         self, bids_root, bids_basename, kind=None, datatype="fif", verbose: bool = True
@@ -418,9 +416,7 @@ class BidsLoader(BidsIO):
 
 
 class BidsWriter(BidsIO):
-    """
-    A class containing writing methods for various required BIDS files.
-    """
+    """A class containing writing methods for various required BIDS files."""
 
     def __init__(
         self, bids_root, bids_basename, kind=None, datatype="fif", verbose: bool = True

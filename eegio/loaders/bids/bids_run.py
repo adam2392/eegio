@@ -295,6 +295,18 @@ class BidsRun(BaseBids):
         self.writer.write_sidecar_json(sidecar_dict)
 
     def add_sidecar_field(self, key, value):
+        """
+        Add a field (i.e. key/value) to the sidecar json file.
+
+        Parameters
+        ----------
+        key :
+        value :
+
+        Returns
+        -------
+        None
+        """
         pass
 
     def append_channel_info(
@@ -367,6 +379,18 @@ class BidsRun(BaseBids):
         self.writer.write_channels_tsv(channel_df)
 
     def delete_channel_info(self, column_id: str):
+        """
+        Remove column from the channels.tsv file.
+
+        Parameters
+        ----------
+        column_id : (str)
+
+        Returns
+        -------
+        None
+
+        """
         channel_df = self.loader.load_channels_tsv()
         if column_id not in channel_df.columns:
             raise ValueError(

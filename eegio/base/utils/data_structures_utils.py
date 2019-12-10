@@ -33,6 +33,17 @@ from natsort import index_natsorted
 
 
 def _get1d_neighbors(electrodechans, chanlabel):
+    """
+
+    Parameters
+    ----------
+    electrodechans :
+    chanlabel :
+
+    Returns
+    -------
+
+    """
     # naturally sort the gridlayout
     natinds = index_natsorted(electrodechans)
     sortedelec = electrodechans[natinds]

@@ -78,10 +78,15 @@ class BidsPatient(BaseBids):
 
     def _bids_compatible_check(self):
         """
-        Checks that the BIDS patient has the necessary folders and files.
+        Check that the BIDS patient has the necessary folders and files.
+
+        Checks existence of files:
+        - participant tsv/json files
+        - scans tsv file
 
         Returns
         -------
+        None
 
         """
         validator = bids.BIDSValidator(index_associated=True)

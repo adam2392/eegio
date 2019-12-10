@@ -119,11 +119,11 @@ class BaseDataset(ABC):
 
     def get_metadata(self) -> Dict:
         """
-        Getter method for the dictionary metadata.
+        Get dictionary metadata.
 
         Returns
         -------
-
+        metadata : (dict)
         """
         return self.metadata
 
@@ -261,6 +261,17 @@ class BaseDataset(ABC):
         return self.mat[idx, tid1:tid2]
 
     def remove_channels(self, toremovechans) -> List:
+        """
+        Removes channels from matrix and contacts array.
+
+        Parameters
+        ----------
+        toremovechans :
+
+        Returns
+        -------
+
+        """
         removeinds = [
             ind for ind, ch in enumerate(self.chanlabels) if ch in toremovechans
         ]
@@ -306,8 +317,9 @@ class BaseDataset(ABC):
 
     def mask_indices(self, mask_inds: Union[List, np.ndarray, int]):
         """
-        Function to keep delete certain rows (i.e. channels) of the matrix time series data
-        and the labels corresponding to those masked indices.
+        Delete certain rows (i.e. channels).
+
+        Masks the matrix time series data and the labels corresponding to those masked indices.
 
         Parameters
         ----------
@@ -316,15 +328,16 @@ class BaseDataset(ABC):
 
         Returns
         -------
-
+        None
         """
         self.mat = np.delete(self.mat, mask_inds, axis=0)
         self.contacts.mask_indices(mask_inds)
 
     def mask_chs(self, chs: Union[List, np.ndarray, str]):
         """
-        Function to keep delete certain rows (i.e. channels) of the matrix time series data
-        and the labels corresponding to those masked names.
+        Delete certain rows (i.e. channels).
+
+        Masks the matrix time series data and the labels corresponding to those masked names.
 
         Parameters
         ----------
@@ -333,7 +346,7 @@ class BaseDataset(ABC):
 
         Returns
         -------
-
+        None
         """
         chs = np.sort(chs)
         chs_to_remove = set(self.chanlabels).intersection(ensure_list(chs))

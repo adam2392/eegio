@@ -16,10 +16,9 @@ from mne_bids.utils import print_dir_tree
 
 class BaseBids(object):
     """
-    An instantiator class of the bids format that extends usage of BIDS
-    that any BIDS derivative would use.
+    An instantiator class of the bids format that extends usage of BIDS.
 
-    It handles:
+    Any BIDS derivative would use. It handles:
      - the logistics of creating a bids format file structure
      - extracting metadata from files stored in iEEG-BIDS format
      - easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)
@@ -158,7 +157,7 @@ class BaseBids(object):
         mne_bids.make_dataset_description(fpath, **dataset_description_kwargs)
 
     def print_summary(self):
-        """Print a summary of the patient in the form of a directory tree showing all available data."""
+        """Print a summary of the patient in the form of a directory tree."""
         if "MRI" not in self.query.get_entities(self.bids_root):
             warnings.warn("Print summary only works for neuroimaging type datasets.")
             return

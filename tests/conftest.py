@@ -1,4 +1,4 @@
-""" Define fixtures available for eegio tests. """
+"""Define fixtures available for eegio tests."""
 import os
 import os.path
 
@@ -14,48 +14,65 @@ from eegio.loaders import BidsRun
 
 @pytest.fixture(scope="session")
 def bids_dir(tmp_path_factory):
-    fn = tmp_path_factory.mktemp("bids_data")
-    return str(fn)
-
-
-@pytest.fixture(scope="session")
-def test_dir(tmp_path_factory):
-    fn = tmp_path_factory.mktemp("bids_data")
-    return str(fn)
-
-
-@pytest.fixture(scope="class")
-def bidspatient(tmp_path_factory):
     """
-    Creating a pytest fixture for a fake bidsPatient data object.
+    Fixture of a temporary path that can be used as a bids_directory.
 
-    :return:
-    """
-    test_subjectid = "0001"
-    test_fpath = os.path.join(os.getcwd(), "data/bids_layout/")
-    # test_fpath_path = tmp_path_factory.mktemp('bids_data')
-    # test_fpath = str(test_fpath_path)
-    bidspat = BidsPatient(
-        subject_id=test_subjectid,
-        session_id="seizure",
-        datadir=test_fpath,
-        managing_user="test",
-        modality="eeg",
-    )
-    return bidspat
+    Should be used for:
+    - testing bids setup
+    - testing bids reading after setup
+    - testing bids writing after setup
 
-
-@pytest.fixture(scope="class")
-def bidsrun_scalp(tmp_path_factory, edf_fpath):
-    """
-    Creating a pytest fixture for a fake bidsRun data object.
-    This dataset should already work for the .fif dataset!
-
-    EDF will not match channel names.
+    Parameters
+    ----------
+    tmp_path_factory :
 
     Returns
     -------
+    bids_root : (str) the temporary path to a bids_root
+    """
+    bids_root = tmp_path_factory.mktemp("bids_data")
+    return str(bids_root)
 
+
+# @pytest.fixture(scope="class")
+# def bidspatient(tmp_path_factory):
+#     """
+#     Creating a pytest fixture for a fake bidsPatient data object.
+#
+#     :return:
+#     """
+#     test_subjectid = "0001"
+#     test_fpath = os.path.join(os.getcwd(), "data/bids_layout/")
+#     # test_fpath_path = tmp_path_factory.mktemp('bids_data')
+#     # test_fpath = str(test_fpath_path)
+#     bidspat = BidsPatient(
+#         subject_id=test_subjectid,
+#         session_id="seizure",
+#         datadir=test_fpath,
+#         managing_user="test",
+#         modality="eeg",
+#     )
+#     return bidspat
+
+
+@pytest.fixture(scope="class")
+def bidsrun_scalp(edf_fpath):
+    """
+    Fixture of a fake bidsRun data object.
+
+    Should be used for:
+    - testing bids-run reading
+    - testing bids-run writing
+
+    Expected to work for .EDF and .FIF files.
+
+    Parameters
+    ----------
+    edf_fpath : (str) the local test edf filepath.
+
+    Returns
+    -------
+    run : (BidsRun object)
     """
     test_subjectid = "0001"
     session_id = "seizure"
@@ -78,9 +95,11 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
 @pytest.fixture(scope="function")
 def contacts():
     """
-    Creating a pytest fixture for a fake Contacts class init.
+    Fixture for a fake Contacts class.
 
-    :return:
+    Returns
+    -------
+    contacts : (Contacts object)
     """
     contactlist = np.hstack(
         (
@@ -97,24 +116,13 @@ def contacts():
 
 
 @pytest.fixture(scope="class")
-def clinical_fpath():
-    """
-    FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS
-
-    :return:
-    """
-    # load in edf data
-    testdatadir = os.path.join(os.getcwd(), "./data/clinical_examples/")
-    filepath = os.path.join(testdatadir, "test_clinicaldata.csv")
-    return filepath
-
-
-@pytest.fixture(scope="class")
 def edf_fpath():
     """
-    FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS
+    Fixture of a test sample edf filepath.
 
-    :return:
+    Returns
+    -------
+    filepath : (str)
     """
     # load in edf data
     testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/sourcedata/")
@@ -125,9 +133,11 @@ def edf_fpath():
 @pytest.fixture(scope="class")
 def fif_fpath():
     """
-    FOR TESTING EDF RAWDATA OF PREFORMATTING INTO FIF+JSON PAIRS
+    Fixture of a test sample edf filepath.
 
-    :return:
+    Returns
+    -------
+    filepath : (str)
     """
     # load in edf data
     testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/sourcedata/")
@@ -137,6 +147,16 @@ def fif_fpath():
 
 @pytest.fixture(scope="class")
 def test_arr():
+    """
+    Fixture of a test sample numpy array with saved results matrix style.
+
+    Should test:
+    - any operations on sequentially saved array data
+
+    Returns
+    -------
+    test_list : (list) a List of array based windows.
+    """
     test_arr = np.random.random(size=(50, 2500))
 
     samplepoints = compute_samplepoints(250, 125, test_arr.shape[1])
@@ -151,6 +171,14 @@ def test_arr():
 
 @pytest.fixture(scope="class")
 def result_fpath():
+    """
+    Fixture of a test sample numpy array with saved results matrix style.
+
+    Returns
+    -------
+    result_fpath : (str)
+    result_npzfpath : (str)
+    """
     # load in edf data
     testdatadir = os.path.join(os.getcwd(), "./data/result_examples")
     result_fpath = os.path.join(testdatadir, "test_fragmodel.json")
