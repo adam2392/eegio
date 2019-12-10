@@ -49,7 +49,7 @@ See [example](./examples/read_eeg_from_bids.py).
 For more info, see tutorials and documentation.
 
 # Contributing
-We welcome contributions from anyone. Our [issues](https://github.com/adam2392/eegio/issues) page is full of places we could use help! 
+We welcome contributions from anyone. Our [issues](https://github.com/adam2392/eegio/issues) page is a great place for suggestions!
 If you have an idea for an improvement not listed there, please [make an issue](https://github.com/adam2392/eegio/issues/new) first so you can discuss with the developers. 
 For information on setting up testing, see [testing guide](./docs/TESTING_SETUP.md).
     
