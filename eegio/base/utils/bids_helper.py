@@ -53,7 +53,7 @@ class BidsBuilder(object):
 
     @staticmethod
     def make_preprocessed_folder(
-            datadir, subject_id, session="one", preprocess_name="preprocessed"
+        datadir, subject_id, session="one", preprocess_name="preprocessed"
     ):
         """
         Create the preproceesed data folder in the correct location if it does not already exist.
@@ -109,16 +109,16 @@ class BidsBuilder(object):
 class BidsConverter:
     @staticmethod
     def convert_to_bids(
-            edf_fpath,
-            bids_root,
-            bids_basename,
-            acquisition,
-            excluded_contacts=None,
-            eog_contacts=None,
-            misc_contacts=None,
-            overwrite=False,
-            line_freq=60.0,
-            use_preprocess_pipeline=True,
+        edf_fpath,
+        bids_root,
+        bids_basename,
+        acquisition,
+        excluded_contacts=None,
+        eog_contacts=None,
+        misc_contacts=None,
+        overwrite=False,
+        line_freq=60.0,
+        use_preprocess_pipeline=True,
     ):
         """
         Convert the passed edf file into the Bids format.
@@ -303,7 +303,7 @@ class BidsConverter:
 class BidsUtils:
     @staticmethod
     def add_field_to_participants_json(
-            current_dict: dict, new_field: str, description: Union[str, dict]
+        current_dict: dict, new_field: str, description: Union[str, dict]
     ):
         """
         Add a new field to the participants.json file.

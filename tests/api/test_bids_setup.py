@@ -11,8 +11,9 @@ from eegio.base.utils.bids_helper import BidsConverter
 class TestBidsPatient:
     def test_bids_setup(self, bids_dir, edf_fpath):
         """
-        Integration test for setting up a bids directory from scratch. Should test:
+        Integration test for setting up a bids directory from scratch.
 
+        Should test:
         1. Initial setup
         2. loading runs
         3. loading patients
@@ -65,8 +66,9 @@ class TestBidsPatient:
     @pytest.mark.skip()
     def test_bids_setup_errors(self):
         """
-        Test error and warnings raised by a pipeline used for Bids Setup
-        that should be raised when a user does something wrong.
+        Test error and warnings raised by a pipeline used for Bids Setup.
+
+        Errors should be raised when a user does something wrong.
 
         Parameters
         ----------

@@ -132,6 +132,7 @@ class ChannelScrub:
         -------
 
         """
+
         def remove_letters(s):
             no_digits = []
             # Iterate through the string, adding non-numbers to the no_digits list
