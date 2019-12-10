@@ -4,7 +4,6 @@ include eegio/__init__.py
 
 recursive-include examples *.py
 recursive-include examples *.txt
-
 recursive-include eegio *.py
 
 ### Exclude

@@ -58,9 +58,7 @@ test_subjectid = "0001"
 test_sessionid = "seizure"
 test_runid = "01"
 if RUN_IEEG:
-    edf_fpaths = [
-        os.path.join(bids_root, "raw", "ieeg_ecog_test.edf")
-    ]
+    edf_fpaths = [os.path.join(bids_root, "raw", "ieeg_ecog_test.edf")]
     modality = "ecog"
 else:
     edf_fpath1 = os.path.join(bids_root, "raw", "scalp_test.edf")
@@ -71,7 +69,7 @@ else:
 # Let's see whether the data has been downloaded using a quick visualization
 # of the directory tree.
 
-data_dir = os.path.join(bids_root, 'raw')
+data_dir = os.path.join(bids_root, "raw")
 print_dir_tree(data_dir)
 
 ###############################################################################
@@ -96,7 +94,7 @@ for edf_fpath in edf_fpaths:
             kind=modality,
         )
 
-    ''' Write data file into BIDS format '''
+    """ Write data file into BIDS format """
     # add a bids run
     bids_basename = make_bids_basename(
         subject=test_subjectid,
@@ -152,12 +150,14 @@ print(raw)
 # TODO: figure out why this isn't returning valid, when it is valid.
 params = _parse_bids_filename(bids_basename, True)
 kind = _handle_kind(raw)
-fif_data_path = make_bids_folders(subject=params['sub'],
-                                  session=params['ses'],
-                                  kind=kind,
-                                  output_path=bids_root,
-                                  overwrite=False,
-                                  verbose=True)
+fif_data_path = make_bids_folders(
+    subject=params["sub"],
+    session=params["ses"],
+    kind=kind,
+    output_path=bids_root,
+    overwrite=False,
+    verbose=True,
+)
 rel_bids_root = "/bids_layout/sub-0001/ses-seizure/ieeg/"
 is_valid = BIDSValidator().is_bids(os.path.join(rel_bids_root, bids_fname))
 

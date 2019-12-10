@@ -1,3 +1,4 @@
+"""Setup EEGIO."""
 import sys
 from distutils.core import setup
 
