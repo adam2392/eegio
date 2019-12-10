@@ -6,8 +6,6 @@ Version: 1.0
 
 import os
 import tempfile
-import json
-import os
 from typing import Union
 
 import mne
@@ -15,13 +13,12 @@ import mne_bids
 import numpy as np
 import pandas as pd
 from mne_bids import make_bids_basename
-from mne_bids import write_raw_bids, make_bids_folders, read_raw_bids
-from mne_bids.utils import _parse_bids_filename, _handle_kind
+from mne_bids import write_raw_bids, make_bids_folders
+from mne_bids.utils import _handle_kind
+from mne_bids.utils import _parse_bids_filename
 
 from eegio.base.config import BAD_MARKERS
 from eegio.base.utils.scrubber import ChannelScrub
-from mne_bids import write_raw_bids, make_bids_folders
-from mne_bids.utils import _parse_bids_filename
 
 
 class BidsBuilder(object):
@@ -56,7 +53,7 @@ class BidsBuilder(object):
 
     @staticmethod
     def make_preprocessed_folder(
-        datadir, subject_id, session="one", preprocess_name="preprocessed"
+            datadir, subject_id, session="one", preprocess_name="preprocessed"
     ):
         """
         Create the preproceesed data folder in the correct location if it does not already exist.
@@ -112,21 +109,24 @@ class BidsBuilder(object):
 class BidsConverter:
     @staticmethod
     def convert_to_bids(
-        edf_fpath,
-        bids_root,
-        bids_basename,
-        acquisition,
-        excluded_contacts=None,
-        eog_contacts=None,
-        misc_contacts=None,
-        overwrite=False,
-        line_freq=None,
-        use_preprocess_pipeline=True,
+            edf_fpath,
+            bids_root,
+            bids_basename,
+            acquisition,
+            excluded_contacts=None,
+            eog_contacts=None,
+            misc_contacts=None,
+            overwrite=False,
+            line_freq=60.0,
+            use_preprocess_pipeline=True,
     ):
         """
-        # TODO: Clean up how write_raw_bids is called - eliminate redundant writing/reading using temporaryDirectory
         Convert the passed edf file into the Bids format.
 
+        # TODO:
+        - Clean up how write_raw_bids is called
+        - eliminate redundant writing/reading using temporaryDirectory
+        
         Parameters
         ----------
         edf_fpath : Union[str, os.PathLike]
@@ -303,7 +303,7 @@ class BidsConverter:
 class BidsUtils:
     @staticmethod
     def add_field_to_participants_json(
-        current_dict: dict, new_field: str, description: Union[str, dict]
+            current_dict: dict, new_field: str, description: Union[str, dict]
     ):
         """
         Add a new field to the participants.json file.
@@ -371,106 +371,3 @@ class BidsUtils:
             notes = [""] * channels_data.shape[0]
             channels_data["notes"] = notes
         bidsrun.writer.write_channels_tsv(channels_data)
-
-
-if __name__ == "__main__":
-    DATADIR = "/Users/Adam2392/Documents/eegio/"
-    bids_root = os.path.join(DATADIR, "./data/bids_layout/")
-    RUN_IEEG = True
-    line_freq = 60
-
-    test_subjectid = "0001"
-    test_sessionid = "seizure"
-    test_runid = "01"
-    if RUN_IEEG:
-        edf_fpath = os.path.join(bids_root, "raw", "ieeg_ecog_test.edf")
-
-        # create the BIDS directory structure
-        modality = "ecog"
-        # bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
-
-        """ Create folder structure """
-        if not os.path.exists(bids_root):
-            print("Making bids root directory.")
-            BidsBuilder.make_bids_folder_struct(
-                datadir=bids_root,
-                subject=test_subjectid,
-                kind=modality,
-                session_id=test_sessionid,
-            )
-
-        """ Write data file into BIDS format """
-        # add a bids run
-        bids_basename = make_bids_basename(
-            subject=test_subjectid,
-            session=test_sessionid,
-            run=test_runid,
-            acquisition=modality,
-        )
-        print("Loading filepath: ", edf_fpath)
-        print("Writing to bidsroot: ", bids_root)
-        print("Bids basename; ", bids_basename)
-        # call bidsbuilder pipeline
-        bids_path = BidsConverter.convert_to_bids(
-            edf_fpath=edf_fpath,
-            bids_root=bids_root,
-            bids_basename=bids_basename,
-            acquisition=modality,
-            line_freq=60,
-            overwrite=True,
-        )
-    else:
-        edf_fpath1 = os.path.join(bids_root, "raw", "scalp_test.edf")
-        edf_fpath2 = os.path.join(bids_root, "raw", "scalp_test_2.edf")
-        edf_fpaths = [edf_fpath1, edf_fpath2]
-
-        for edf_fpath in edf_fpaths:
-            # create the BIDS directory structure
-            modality = "eeg"
-            # bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
-
-            """ Create folder structure """
-            if not os.path.exists(bids_root):
-                print("Making bids root directory.")
-                BidsBuilder.make_bids_folder_struct(
-                    datadir=bids_root,
-                    subject=test_subjectid,
-                    kind=modality,
-                    session_id=test_sessionid,
-                )
-
-            """ Write data file into BIDS format """
-            # add a bids run
-            bids_basename = make_bids_basename(
-                subject=test_subjectid,
-                session=test_sessionid,
-                run=test_runid,
-                acquisition=modality,
-            )
-            print("Loading filepath: ", edf_fpath)
-            print("Writing to bidsroot: ", bids_root)
-            print("Bids basename; ", bids_basename)
-            # call bidsbuilder pipeline
-            bids_path = BidsConverter.convert_to_bids(
-                edf_fpath=edf_fpath,
-                bids_root=bids_root,
-                bids_basename=bids_basename,
-                acquisition=modality,
-                line_freq=line_freq,
-                overwrite=True,
-            )
-
-    from eegio.loaders.bids.bids_run import BidsRun
-
-    if modality in ["ecog", "seeg"]:
-        kind = "ieeg"
-    elif modality == "eeg":
-        kind = "eeg"
-    bids_fname = bids_basename + f"_{kind}.fif"
-
-    raw = read_raw_bids(bids_fname, bids_root)
-
-    bidsrun = BidsRun(None, None)
-    raw = bidsrun.load_data()
-
-    print(raw)

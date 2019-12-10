@@ -11,7 +11,19 @@ from eegio.base.config import NON_EEG_MARKERS, BAD_MARKERS
 class ChannelScrub:
     @classmethod
     def channel_text_scrub(cls, raw: mne.io.BaseRaw):
-        """TODO: ACCOUNT FOR - BEING IN BIPOLAR MONTAGE CHANNEL LABELS. """
+        """
+        Cleans and formats the channel text inside a MNE-Raw data structure.
+
+        TODO: ACCOUNT FOR - BEING IN BIPOLAR MONTAGE CHANNEL LABELS.
+
+        Parameters
+        ----------
+        raw : MNE-raw data structure
+
+        Returns
+        -------
+
+        """
 
         def _reformatchanlabel(label):
             """
@@ -49,10 +61,16 @@ class ChannelScrub:
     @classmethod
     def look_for_bad_channels(self, ch_names, bad_markers: List[str] = BAD_MARKERS):
         """
-        Helper function to allow hardcoding of what are "bad channels"
+        Looks for hardcoding of what are "bad channels"
 
-        :param ch_names: (list) a list of str channel labels
-        :return: bad_channels (list) of string labels
+        Parameters
+        ----------
+        ch_names : (list) a list of str channel labels
+        bad_markers : (list) of string labels
+
+        Returns
+        -------
+
         """
         orig_chdict = {ch.upper(): ch for ch in ch_names}
 
@@ -97,8 +115,8 @@ class ChannelScrub:
     @classmethod
     def label_channel_types(cls, labels: List[str]):
         """
-        Function to load in the channel types. The possibilities are: EEG, STIM, EOG, EKG, Misc.
-        that are from MNE-Python.
+        Load in the channel types and try to infer them.
+        The possibilities are: EEG, STIM, EOG, EKG, Misc. that are from MNE-Python.
 
         We map these to:
         1. bad-non: bad or non-eeg channels
@@ -106,11 +124,14 @@ class ChannelScrub:
         3. strip: strip channels (1-6, or 1-8 contacts)
         4. seeg: depth channels inserted (1-8 up to 1-16)
 
-        :param labels:
-        :param mapping:
-        :return:
-        """
+        Parameters
+        ----------
+        labels :
 
+        Returns
+        -------
+
+        """
         def remove_letters(s):
             no_digits = []
             # Iterate through the string, adding non-numbers to the no_digits list
