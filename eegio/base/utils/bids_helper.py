@@ -448,7 +448,7 @@ if __name__ == "__main__":
             )
             print("Loading filepath: ", edf_fpath)
             print("Writing to bidsroot: ", bids_root)
-            print("Bids basenmae; ", bids_basename)
+            print("Bids basename; ", bids_basename)
             # call bidsbuilder pipeline
             bids_path = BidsConverter.convert_to_bids(
                 edf_fpath=edf_fpath,
