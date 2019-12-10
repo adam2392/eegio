@@ -37,17 +37,22 @@ class ChannelScrub:
             :return: label (str) the reformatted string that is uppercase and w/o spaces
             """
             # hard coded replacement rules
-            label = str(label).replace("POL", "").replace(" ", "").upper()
+            # label = str(label).replace("POL ", "").upper()
+            label = str(label).replace("POL", "").upper()
             label = label.replace("EEG", "").replace("-REF", "")
 
             # replace "Grid" with 'G' label
             label = label.replace("GRID", "G")
+            # for BIDS format, you cannot have blank channel name
+            if label == "":
+                label = "N/A"
             return label
 
         # apply channel scrubbing
         raw.rename_channels(lambda x: x.upper())
         raw.rename_channels(lambda x: x.strip("."))  # remove dots from channel names
         raw.rename_channels(lambda x: x.strip("-"))  # remove dashes from channel names
+        raw.rename_channels(lambda x: x.replace(" ", ""))
         raw.rename_channels(
             lambda x: x.replace("’", "'")
         )  # remove dashes from channel names

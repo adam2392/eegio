@@ -1,7 +1,7 @@
 {
-    "TaskName": null,
-    "Manufacturer": "Elekta",
-    "PowerLineFrequency": 60.0,
+    "TaskName": "monitor",
+    "Manufacturer": "n/a",
+    "PowerLineFrequency": 60,
     "SamplingFrequency": 1000.0,
     "SoftwareFilters": "n/a",
     "RecordingDuration": 15.499,

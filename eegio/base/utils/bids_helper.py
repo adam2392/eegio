@@ -112,13 +112,12 @@ class BidsConverter:
         edf_fpath,
         bids_root,
         bids_basename,
-        acquisition,
+        authors=None,
         excluded_contacts=None,
         eog_contacts=None,
         misc_contacts=None,
         overwrite=False,
         line_freq=60.0,
-        use_preprocess_pipeline=True,
     ):
         """
         Convert the passed edf file into the Bids format.
@@ -162,6 +161,12 @@ class BidsConverter:
         if line_freq is not None:
             raw.info["line_freq"] = line_freq
 
+        # extract parameters from bids_basenmae
+        params = _parse_bids_filename(bids_basename, True)
+        subject, session = params["sub"], params["ses"]
+        acquisition, kind = params["acq"], params["kind"]
+        task = params["task"]
+
         # read in the events from the EDF file
         events_data, events_id = mne.events_from_annotations(raw)
         channel_scrub = ChannelScrub
@@ -186,12 +191,22 @@ class BidsConverter:
             ] = f"Scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
         raw.info["bads"] = bad_channels
 
+        # actually perform write_raw bids
+        bids_root = write_raw_bids(
+            raw,
+            bids_basename,
+            output_path=bids_root,
+            events_data=events_data,
+            event_id=events_id,
+            overwrite=overwrite,
+            verbose=False,
+        )
+
         # save a fif copy and reload it
-        params = _parse_bids_filename(bids_basename, True)
         kind = _handle_kind(raw)
         fif_data_path = make_bids_folders(
-            subject=params["sub"],
-            session=params["ses"],
+            subject=subject,
+            session=session,
             kind=kind,
             output_path=bids_root,
             overwrite=False,
@@ -199,6 +214,7 @@ class BidsConverter:
         )
 
         bids_fname = bids_basename + f"_{kind}.fif"
+        deriv_bids_root = os.path.join(bids_root, "derivatives")
         with tempfile.TemporaryDirectory() as tmp_bids_root:
             raw.save(os.path.join(tmp_bids_root, bids_fname), overwrite=overwrite)
             raw = mne.io.read_raw_fif(os.path.join(tmp_bids_root, bids_fname))
@@ -207,7 +223,7 @@ class BidsConverter:
             bids_root = write_raw_bids(
                 raw,
                 bids_basename,
-                output_path=bids_root,
+                output_path=deriv_bids_root,
                 events_data=events_data,
                 event_id=events_id,
                 overwrite=overwrite,

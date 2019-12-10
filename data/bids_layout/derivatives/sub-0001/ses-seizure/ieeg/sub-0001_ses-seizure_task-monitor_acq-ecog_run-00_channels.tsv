@@ -96,4 +96,4 @@ SLT3	ECOG	V	0.0	500.0	Electrocorticography	1000.0	good
 SLT4	ECOG	V	0.0	500.0	Electrocorticography	1000.0	good
 EKG1	ECG	V	0.0	500.0	ElectroCardioGram	1000.0	good
 EKG2	ECG	V	0.0	500.0	ElectroCardioGram	1000.0	good
-	ECOG	V	0.0	500.0	Electrocorticography	1000.0	bad
+N/A	ECOG	V	0.0	500.0	Electrocorticography	1000.0	bad

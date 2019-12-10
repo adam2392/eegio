@@ -11,7 +11,11 @@ Specifically, we will follow these steps:
 1. Download repository, and use the data in example directory:
     data/
         bids_layout/
-            raw/
+            sourcedata/
+            derivatives/
+            sub-XXX/
+            sub-XXY/
+            ...
 
 2. Load the source raw data, extract information, preprocess certain things
 and save in a new BIDS directory
@@ -25,12 +29,16 @@ and save in a new BIDS directory
 import os
 
 from bids_validator import BIDSValidator
-from mne_bids import read_raw_bids, make_bids_folders, make_bids_basename
-from mne_bids.utils import _parse_bids_filename, _handle_kind
+from mne_bids import (
+    read_raw_bids,
+    make_bids_folders,
+    make_bids_basename,
+    make_dataset_description,
+)
+from mne_bids.utils import _parse_bids_filename
 from mne_bids.utils import print_dir_tree
 
 from eegio.base.utils.bids_helper import BidsConverter
-from eegio.loaders.bids.bids_run import BidsRun
 
 ###############################################################################
 # Step 1: Prepare the data
@@ -56,20 +64,22 @@ RUN_IEEG = True  # either run scalp, or iEEG
 line_freq = 60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
 test_subjectid = "0001"
 test_sessionid = "seizure"
-test_runid = "01"
+test_task = "monitor"
+authors = ["Adam Li", "Patrick Myers"]
+
 if RUN_IEEG:
-    edf_fpaths = [os.path.join(bids_root, "raw", "ieeg_ecog_test.edf")]
+    edf_fpaths = [os.path.join(bids_root, "sourcedata", "ieeg_ecog_test.edf")]
     modality = "ecog"
 else:
-    edf_fpath1 = os.path.join(bids_root, "raw", "scalp_test.edf")
-    edf_fpath2 = os.path.join(bids_root, "raw", "scalp_test_2.edf")
+    edf_fpath1 = os.path.join(bids_root, "sourcedata", "scalp_test.edf")
+    edf_fpath2 = os.path.join(bids_root, "sourcedata", "scalp_test_2.edf")
     edf_fpaths = [edf_fpath1, edf_fpath2]
     modality = "eeg"
 ###############################################################################
 # Let's see whether the data has been downloaded using a quick visualization
 # of the directory tree.
 
-data_dir = os.path.join(bids_root, "raw")
+data_dir = os.path.join(bids_root, "sourcedata")
 print_dir_tree(data_dir)
 
 ###############################################################################
@@ -83,22 +93,26 @@ print_dir_tree(data_dir)
 #
 # Note that kind and acquisition currently almost stand for the same thing.
 # Please read the BIDS docs to get acquainted.
-for edf_fpath in edf_fpaths:
-    # create the BIDS directory structure
-    if not os.path.exists(bids_root):
-        print("Making bids root directory.")
-        make_bids_folders(
-            output_path=bids_root,
-            session=test_sessionid,
-            subject=test_subjectid,
-            kind=modality,
-        )
 
+# create the BIDS directory structure
+if not os.path.exists(bids_root):
+    print("Making bids root directory.")
+    make_bids_folders(
+        output_path=bids_root,
+        session=test_sessionid,
+        subject=test_subjectid,
+        kind=modality,
+    )
+
+for i, edf_fpath in enumerate(edf_fpaths):
     """ Write data file into BIDS format """
+    test_runid = i
+
     # add a bids run
     bids_basename = make_bids_basename(
         subject=test_subjectid,
         session=test_sessionid,
+        task=test_task,
         run=test_runid,
         acquisition=modality,
     )
@@ -106,14 +120,21 @@ for edf_fpath in edf_fpaths:
     print("Writing to bidsroot: ", bids_root)
     print("Bids basenmae; ", bids_basename)
     # call bidsbuilder pipeline
-    bids_root = BidsConverter.convert_to_bids(
+    bids_deriv_root = BidsConverter.convert_to_bids(
         edf_fpath=edf_fpath,
         bids_root=bids_root,
         bids_basename=bids_basename,
-        acquisition=modality,
+        authors=authors,
         line_freq=line_freq,
         overwrite=True,
     )
+
+# currently write_raw_bids overwrites make_dataset_description
+# TODO: put this on the top when PR gets merged.
+make_dataset_description(
+    os.path.join(bids_root), name="test_bids_dataset", authors=authors
+)
+
 ###############################################################################
 # What does our fresh BIDS directory look like?
 print_dir_tree(bids_root)
@@ -127,7 +148,7 @@ if modality in ["ecog", "seeg"]:
     kind = "ieeg"
 elif modality == "eeg":
     kind = "eeg"
-bids_fname = bids_basename + f"_{kind}.fif"
+bids_fname = bids_basename + f"_{kind}.edf"
 
 print("Trying to read from: ", bids_fname)
 
@@ -137,8 +158,8 @@ raw = read_raw_bids(bids_fname, bids_root)
 print("Read successfully using MNE-BIDS")
 
 # use BidsRun object, which just simply adds additional functionality
-bidsrun = BidsRun(bids_root, bids_fname)
-raw = bidsrun.load_data()
+# bidsrun = BidsRun(bids_root, bids_fname)
+# raw = bidsrun.load_data()
 
 print(raw)
 
@@ -147,9 +168,10 @@ print(raw)
 # ------------------------------------------------------------
 # Now we have written our BIDS directory.
 # save a fif copy and reload it
-# TODO: figure out why this isn't returning valid, when it is valid.
+# TODO: re-check when pybids is updated.
+# currently, use the https://bids-standard.github.io/bids-validator/ and see that it is verified
 params = _parse_bids_filename(bids_basename, True)
-kind = _handle_kind(raw)
+print(raw.info)
 fif_data_path = make_bids_folders(
     subject=params["sub"],
     session=params["ses"],
@@ -158,8 +180,16 @@ fif_data_path = make_bids_folders(
     overwrite=False,
     verbose=True,
 )
-rel_bids_root = "/bids_layout/sub-0001/ses-seizure/ieeg/"
-is_valid = BIDSValidator().is_bids(os.path.join(rel_bids_root, bids_fname))
+rel_bids_root = f"/sub-0001/ses-seizure/{kind}/"
+path = os.path.join(rel_bids_root, bids_fname)
+is_valid = BIDSValidator().is_bids(path)
+
+print(BIDSValidator().is_top_level(path))
+print(BIDSValidator().is_associated_data(path))
+print(BIDSValidator().is_session_level(path))
+print(BIDSValidator().is_subject_level(path))
+print(BIDSValidator().is_phenotypic(path))
+print(BIDSValidator().is_file(path))
 
 print("checked filepath: ", os.path.join(rel_bids_root, bids_fname))
 print(is_valid)

@@ -6,6 +6,7 @@ from eegio.loaders import BaseBids
 
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
+
 class TestBaseBids:
     @pytest.mark.filterwarnings("ignore::RuntimeWarning")
     def testbasebids(self):
@@ -38,11 +39,13 @@ class TestBaseBids:
         session_id = "seizure"
         kind = "eeg"
         run_id = "01"
+        task = "monitor"
         bids_basename = make_bids_basename(
             subject=test_subjectid,
             session=session_id,
             acquisition=kind,
             run=run_id,
+            task=task,
             # suffix=kind + ".fif",
         )
         ext = "fif"
@@ -50,10 +53,7 @@ class TestBaseBids:
 
         # instantiate a loader/writer
         loader = BidsLoader(
-            bids_root=bids_root,
-            bids_basename=bids_basename,
-            kind=kind,
-            datatype=ext,
+            bids_root=bids_root, bids_basename=bids_basename, kind=kind, datatype=ext,
         )
         participant_dict = loader.load_participants_json()
         participant_df = loader.load_participants_tsv()
@@ -72,7 +72,6 @@ class TestBaseBids:
         print(loader.rel_participantstsv_fpath)
         print(loader.rel_scanstsv_fpath)
         print(loader.rel_sidecarjson_fpath)
-
 
         with tempfile.TemporaryDirectory() as bids_root:
             writer = BidsWriter(

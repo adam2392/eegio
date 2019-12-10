@@ -1,4 +1,8 @@
 {
-    "Name": " ",
-    "BIDSVersion": "1.2.0"
+    "Name": "test_bids_dataset",
+    "BIDSVersion": "1.2.0",
+    "Authors": [
+        "Adam Li",
+        "Patrick Myers"
+    ]
 }

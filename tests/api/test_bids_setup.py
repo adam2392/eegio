@@ -31,6 +31,7 @@ class TestBidsPatient:
         modality = "eeg"
         test_sessionid = "seizure"
         test_runid = "01"
+        task = "monitor"
         line_freq = 60
         # create the BIDS directory structure
         if not os.path.exists(bids_dir):
@@ -47,6 +48,7 @@ class TestBidsPatient:
             acquisition=modality,
             session=test_sessionid,
             run=test_runid,
+            task=task,
         )
 
         # call bidsbuilder pipeline
@@ -54,7 +56,6 @@ class TestBidsPatient:
             edf_fpath=edf_fpath,
             bids_root=bids_dir,
             bids_basename=bids_basename,
-            acquisition=modality,
             line_freq=line_freq,
             overwrite=True,
         )

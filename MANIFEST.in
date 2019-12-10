@@ -16,8 +16,8 @@ exclude CONTRIBUTING.md
 exclude .coveragerc
 exclude *.yml
 exclude .mailmap
-exclude annonymize
-recursive-exclude eegio *.pyc
 
+recursive-exclude eegio *.pyc
 recursive-exclude doc *
 recursive-exclude paper *
+recursive-exclude annonymize

@@ -61,14 +61,16 @@ def bidsrun_scalp(tmp_path_factory, edf_fpath):
     session_id = "seizure"
     kind = "eeg"
     run_id = "01"
+    task = "monitor"
     bids_fname = make_bids_basename(
         subject=test_subjectid,
         session=session_id,
         acquisition=kind,
+        task=task,
         run=run_id,
         suffix=kind + ".fif",
     )
-    test_bids_root = os.path.join(os.getcwd(), "./data/bids_layout/")
+    test_bids_root = os.path.join(os.getcwd(), "./data/bids_layout/derivatives")
     run = BidsRun(bids_root=test_bids_root, bids_fname=bids_fname)
     return run
 
@@ -115,7 +117,7 @@ def edf_fpath():
     :return:
     """
     # load in edf data
-    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/raw/")
+    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/sourcedata/")
     filepath = os.path.join(testdatadir, "scalp_test.edf")
     return filepath
 
@@ -128,7 +130,7 @@ def fif_fpath():
     :return:
     """
     # load in edf data
-    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/raw/")
+    testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/sourcedata/")
     filepath = os.path.join(testdatadir, "scalp_test_raw.fif")
     return filepath
 

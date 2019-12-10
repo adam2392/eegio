@@ -1,7 +1,7 @@
 {
-    "TaskName": null,
-    "Manufacturer": "nk",
-    "PowerLineFrequency": 60.0,
+    "TaskName": "monitor",
+    "Manufacturer": "n/a",
+    "PowerLineFrequency": 60,
     "SamplingFrequency": 200.0,
     "SoftwareFilters": "n/a",
     "RecordingDuration": 235.995,
@@ -14,6 +14,5 @@
     "ECGChannelCount": 2,
     "EMGChannelCount": 0,
     "MiscChannelCount": 0,
-    "TriggerChannelCount": 0,
-    "InstitutionName": "National institute of Health_v2"
+    "TriggerChannelCount": 0
 }
