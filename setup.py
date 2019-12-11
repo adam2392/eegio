@@ -1,5 +1,6 @@
 """Setup EEGIO."""
 import sys
+import os
 from distutils.core import setup
 
 import numpy
@@ -18,10 +19,21 @@ To test on test pypi:
     
 """
 
+# get the version
+version = None
+with open(os.path.join('eegio', '__init__.py'), 'r') as fid:
+    for line in (line.strip() for line in fid):
+        if line.startswith('__version__'):
+            version = line.split('=')[1].strip().strip('\'')
+            break
+if version is None:
+    raise RuntimeError('Could not determine version')
+
 PACKAGE_NAME = "eegio"
-VERSION = "0.1"
-DESCRIPTION = "An io package for eeg data and time-series transformations done on it."
+DESCRIPTION = "EEGIO: An io package for eeg data that is MNE-Python and MNE-BIDS compatible ."
 URL = "https://github.com/adam2392/eegio"
+MAINTAINER = 'Adam Li'
+MAINTAINER_EMAIL = 'adam2392@gmail.com'
 MINIMUM_PYTHON_VERSION = 3, 6  # Minimum of Python 3.6
 REQUIRED_PACKAGES = [
     "numpy>=1.17.2",
@@ -67,8 +79,10 @@ check_python_version()
 
 setup(
     name=PACKAGE_NAME,
-    version=VERSION,
+    version=version,
     description=DESCRIPTION,
+    maintainer=MAINTAINER,
+    maintainer_email=MAINTAINER_EMAIL,
     author="Adam Li",
     long_description=open("README.md").read(),
     url=URL,

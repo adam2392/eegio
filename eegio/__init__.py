@@ -1,3 +1,4 @@
+"""MNE software for easily interacting with MNE-Python, MNE-BIDS compatible datasets."""
 from os.path import dirname, basename, isfile
 import glob
 import warnings
@@ -6,7 +7,6 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 warnings.simplefilter(action="ignore", category=PendingDeprecationWarning)
 
 import eegio.base.objects as objects
-
 import eegio.base.utils as utils
 
 modules = glob.glob(dirname(__file__) + "/*.py")

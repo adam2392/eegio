@@ -56,6 +56,9 @@ pycodestyle:
 check-manifest:
 	check-manifest --ignore .circleci*,docs,.DS_Store,annonymize
 
+upload-pipy:
+	python setup.py sdist bdist_egg register upload
+
 black:
 	@if command -v black > /dev/null; then \
 		echo "Running black"; \
