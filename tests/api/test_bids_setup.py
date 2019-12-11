@@ -7,9 +7,9 @@ from mne_bids import make_bids_basename, make_bids_folders
 from eegio.base.utils.bids_helper import BidsConverter
 
 
-@pytest.mark.usefixture(["bids_dir", "edf_fpath"])
+@pytest.mark.usefixture(["bids_root", "edf_fpath"])
 class TestBidsPatient:
-    def test_bids_setup(self, bids_dir, edf_fpath):
+    def test_bids_setup(self, bids_root, edf_fpath):
         """
         Integration test for setting up a bids directory from scratch.
 
@@ -20,7 +20,7 @@ class TestBidsPatient:
 
         Parameters
         ----------
-        bids_dir :
+        bids_root :
 
         Returns
         -------
@@ -34,10 +34,10 @@ class TestBidsPatient:
         task = "monitor"
         line_freq = 60
         # create the BIDS directory structure
-        if not os.path.exists(bids_dir):
+        if not os.path.exists(bids_root):
             print("Making bids root directory.")
             make_bids_folders(
-                output_path=bids_dir,
+                output_path=bids_root,
                 session=test_sessionid,
                 subject=test_subjectid,
                 kind=modality,
@@ -54,7 +54,7 @@ class TestBidsPatient:
         # call bidsbuilder pipeline
         bids_root = BidsConverter.convert_to_bids(
             edf_fpath=edf_fpath,
-            bids_root=bids_dir,
+            bids_root=bids_root,
             bids_basename=bids_basename,
             line_freq=line_freq,
             overwrite=True,

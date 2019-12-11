@@ -261,7 +261,9 @@ class Contacts(object):
         """
         if self.naturalinds == None:
             self.naturalinds = index_natsorted(self.chanlabels)
-            self.chanlabels = np.array(order_by_index(self.chanlabels, self.naturalinds))
+            self.chanlabels = np.array(
+                order_by_index(self.chanlabels, self.naturalinds)
+            )
         else:
             warnings.warn(
                 "Already naturally sorted contacts! Extract channel labels naturally sorted by calling "

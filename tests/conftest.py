@@ -13,7 +13,7 @@ from eegio.loaders import BidsRun
 
 
 @pytest.fixture(scope="session")
-def bids_dir(tmp_path_factory):
+def bids_root(tmp_path_factory):
     """
     Fixture of a temporary path that can be used as a bids_directory.
 
