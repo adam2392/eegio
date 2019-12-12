@@ -23,11 +23,12 @@ To test on test pypi:
 version = None
 with open(os.path.join('eegio', '__init__.py'), 'r') as fid:
     for line in (line.strip() for line in fid):
-        if line.startswith('__version__'):
-            version = line.split('=')[1].strip().strip('\'')
+        if line.startswith("__version__"):
+            version = line.split("=")[1].strip().strip('\'')
             break
 if version is None:
     raise RuntimeError('Could not determine version')
+print("found version: ", version)
 
 PACKAGE_NAME = "eegio"
 DESCRIPTION = "EEGIO: An io package for eeg data that is MNE-Python and MNE-BIDS compatible ."
@@ -85,6 +86,7 @@ setup(
     maintainer_email=MAINTAINER_EMAIL,
     author="Adam Li",
     long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     url=URL,
     license="GNU General Public License (GPL)",
     keywords="EEG, epilepsy, research tools, IO tools",
@@ -99,5 +101,5 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     include_package_data=True,
     classifiers=CLASSIFICATION_OF_PACKAGE,
-    zip_ok=False,
+    zip_ok=True,
 )
