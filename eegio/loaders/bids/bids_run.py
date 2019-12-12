@@ -6,14 +6,13 @@ Version: 1.0
 
 import os
 import pathlib
-from typing import Union, Dict
+from typing import Dict
 
-import pandas as pd
 import mne
 import mne_bids
-from eegio.base.config import BAD_MARKERS
+from mne_bids.utils import _parse_bids_filename, _parse_ext
+
 from eegio.loaders.bids.basebids import BaseBids
-from eegio.base.utils.scrubber import ChannelScrub
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
 
@@ -26,61 +25,80 @@ class BidsRun(BaseBids):
 
     Attributes
     ----------
-    subject_id: str
-        The unique identifier for the recorded subject.
-    session_id:
-        The identifier for this run's session.
-    run_id:
-        The identifier for the actual recording snapshot.
-    datadir: Union[str, os.PathLike]
+    bids_root: Union[str, os.PathLike]
         Where this dataset is located (base directory)
-    modality: str
-        The method of data recording.
-    original_fileid: str
-        The source's file path for backwards annotation.
+
+    bids_fname : str
+        The base filename of the BIDS compatible files. Typically, this can be
+        generated using make_bids_basename.
+        Example: `sub-01_ses-01_task-testing_acq-01_run-01`.
+        This will write the following files in the correct subfolder of the
+        output_path::
+
+            sub-01_ses-01_task-testing_acq-01_run-01_meg.fif
+            sub-01_ses-01_task-testing_acq-01_run-01_meg.json
+            sub-01_ses-01_task-testing_acq-01_run-01_channels.tsv
+            sub-01_ses-01_task-testing_acq-01_run-01_coordsystem.json
+
+        and the following one if events_data is not None::
+
+            sub-01_ses-01_task-testing_acq-01_run-01_events.tsv
+
+        and add a line to the following files::
+
+            participants.tsv
+            scans.tsv
+
+        Note that the modality 'meg' is automatically inferred from the raw
+        object and extension '.fif' is copied from raw.filenames.
+
+    verbose: bool
+        verbosity
 
     """
 
-    def __init__(
-        self,
-        subject_id: str,
-        session_id: str,
-        run_id: str,
-        datadir: Union[str, os.PathLike] = None,
-        modality: str = "ieeg",
-        montage: str = None,
-    ):
-        """
-        Initialize a BidsRun object.
+    def __init__(self, bids_root, bids_fname: str, verbose: bool = True):
+        super(BidsRun, self).__init__(bids_root=bids_root)
 
-        Parameters
-        ----------
-        subject_id :
-        session_id :
-        run_id :
-        datadir :
-        modality :
+        # ensures just base path
+        self.bids_fname = os.path.basename(bids_fname)
 
-        """
-        super(BidsRun, self).__init__(datadir=datadir, modality=modality)
-        self.subject_id = subject_id
-        self.session_id = session_id
-        self.run_id = run_id
+        # what is the modality -- meg, eeg, ieeg to read
+        self.bids_basename = "_".join(bids_fname.split("_")[:-1])
+        self.kind = bids_fname.split("_")[-1].split(".")[0]
+
+        # extract BIDS parameters from the bids filename to be loaded/modified
+        # gets: subjectid, sessionid, acquisition type, task name, runid, file extension
+        params = _parse_bids_filename(self.bids_fname, verbose=verbose)
+        self.subject_id, self.session_id = params["sub"], params["ses"]
+        self.acquisition, self.task, self.run = (
+            params["acq"],
+            params["task"],
+            params["run"],
+        )
+        _, self.ext = _parse_ext(self.bids_fname)
+
         self.result_fpath = None
 
         # instantiate a loader/writer
-        self.loader = BidsLoader(datadir, subject_id, session_id, run_id, modality)
-        self.writer = BidsWriter(datadir, subject_id, session_id, run_id, modality)
+        self.loader = BidsLoader(
+            bids_root=self.bids_root,
+            bids_basename=self.bids_basename,
+            kind=self.kind,
+            datatype=self.ext,
+        )
+        self.writer = BidsWriter(
+            bids_root=self.bids_root,
+            bids_basename=self.bids_basename,
+            kind=self.kind,
+            datatype=self.ext,
+        )
 
         if not os.path.exists(self.loader.datafile_fpath):
             raise RuntimeError(
                 f"Bids dataset run does not exist at {self.loader.datafile_fpath}. "
                 f"Please first create the dataset in BIDS format."
             )
-
-        # upon loading a BidsRun, update the sidecar json's channel counts. This makes
-        # it BIDS-compatible since these fields are required.
-        self._update_sidecar_json_channelcounts()
 
     def _create_bidsrun(self, data_fpath):
         """
@@ -101,13 +119,13 @@ class BidsRun(BaseBids):
                 "Can't automatically create bids run using this extension. "
             )
         bids_basename = self.loader.datafile_fpath
-        bids_dir = self.datadir
+        bids_dir = self.bids_root
 
         # copy over bids run to where it should be within the bids directory
         output_path = mne_bids.write_raw_bids(
             raw, bids_basename, output_path=bids_dir, overwrite=True, verbose=False
         )
-        # return output_path
+        return output_path
 
     @property
     def fpath(self):
@@ -128,7 +146,7 @@ class BidsRun(BaseBids):
 
         Returns
         -------
-        The sampling frequency
+        The sampling frequency in HZ
 
         """
         sidecar = self.loader.load_sidecar_json()
@@ -159,18 +177,6 @@ class BidsRun(BaseBids):
         """
         chdf = self.loader.load_channels_tsv()
         return chdf["name"].to_numpy()
-
-    @property
-    def results_fpath(self):
-        """
-        Get the path to the results directory.
-
-        Returns
-        -------
-        The path of the results directory
-
-        """
-        return self.loader.result_fpath
 
     def load_data(self):
         """
@@ -289,14 +295,22 @@ class BidsRun(BaseBids):
         self.writer.write_sidecar_json(sidecar_dict)
 
     def add_sidecar_field(self, key, value):
+        """
+        Add a field (i.e. key/value) to the sidecar json file.
+
+        Parameters
+        ----------
+        key :
+        value :
+
+        Returns
+        -------
+        None
+        """
         pass
 
     def append_channel_info(
-        self,
-        column_id: str,
-        channel_id: str = None,
-        value=None,
-        channel_dict: Dict = None,
+        self, column_id: str, channel_id: str, value, channel_dict: Dict = None,
     ):
         """
         Add a new column to the channels tsv file.
@@ -319,16 +333,22 @@ class BidsRun(BaseBids):
             )
         channel_df = self.loader.load_channels_tsv()
         colnames = channel_df.columns
-        if column_id not in colnames:
-            if channel_dict is not None:
-                new_data = []
-                for key, value in channel_dict.items():
-                    new_data.append(value)
-            else:
-                new_data = [""] * channel_df.shape[0]
-            channel_df[column_id] = new_data
-        if value is not None:
-            channel_df.loc[channel_df["name"] == channel_id, column_id] = value
+        if column_id in colnames:
+            raise RuntimeError(
+                f"Already added in the column: {column_id}. Call modify_channel_info to"
+                f"modify."
+            )
+
+        if channel_dict is not None:
+            new_data = []
+            for key, value in channel_dict.items():
+                new_data.append(value)
+        else:
+            new_data = ["N/A"] * channel_df.shape[0]
+        channel_df[column_id] = new_data
+
+        channel_df.loc[channel_df["name"] == channel_id, column_id] = value
+
         self.writer.write_channels_tsv(channel_df)
 
     def modify_channel_info(self, column_id: str, channel_id: str, value=None):
@@ -358,44 +378,29 @@ class BidsRun(BaseBids):
         channel_df.loc[channel_df["name"] == channel_id, column_id] = value
         self.writer.write_channels_tsv(channel_df)
 
-    def find_bad_channels(self):
+    def delete_channel_info(self, column_id: str):
         """
-        Find bad electrodes based on hardcoded rules of the electrode name.
+        Remove column from the channels.tsv file.
 
-        Uses markers encoded in BAD_MARKERS (see config file)
+        Parameters
+        ----------
+        column_id : (str)
 
         Returns
         -------
-        A dictionary where the key is the electrode name and the value is a string description
+        None
 
         """
         channel_df = self.loader.load_channels_tsv()
-        channel_scrub = ChannelScrub
-        channel_names = channel_df["name"]
-        bad_channels = channel_scrub.look_for_bad_channels(channel_names)
-        bad_channels_dict = {}
-        for bad in bad_channels:
-            bad_channels_dict[
-                bad
-            ] = f"Scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
-        return bad_channels_dict
-
-    def find_channel_types(self):
-        """
-        Find the actual type of the electrode based on a regular expression of the electrode name.
-
-        Returns
-        -------
-        A dictionary where the key is the electrode name and the value is the type
-
-        """
-        channel_df = self.loader.load_channels_tsv()
-        channel_scrub = ChannelScrub
-        channel_names = channel_df["name"]
-        channel_dict = channel_scrub.label_channel_types(channel_names)
-        for key, value in channel_dict.items():
-            channel_dict[key] = value.upper()
-        return channel_dict
+        if column_id not in channel_df.columns:
+            raise ValueError(
+                f"Column id {column_id} not in the channels tsv file. Please pass a correct column or "
+                f"add to the tsv file"
+            )
+        print("Inside delete: ", channel_df)
+        channel_df.drop(columns=column_id, axis=1, inplace=True)
+        print("Inside delete: ", channel_df)
+        self.writer.write_channels_tsv(channel_df)
 
     def _update_sidecar_json_channelcounts(self):
         """
@@ -420,88 +425,24 @@ class BidsRun(BaseBids):
 
         self.writer.write_sidecar_json(sidecar_dict)
 
-        def modify_original_scan_filename(self, original_filename: str):
-            """
-            Add the passed original filename to the scans tsv file.
-
-            Parameters
-            ----------
-            original_filename :
-                The path to the file from the source.
-
-            """
-            scans_data = self.loader.load_scans_tsv()
-            colnames = scans_data.columns
-            if "original_filename" not in colnames:
-                fnames = []
-                for index, row in scans_data.iterrows():
-                    fnames.append("")
-                scans_data["original_filename"] = fnames
-            for index, row in scans_data.iterrows():
-                if row["filename"] == self.fpath:
-                    scans_data["original_filename"][index] = original_filename
-            self.writer.write_scans_tsv(scans_data)
-
-    @staticmethod
-    def modify_electrode_type(channel_df: pd.DataFrame, chlabel: str, chtype: str):
-        """
-        Modify a single recording channel's type.
-
-        Updates the run's channel information to be one of the ones in the following:
-        https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md
-
-        Right now, we support EEG, ECOG, SEEG, ECG (i.e. EKG), EMG, EOG, MISC.
-
-        All others are categorized as OTHER for now.
-
-        TODO:
-        1. add support for other types.
-
-        Parameters
-        ----------
-        channel_df: pandas.DataFrame
-            The current DataFrame containing electrode contact information
-        chlabel: str
-            The label of the electrode to modify
-        chtype: str
-            The type to change the electrode to
-
-        Returns
-        -------
-        The modified DataFrame
-
-        """
-        channel_df.loc([channel_df["name"] == chlabel])["type"] = chtype
-        return channel_df
-
-    # @staticmethod
-    # def modify_electrode_status(
-    #     channel_df: pd.DataFrame, chlabel: str, chdescription: str
-    # ):
+    # def modify_original_scan_filename(self, original_filename: str):
     #     """
-    #     Update the run's channel information by looking at the generated clinical electrode sheet annotations.
-    #
-    #     Electrode status can either be "good", or "bad"
+    #     Add the passed original filename to the scans tsv file.
     #
     #     Parameters
     #     ----------
-    #     channel_df: pandas.DataFrame
-    #         The current DataFrame containing electrode contact information
-    #     chlabel: str
-    #         The label of the electrode to modify
-    #     chdescription: str
-    #         The description to fill in the 'notes' column of the DataFrame
-    #
-    #
-    #     Returns
-    #     -------
-    #     The modified DataFrame
+    #     original_filename :
+    #         The path to the file from the source.
     #
     #     """
-    #     # channel_df[channel_df["name"] == chlabel]["status"] = "bad"
-    #     # channel_df[channel_df["name"] == chlabel]["notes"] = chdescription
-    #     for ind, row in channel_df.iterrows():
-    #         if row["name"] == chlabel:
-    #             channel_df["status"][ind] = "bad"
-    #             channel_df["notes"][ind] = chdescription
-    #     return channel_df
+    #     scans_data = self.loader.load_scans_tsv()
+    #     colnames = scans_data.columns
+    #     if "original_filename" not in colnames:
+    #         fnames = []
+    #         for index, row in scans_data.iterrows():
+    #             fnames.append("")
+    #         scans_data["original_filename"] = fnames
+    #     for index, row in scans_data.iterrows():
+    #         if row["filename"] == self.fpath:
+    #             scans_data["original_filename"][index] = original_filename
+    #     self.writer.write_scans_tsv(scans_data)

@@ -1,5 +1,5 @@
 [run]
-omit=./eegio/base/utils/*,eegio/base/dataset_test/*,eegio/*config*,eegio/base/format/*,*electrode.py,*basedataobject.py,tests/*
+omit=./eegio/base/utils/*,eegio/base/dataset_test/*,eegio/*config*,eegio/base/format/*,*electrode.py,*basedataobject.py,tests/*,*bids_patient.py,*/derivatives/*
 
 [report]
 omit=tests/*

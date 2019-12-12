@@ -1,8 +1,12 @@
 language: python
+
 python:
+  - "3.6"
   - "3.7"
+
 env:
   - CODECOV_TOKEN="9dc663c6-d351-41f4-8bab-b27b6c4cc6b3"
+
 # command to install dependencies
 install:
   # commands to get Miniconda3 setup
@@ -17,10 +21,11 @@ install:
   - conda config --add channels conda-forge
   - conda install numpy pandas scikit-learn scipy mne mne-bids natsort
   - pip install pybids
-  - conda install pytest black check-manifest pytest-cov
-  - conda install pyedflib xlrd
+  - conda install pytest black check-manifest pytest-cov pydocstyle
+  - conda install xlrd pyedflib
   - pip install codecov
 #  - pip install -r requirements.txt
+
 cache:
     - pip
     - yarn

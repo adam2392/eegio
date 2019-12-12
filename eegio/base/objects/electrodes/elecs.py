@@ -17,6 +17,7 @@ def reinitialize_datastructure(f):
 class Contacts(object):
     """
     Class wrapper for a full set of contacts for a patient.
+
     If:
      - ECoG/SEEG, then each contact corresponds to a certain electrode, with
      many electrodes being part of the EEG for this patient.
@@ -109,7 +110,7 @@ class Contacts(object):
         self.xyz = contacts_xyz
         self.referencespace = referencespace
         self.scale = scale
-        self.natinds = None
+        self.naturalinds = None
 
         self._initialize_contacts_xyz_dict()
 
@@ -117,15 +118,26 @@ class Contacts(object):
         self._initialize_datastructs()
 
     def __str__(self):
+        """Comma separated string of channel labels."""
         return ",".join(self.chanlabels)
 
     def __repr__(self):
+        """Return list of channel labels."""
         return self.chanlabels
 
     def __len__(self):
+        """Get number of contacts."""
         return len(self.chanlabels)
 
     def __getitem__(self, given):
+        """
+        Slices the contact labels.
+
+        Parameters
+        ----------
+        given : (slice)
+
+        """
         if isinstance(given, slice):
             # do your handling for a slice object:
             # print(given.start, given.stop, given.step)
@@ -137,13 +149,10 @@ class Contacts(object):
 
     def _initialize_datastructs(self):
         """
-        Helper function to initialize an electrodes dictionary for storing contacts belonging to the same electrode.
+        Initialize an electrodes dictionary for storing contacts belonging to the same electrode.
 
         Assumes that all different electrodes have a starting different lettering (e.g. A1, A2, A3 are all from the same
         electrode).
-
-        Returns
-        -------
 
         """
         self.electrodes = collections.defaultdict(list)
@@ -164,12 +173,10 @@ class Contacts(object):
 
     def _initialize_datastructs_dev(self):
         """
-        Helper function to initialize an electrodes dictionary for storing contacts belonging to the same electrode.
+        Initialize an electrodes dictionary for storing contacts belonging to the same electrode.
 
         Assumes that all different electrodes have a starting different lettering (e.g. A1, A2, A3 are all from the same
         electrode).
-
-        :return:
         """
         self.electrodes_dict = collections.defaultdict(list)
         for i, name in enumerate(self.chanlabels):
@@ -198,7 +205,7 @@ class Contacts(object):
         self, contacts_xyz: List, referencespace: str = None, scale: str = "mm"
     ):
         """
-        Function to help load in contact xyz coordinates.
+        Load in contact xyz coordinates.
 
         Parameters
         ----------
@@ -213,7 +220,7 @@ class Contacts(object):
 
         Returns
         -------
-
+        None
         """
         if referencespace == None:
             warnings.warn(
@@ -227,11 +234,11 @@ class Contacts(object):
 
     def get_contacts_xyz(self) -> Union[Dict, None]:
         """
-        Helper function to return the contacts and their xyz coordinates.
+        Get the contacts and their xyz coordinates.
 
         Returns
         -------
-
+        chancoord_dict :
         """
         if self.xyz and (len(self.xyz) == len(self.chanlabels)):
             return {chanlabel: xyz for chanlabel, xyz in zip(self.chanlabels, self.xyz)}
@@ -244,26 +251,31 @@ class Contacts(object):
 
     def natsort_contacts(self) -> Tuple:
         """
-        Naturally sort the contacts. Keeps the applied indices in self.natinds
+        Naturally sort the contacts.
+
+        Keeps the applied indices in self.naturalinds
 
         Returns
         -------
-
+        naturalinds
         """
-        if self.natinds == None:
-            self.natinds = index_natsorted(self.chanlabels)
-            self.chanlabels = np.array(order_by_index(self.chanlabels, self.natinds))
+        if self.naturalinds == None:
+            self.naturalinds = index_natsorted(self.chanlabels)
+            self.chanlabels = np.array(
+                order_by_index(self.chanlabels, self.naturalinds)
+            )
         else:
             warnings.warn(
                 "Already naturally sorted contacts! Extract channel labels naturally sorted by calling "
-                "chanlabels, and apply ordering to other channel level data with natinds."
+                "chanlabels, and apply ordering to other channel level data with naturalinds."
             )
-        return self.natinds
+        return self.naturalinds
 
     def mask_indices(self, mask_inds: List) -> List:
         """
-        Function to keep delete certain rows (i.e. channels) of the matrix time series data
-        and the labels corresponding to those masked indices.
+        Mask certain rows (i.e. channels).
+
+        Masks the matrix time series data, and the labels corresponding to those masked indices.
 
         Parameters
         ----------
@@ -272,7 +284,7 @@ class Contacts(object):
 
         Returns
         -------
-
+        keepinds :
         """
         if max(mask_inds) > len(self.chanlabels):
             warnings.warn(
@@ -288,8 +300,9 @@ class Contacts(object):
 
     def mask_chs(self, contacts):
         """
-        Function to keep delete certain rows (i.e. channels) of the matrix time series data
-        and the labels corresponding to those masked names.
+        Mask/delete certain rows (i.e. channels).
+
+        Masks the matrix time series data, and the labels corresponding to those masked names.
 
         Parameters
         ----------
@@ -298,7 +311,7 @@ class Contacts(object):
 
         Returns
         -------
-
+        keepinds : (list) the indices to actually keep
         """
         if any(x not in self.chanlabels for x in contacts):
             raise ValueError(
@@ -318,7 +331,8 @@ class Contacts(object):
 
         Returns
         -------
-
+        bipolar_inds :
+        remaining_labels :
         """
         # set list to hold new labeling and the corresponding bipolar indices
         self.chanlabels_bipolar = []
@@ -353,6 +367,17 @@ class Contacts(object):
             return self.bipolar_inds, remaining_labels
 
     def get_elec(self, contact_name):
+        """
+        Get electrode of a certain contact name on SEEG.
+
+        Parameters
+        ----------
+        contact_name :
+
+        Returns
+        -------
+        electrode :
+        """
         match = self.contact_single_regex.match(contact_name)
         if match is None:
             return None
@@ -360,14 +385,24 @@ class Contacts(object):
 
     def get_contact_coords(self, contact_name):
         """
-        Function to get the coordinates of a specified contact or contact pair. Allowed formats are:
+        Get the coordinates of a specified contact or contact pair.
+
+        Allowed formats are:
 
             A1            : Single contact.
             A1-2 or A1-A2 : Contact pair. The indices must be adjacent.
 
 
-        Examples:
+        Parameters
+        ----------
+        contact_name :
 
+        Returns
+        -------
+        contact_coordinates (x,y,z) :
+
+        Examples
+        --------
         >>> np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
         >>> contacts = Contacts(["A1", "A2"], [(0.0 0.0 1.0), (0.0 0.0 2.0)])
         >>> contacts.get_coords("A1")
@@ -377,7 +412,6 @@ class Contacts(object):
         >>> contacts.get_coords("A2-A1")
         array([0.0, 0.0, 1.5])
         """
-
         match = self.contact_single_regex.match(contact_name)
         if match is not None:
             return self.name_to_xyz[contact_name]
@@ -403,7 +437,7 @@ class Contacts(object):
 
     def get_seeg_ngbhrs(self, contact: str):
         """
-        Helper function to get neighboring contacts for SEEG contacts using regex.
+        Get neighboring contacts for SEEG contacts using regex.
 
         Parameters
         ----------
@@ -411,6 +445,8 @@ class Contacts(object):
 
         Returns
         -------
+        nghbrcontacts : the actual neighboring contacts
+        nghbrinds : the indices of the neighbors in self.contacts
 
         """
         # initialize empty data structures to return
@@ -461,7 +497,7 @@ class Contacts(object):
 
     def get_contact_ngbhrs(self, contact_name):
         """
-        Helper function to return the neighbor contact names, and also the indices in our data structure.
+        Get the neighbor contact names, and also the indices in our data structure.
 
         Parameters
         ----------
@@ -469,6 +505,8 @@ class Contacts(object):
 
         Returns
         -------
+        nghbrcontacts : the actual neighboring contacts
+        nghbrinds : the indices of the neighbors in self.contacts
 
         """
         # initialize empty data structures to return

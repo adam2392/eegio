@@ -4,7 +4,6 @@ include eegio/__init__.py
 
 recursive-include examples *.py
 recursive-include examples *.txt
-
 recursive-include eegio *.py
 
 ### Exclude
@@ -17,8 +16,8 @@ exclude CONTRIBUTING.md
 exclude .coveragerc
 exclude *.yml
 exclude .mailmap
-exclude annonymize
-recursive-exclude eegio *.pyc
 
+recursive-exclude eegio *.pyc
 recursive-exclude doc *
 recursive-exclude paper *
+recursive-exclude annonymize

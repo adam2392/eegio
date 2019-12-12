@@ -27,7 +27,7 @@ clean: clean-build clean-pyc clean-so clean-ctags clean-cache
 inplace:
 	$(PYTHON) setup.py install
 
-test: inplace
+test: inplace check-manifest
 	rm -f .coverage
 	$(PYTESTS) ./
 
@@ -52,4 +52,23 @@ pydocstyle:
 pycodestyle:
 	@echo "Running pycodestyle"
 	@pycodestyle
+
+check-manifest:
+	check-manifest --ignore .circleci*,docs,.DS_Store,annonymize
+
+upload-pipy:
+	python setup.py sdist bdist_egg register upload
+
+black:
+	@if command -v black > /dev/null; then \
+		echo "Running black"; \
+		black --check eegio examples; \
+	else \
+		echo "black not found, please install it!"; \
+		exit 1; \
+	fi;
+	@echo "black passed"
+
+check:
+	@$(MAKE) -k black pydocstyle check-manifest
 

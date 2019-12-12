@@ -13,7 +13,7 @@ class DatasetTester(object):
     --------
     >>> from eegio.dataset_test.dataset_tester import DatasetTester
     # test loading in the actual data from the fif saved place
-    >>> loader = iEEGRecording(root_dir=datadir,
+    >>> loader = iEEGRecording(root_dir=bids_root,
     ...                         jsonfilepath=jsonpath,
     ...                          preload=False)
     >>> ieegts = loader.loadpipeline()
@@ -34,7 +34,7 @@ class DatasetTester(object):
 
     def get_test_results(self):
         """
-        Getter method for getting the results of testing the dataset. One should
+        Get the results of testing the dataset. One should
         print the results to see which dataset's attributes failed the dataset test.
 
         :return: self.problems (list)
@@ -43,7 +43,7 @@ class DatasetTester(object):
 
     def load_datadict(self, metadataobj):
         """
-        Loader method for passing a metadata dictionary object to the DatasetTester class object.
+        Load a metadata dictionary object to the DatasetTester class object.
 
         :param metadataobj: (dict)
         :return: None
@@ -87,7 +87,9 @@ class DatasetTester(object):
 
     def check_modality(self):
         """
-        Function to test the dataset's kind. We have the possibilities of:
+        Test the dataset's kind.
+
+        We have the possibilities of:
         - seeg
         - ecog
         - scalp
@@ -103,7 +105,9 @@ class DatasetTester(object):
 
     def check_clinical_outcomes(self):
         """
-        Function to check clinical outcomes of a dataset. Every patient/dataset
+        Check clinical outcomes of a dataset.
+
+        Every patient/dataset
         has a surgical outcome, engel_score and clinical_difficulty associated with it.
 
         Note that if an outcome was no resection (i.e. nr), then the corresponding
@@ -131,7 +135,9 @@ class DatasetTester(object):
 
     def check_onset_offset(self):
         """
-        Function to check the onset/offset times of a dataset. Every seizure dataset
+        Check the onset/offset times of a dataset.
+
+        Every seizure dataset
         should have a marked eeg_onset and eeg_offset from clinical annotations.
 
         TODO:
@@ -159,7 +165,8 @@ class DatasetTester(object):
 
     def check_cez_labels_scalp(self):
         """
-        Function to check the clinically annotated EZ labels at the contact level.
+        Check the clinically annotated EZ labels at the contact level.
+
         It checks for the:
         - ez_hypo_contacts that can be different per dataset
         - ablated_contacts/resected_contacts that will be the same for every dataset for a specific patient
@@ -183,7 +190,8 @@ class DatasetTester(object):
 
     def check_cez_labels_ieeg(self):
         """
-        Function to check the clinically annotated EZ labels at the contact level.
+        Check the clinically annotated EZ labels at the contact level.
+
         It checks for the:
         - ez_hypo_contacts that can be different per dataset
         - ablated_contacts/resected_contacts that will be the same for every dataset for a specific patient
@@ -211,7 +219,7 @@ class DatasetTester(object):
 
     def _check_cez_labels_in_chans(self):
         """
-        Helper function to check the cez labels for contact level.
+        Check the cez labels for contact level.
 
         :return: None
         """
@@ -242,7 +250,7 @@ class DatasetTester(object):
 
     def check_cez_brain_regionlabels(self):
         """
-        Function to check the brain regions labeled as suspected epileptogenic.
+        Check the brain regions labeled as suspected epileptogenic.
 
         :return: None
         """

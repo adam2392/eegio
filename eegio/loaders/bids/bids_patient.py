@@ -5,14 +5,16 @@ Version: 1.0
 """
 import os
 import warnings
-from typing import Union, Dict
+from collections import OrderedDict
+from typing import Dict
+from typing import Union
 
 import bids
 import mne_bids.utils
 from mne_bids import make_bids_basename
 
+from eegio.base.utils.bids_helper import BidsBuilder, BidsUtils
 from eegio.loaders.bids.basebids import BaseBids
-from eegio.base.utils.bids_helper import BidsBuilder, BidsConverter, BidsUtils
 from eegio.loaders.bids.bidsio import BidsWriter, BidsLoader
 
 
@@ -25,11 +27,9 @@ class BidsPatient(BaseBids):
 
     Attributes
     ----------
-    subject_id: str
-        Identifier for this patient
-    session_id: str
+    bids_fname: str
         Identifier for the session
-    datadir: Union[str, os.PathLike]
+    bids_root: Union[str, os.PathLike]
         The base directory for the Bids dataset that this BidsPatient belongs
     managing_user: str
         Managing user that is tied to this Patient. E.g. a clinical center, or a specific researcher,
@@ -39,53 +39,25 @@ class BidsPatient(BaseBids):
 
     """
 
-    def __init__(
-        self,
-        subject_id: str,
-        session_id: str = None,
-        datadir: Union[str, os.PathLike] = None,
-        managing_user: str = None,
-        modality: str = "ieeg",
-    ):
-        """
-        Initialize BidsPatient object.
+    def __init__(self, bids_root, subject_id: str, verbose):
+        super(BidsPatient, self).__init__(bids_root=bids_root)
 
-        Parameters
-        ----------
-        subject_id :
-        session_id :
-        datadir :
-        managing_user :
-        modality :
+        # what is the modality -- meg, eeg, ieeg to read
+        self.bids_basename = make_bids_basename(subject=subject_id)
 
-        """
-        super(BidsPatient, self).__init__(datadir=datadir, modality=modality)
-
+        # extract BIDS parameters from the bids filename to be loaded/modified
         self.subject_id = subject_id
-        self.session_id = session_id
-        self.managing_user = managing_user
-        self.subjdir = os.path.join(self.datadir, "sub-" + self.subject_id)
-
-        if not os.path.exists(self.subjdir):
-            warnings.warn(
-                f"Subject directory does not exist at: {self.subjdir} "
-                f"We are going to create it for you!"
-            )
-            # create bids folder for this subject
-            BidsBuilder.make_bids_folder_struct(
-                self.datadir, self.subject_id, self.modality, self.session_id
-            )
-
-        # run to cache and search to get all datasets available for this patient
-        self._get_all_datasets()
 
         # instantiate a loader/writer
         self.loader = BidsLoader(
-            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
+            bids_root=self.bids_root, bids_basename=self.bids_basename,
         )
         self.writer = BidsWriter(
-            bidsdir=self.datadir, subject_id=self.subject_id, session_id=self.session_id
+            bids_root=self.bids_root, bids_basename=self.bids_basename,
         )
+
+        # run to cache and search to get all datasets available for this patient
+        self._get_all_datasets()
 
         # run BIDS compatability checks
         self._bids_compatible_check()
@@ -106,10 +78,15 @@ class BidsPatient(BaseBids):
 
     def _bids_compatible_check(self):
         """
-        Checks that the BIDS patient has the necessary folders and files.
+        Check that the BIDS patient has the necessary folders and files.
+
+        Checks existence of files:
+        - participant tsv/json files
+        - scans tsv file
 
         Returns
         -------
+        None
 
         """
         validator = bids.BIDSValidator(index_associated=True)
@@ -148,12 +125,7 @@ class BidsPatient(BaseBids):
 
         """
         # instantiate a loader/writer
-        self.loader = BidsLoader(
-            bidsdir=self.datadir,
-            subject_id=self.subject_id,
-            session_id=self.session_id,
-            run_id=runid,
-        )
+        self.loader = BidsLoader(bids_root=self.bids_root, bids_basename=None)
 
     def _write(self, runid):
         """
@@ -165,12 +137,7 @@ class BidsPatient(BaseBids):
             Identifier for the desired recording
 
         """
-        self.writer = BidsWriter(
-            bidsdir=self.datadir,
-            subject_id=self.subject_id,
-            session_id=self.session_id,
-            run_id=runid,
-        )
+        self.writer = BidsWriter(bids_root=self.bids_root, bids_basename=None)
 
     def _create_derivative_folders(self, types="all"):
         """
@@ -189,9 +156,11 @@ class BidsPatient(BaseBids):
 
         # create preprocess, results folders
         BidsBuilder.make_preprocessed_folder(
-            self.datadir, self.subject_id, self.session_id
+            self.bids_root, self.subject_id, self.session_id
         )
-        BidsBuilder.make_results_folder(self.datadir, self.subject_id, self.session_id)
+        BidsBuilder.make_results_folder(
+            self.bids_root, self.subject_id, self.session_id
+        )
 
     def get_subject_sessions(self):
         """
@@ -245,7 +214,7 @@ class BidsPatient(BaseBids):
         """Load in all the dataset paths."""
         # Should update after creating a run, but does not work currently
         edffiles = self.query.get(extension=".edf", return_type="file")
-        fiffiles = self.query.get(extension=".fif", return_type="file")
+        fiffiles = self.query.get(extension=self.ext, return_type="file")
         self.edf_fpaths = edffiles
         self.dataset_fpaths = fiffiles
 
@@ -300,13 +269,7 @@ class BidsPatient(BaseBids):
         # load in all the mne_raw datasets
         rawlist = []
         for run_id in runs_in_session:
-            loader = BidsLoader(
-                bidsdir=self.datadir,
-                subject_id=self.subject_id,
-                session_id=session_id,
-                run_id=run_id,
-                kind=kind,
-            )
+            loader = BidsLoader(bids_root=self.bids_root, bids_basename=None)
             rawlist.append(loader.load_dataset())
         return rawlist
 
@@ -326,13 +289,7 @@ class BidsPatient(BaseBids):
             An object containing the raw EEG data
 
         """
-        loader = BidsLoader(
-            bidsdir=self.datadir,
-            subject_id=self.subject_id,
-            session_id=session_id,
-            run_id=run_id,
-            kind=kind,
-        )
+        loader = BidsLoader(bids_root=self.bids_root, bids_basename=None)
         raw = loader.load_dataset()
         return raw
 
@@ -354,23 +311,11 @@ class BidsPatient(BaseBids):
             if not os.path.exists(fpath):
                 raise OSError(f"{fpath} doesn't exist. Please pass in valid filepaths.")
             if line_noise != 50:
-                loader = BidsLoader(
-                    bidsdir=self.datadir,
-                    subject_id=self.subject_id,
-                    session_id=self.session_id,
-                    run_id=i,
-                    kind=kind,
-                )
+                loader = BidsLoader(bids_root=self.bids_root, bids_basename=None)
                 sidecardict = loader.load_sidecar_json()
                 sidecardict["PowerLineFrequency"] = line_noise
 
-                writer = BidsWriter(
-                    bidsdir=self.datadir,
-                    subject_id=self.subject_id,
-                    session_id=self.session_id,
-                    run_id=i,
-                    kind=kind,
-                )
+                writer = BidsWriter(bids_root=self.bids_root, bids_basename=None)
                 writer.write_sidecar_json(sidecardict)
 
             # TODO: Check if .fif file already exists. Otherwise convert to fif
@@ -556,3 +501,32 @@ class BidsPatient(BaseBids):
         # recreate metadata
         metadata = self._create_metadata()
         self._load_metadata(metadata)
+
+    def _create_participants_json(self, fname, overwrite=False, verbose=False):
+        """
+        Create the participants json file for Bids compliance. an Extension of what is present in MNE-BIDS.
+
+        TODO:
+        1. determine how to incorporate into MNE-BIDS
+
+        Parameters
+        ----------
+        fname : Union[str, os.PathLike]
+            The path of the participants json file
+        overwrite : bool
+            Whether to overwrite an existing participants json file
+        verbose : bool
+            Whether to print the data from the participants json file to stdout
+
+        """
+        cols = OrderedDict()
+        cols["participant_id"] = {"Description": "Unique participant identifier"}
+        cols["age"] = {
+            "Description": "Age of the participant at time of testing",
+            "Units": "years",
+        }
+        cols["sex"] = {
+            "Description": "Biological sex of the participant",
+            "Levels": {"F": "female", "M": "male"},
+        }
+        _write_json(fname, cols, overwrite, verbose)
