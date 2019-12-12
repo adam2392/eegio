@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>eegio.base.objects.bids.bids_patient &#8212; eegio 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/gallery.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../../../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../../../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../../../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../../index.html">
+          EEGIO</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <h1>Source code for eegio.base.objects.bids.bids_patient</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Authors: Adam Li and Patrick Myers.</span>
+
+<span class="sd">Version: 1.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">mne_bids.utils</span>
+<span class="kn">from</span> <span class="nn">mne_bids</span> <span class="k">import</span> <span class="n">make_bids_basename</span>
+
+<span class="kn">from</span> <span class="nn">eegio.base.objects.bids.basebids</span> <span class="k">import</span> <span class="n">BaseBids</span>
+<span class="kn">from</span> <span class="nn">eegio.base.objects.bids.bids_run</span> <span class="k">import</span> <span class="n">BidsRun</span>
+<span class="kn">from</span> <span class="nn">eegio.base.utils.bids_helper</span> <span class="k">import</span> <span class="n">BidsBuilder</span>
+<span class="kn">from</span> <span class="nn">eegio.loaders.bidsio</span> <span class="k">import</span> <span class="n">BidsWriter</span><span class="p">,</span> <span class="n">BidsLoader</span>
+
+
+<div class="viewcode-block" id="BidsPatient"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient">[docs]</a><span class="k">class</span> <span class="nc">BidsPatient</span><span class="p">(</span><span class="n">BaseBids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for patient data that inherits basic dataset functionality and follows Bids format.</span>
+
+<span class="sd">    The additional components for this are related to the fact that each Patient can</span>
+<span class="sd">    have multiple EEGTimeSeries, or Results related to it.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject_id: str</span>
+<span class="sd">        Identifier for this patient</span>
+<span class="sd">    session_id: str</span>
+<span class="sd">        Identifier for the session</span>
+<span class="sd">    datadir: Union[str, os.PathLike]</span>
+<span class="sd">        The base directory for the Bids dataset that this BidsPatient belongs</span>
+<span class="sd">    managing_user: str</span>
+<span class="sd">        Managing user that is tied to this Patient. E.g. a clinical center, or a specific researcher,</span>
+<span class="sd">        or specific doctor.</span>
+<span class="sd">    modality: str</span>
+<span class="sd">        The type of recording the BidsPatient underwent during this session.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BidsPatient.__init__"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">subject_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">datadir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">managing_user</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">modality</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ieeg&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize BidsPatient object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subject_id :</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        datadir :</span>
+<span class="sd">        managing_user :</span>
+<span class="sd">        modality :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BidsPatient</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">,</span> <span class="n">modality</span><span class="o">=</span><span class="n">modality</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span> <span class="o">=</span> <span class="n">subject_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">managing_user</span> <span class="o">=</span> <span class="n">managing_user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subjdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="s1">&#39;sub-&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subjdir</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Subject directory does not exist at: </span><span class="si">{self.subjdir}</span><span class="s2"> &quot;</span>
+                          <span class="n">f</span><span class="s2">&quot;We are going to create it for you!&quot;</span><span class="p">)</span>
+            <span class="c1"># create bids folder for this subject</span>
+            <span class="n">BidsBuilder</span><span class="o">.</span><span class="n">make_bids_folder_struct</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
+
+        <span class="c1"># run to cache and search to get all datasets available for this patient</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_datasets</span><span class="p">()</span>
+
+        <span class="c1"># create derivative folders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_derivative_folders</span><span class="p">()</span>
+
+        <span class="c1"># instantiate a loader/writer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loader</span> <span class="o">=</span> <span class="n">BidsLoader</span><span class="p">(</span><span class="n">bidsdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                                 <span class="n">subject_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                 <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                 <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span> <span class="o">=</span> <span class="n">BidsWriter</span><span class="p">(</span><span class="n">bidsdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                                 <span class="n">subject_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                 <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                 <span class="p">)</span></div>
+        <span class="c1"># if new_subject:</span>
+        <span class="c1">#     # Need to have subject in file in order to load and modify any metadata</span>
+        <span class="c1">#     BidsBuilder.add_subject_to_participants(self.subject_id, self.loader, self.writer)</span>
+        <span class="c1">#     # TODO: How do we add subject age/sex at this point</span>
+
+        <span class="c1"># metadata = self._create_metadata()</span>
+        <span class="c1"># self._load_metadata(metadata)</span>
+
+        <span class="c1"># if self.numdatasets &gt; 0:</span>
+        <span class="c1">#     scans = self._create_scan_data()</span>
+        <span class="c1">#     self._load_scans(scans)</span>
+
+<div class="viewcode-block" id="BidsPatient.__str__"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print the string representation of BidsPatient.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            A description of the BidsPatient including the number of datasets.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> Patient with </span><span class="si">{}</span><span class="s2"> Dataset Recordings &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numdatasets</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a BidsLoader for a specific runid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        runid : str</span>
+<span class="sd">            Identifier for the desired recording</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># instantiate a loader/writer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loader</span> <span class="o">=</span> <span class="n">BidsLoader</span><span class="p">(</span><span class="n">bidsdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                                 <span class="n">subject_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                 <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                 <span class="n">run_id</span><span class="o">=</span><span class="n">runid</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a BidsWriter for a specific runid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        runid : str</span>
+<span class="sd">            Identifier for the desired recording</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span> <span class="o">=</span> <span class="n">BidsWriter</span><span class="p">(</span><span class="n">bidsdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                                 <span class="n">subject_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                 <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                 <span class="n">run_id</span><span class="o">=</span><span class="n">runid</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_derivative_folders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the custom folders for a BidsPatient.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        types : str</span>
+<span class="sd">            Which derivative folders to create. Can be &quot;all&quot;, &quot;preprocess&quot;, or &quot;results&quot;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">types</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;preprocess&quot;</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can only create two types of derivative folders right now.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># create preprocess, results folders</span>
+        <span class="n">BidsBuilder</span><span class="o">.</span><span class="n">make_preprocessed_folder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
+        <span class="n">BidsBuilder</span><span class="o">.</span><span class="n">make_results_folder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BidsPatient.get_subject_sessions"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_sessions">[docs]</a>    <span class="k">def</span> <span class="nf">get_subject_sessions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all of the sessions that the BidsPatient has.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The list of sessions</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mne_bids</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_entity_vals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subjdir</span><span class="p">,</span> <span class="s1">&#39;ses&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsPatient.get_subject_runs"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_runs">[docs]</a>    <span class="k">def</span> <span class="nf">get_subject_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all the runs that the BidsPatient has.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[str]</span>
+<span class="sd">            The list of runs</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mne_bids</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_entity_vals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subjdir</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsPatient.get_subject_kinds"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_kinds">[docs]</a>    <span class="k">def</span> <span class="nf">get_subject_kinds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all the types of recordings that the BidsPatient has.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[str]</span>
+<span class="sd">            The list of recording types</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mne_bids</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_kinds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subjdir</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">numdatasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the number of datasets that the BidsPatient has.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            The number of datasets</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># should be return len(self.dataset_fpaths). Fix updating _get_all_datasets</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scans</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_all_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load in all the dataset paths.&quot;&quot;&quot;</span>
+        <span class="c1"># Should update after creating a run, but does not work currently</span>
+        <span class="n">edffiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">extension</span><span class="o">=</span><span class="s1">&#39;.edf&#39;</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">)</span>
+        <span class="n">fiffiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">extension</span><span class="o">=</span><span class="s1">&#39;.fif&#39;</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s1">&#39;file&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edf_fpaths</span> <span class="o">=</span> <span class="n">edffiles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_fpaths</span> <span class="o">=</span> <span class="n">fiffiles</span>
+
+<div class="viewcode-block" id="BidsPatient.load_subject_metadata"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.load_subject_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">load_subject_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all the metadata corresponding to this subject.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary containing metadata information</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_json</span><span class="p">()</span>
+        <span class="n">participants_tsv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_tsv</span><span class="p">()</span>
+
+        <span class="c1"># json file describes columns for this patient</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">participants_tsv</span><span class="p">[</span><span class="n">participants_tsv</span><span class="p">[</span><span class="s2">&quot;participant_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="c1"># metadata = participants_tsv.set_index(&#39;participant_id&#39;)[self.subject_id].to_dict(orient=&quot;index&quot;)</span>
+        <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;field_descriptions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">participants_json</span>
+        <span class="k">return</span> <span class="n">metadata</span></div>
+
+<div class="viewcode-block" id="BidsPatient.load_session"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.load_session">[docs]</a>    <span class="k">def</span> <span class="nf">load_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;eeg&quot;</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="s2">&quot;edf&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in the all runs for the session.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        kind :</span>
+<span class="sd">        extension :</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[mne.io.BaseRaw]</span>
+<span class="sd">            A list of objects with raw EEG data for a single session</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># query for the run ids in the session based on factors</span>
+        <span class="n">runs_in_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;run&quot;</span><span class="p">,</span>
+                                         <span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                         <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                         <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+                                         <span class="n">datatype</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
+                                         <span class="n">extension</span><span class="o">=</span><span class="n">extension</span><span class="p">)</span>
+
+        <span class="c1"># load in all the mne_raw datasets</span>
+        <span class="n">rawlist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="n">runs_in_session</span><span class="p">:</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">BidsLoader</span><span class="p">(</span><span class="n">bidsdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                                <span class="n">subject_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
+                                <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span>
+                                <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
+            <span class="n">rawlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">rawlist</span></div>
+
+<div class="viewcode-block" id="BidsPatient.load_run"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.load_run">[docs]</a>    <span class="k">def</span> <span class="nf">load_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;eeg&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in the raw data for a specific run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        run_id :</span>
+<span class="sd">        kind :</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mne.IO.BaseRaw</span>
+<span class="sd">            An object containing the raw EEG data</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">BidsLoader</span><span class="p">(</span><span class="n">bidsdir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                   <span class="n">subject_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                   <span class="n">session_id</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
+                   <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span>
+                   <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">raw</span></div>
+
+<div class="viewcode-block" id="BidsPatient.preprocess_edf_files"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.preprocess_edf_files">[docs]</a>    <span class="k">def</span> <span class="nf">preprocess_edf_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filelist</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">line_noise</span><span class="o">=</span><span class="mi">60</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert .edf files to .fif and .json file pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filelist : list[os.PathLike]</span>
+<span class="sd">            The list of all files to be converted into .fif format. Default is all edf files available</span>
+<span class="sd">        line_noise : int</span>
+<span class="sd">            The line noise to be eliminated. Typically 60 Hz in America</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">filelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">filelist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_non_processed_files</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">filelist</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{fpath}</span><span class="s2"> doesn&#39;t exist. Please pass in valid filepaths.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">line_noise</span> <span class="o">!=</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="n">sidecardict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span>
+                <span class="n">sidecardict</span><span class="p">[</span><span class="s2">&quot;PowerLineFrequency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">line_noise</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_sidecar_json</span><span class="p">()</span></div>
+
+            <span class="c1"># TODO: Check if .fif file already exists. Otherwise convert to fif</span>
+
+    <span class="k">def</span> <span class="nf">_find_non_processed_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the .edf files that have not been preprocessed into .fif files.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list:</span>
+<span class="sd">            File paths for unprocessed recordings.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scans_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_scans_tsv</span><span class="p">()</span>
+        <span class="n">colnames</span> <span class="o">=</span> <span class="n">scans_df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="s1">&#39;original_filename&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">colnames</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">scans_df</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">scans_df</span><span class="p">[</span><span class="n">scans_df</span><span class="p">[</span><span class="s2">&quot;original_filename&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">][</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_create_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create files to put the data into a bids compatible format.</span>
+
+<span class="sd">        Instantiate a BidsRun object corresponding to the passed scan.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scan :</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        BidsRun</span>
+<span class="sd">            The BidsRun object containing functionality to parse run-level data</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">run_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numdatasets</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">bids_basename</span> <span class="o">=</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">run</span><span class="o">=</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="n">BidsBuilder</span><span class="p">()</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">convert_to_bids</span><span class="p">(</span><span class="n">edf_fpath</span><span class="o">=</span><span class="n">scan</span><span class="p">,</span> <span class="n">bids_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="n">bids_basename</span><span class="o">=</span><span class="n">bids_basename</span><span class="p">)</span>
+        <span class="n">bidsrun</span> <span class="o">=</span> <span class="n">BidsRun</span><span class="p">(</span><span class="n">subject_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                          <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                          <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span>
+                          <span class="n">datadir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                          <span class="n">modality</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">)</span>
+        <span class="n">builder</span><span class="o">.</span><span class="n">create_channel_info</span><span class="p">(</span><span class="n">bidsrun</span><span class="p">)</span>
+        <span class="n">scans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_scan_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_scans</span><span class="p">(</span><span class="n">scans</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_datasets</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">bidsrun</span>
+
+<div class="viewcode-block" id="BidsPatient.add_scans"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.add_scans">[docs]</a>    <span class="k">def</span> <span class="nf">add_scans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scans</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add scans (runs) to the patient.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scans : list[os.PathLike]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="n">scans</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">scan</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{scan}</span><span class="s1"> does not exist. Please pass existing scans&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_run</span><span class="p">(</span><span class="n">scan</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsPatient.load_dataset"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.load_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        run_id :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># bids_fname = make_bids_basename(subject=self.subject_id,</span>
+        <span class="c1">#                                 session=self.session_id,</span>
+        <span class="c1">#                                 run=run_id)</span>
+        <span class="c1"># dataset = mne_bids.read_raw_bids(bids_fname=bids_fname, bids_root=self.datadir)</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">run_id</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BidsPatient.get_filesizes"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.get_filesizes">[docs]</a>    <span class="k">def</span> <span class="nf">get_filesizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the total file size of all the files attached for this patient.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            size of all files</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_fpaths</span><span class="p">():</span>
+            <span class="n">size</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">size</span></div>
+
+    <span class="k">def</span> <span class="nf">_load_scans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scans</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the scan dictionary into memory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scans :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scans</span> <span class="o">=</span> <span class="n">scans</span>
+
+    <span class="k">def</span> <span class="nf">_create_scan_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the scans dictionary from whatever is in the scans.tsv file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary representation of the scans</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scans_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_scans_tsv</span><span class="p">()</span>
+        <span class="n">scans_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">scans_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">scans_dict</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="n">scans_dict</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">scans_dict</span>
+
+    <span class="k">def</span> <span class="nf">_load_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the passed metadata into memory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        metadata :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+
+
+    <span class="k">def</span> <span class="nf">_create_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the metadata dictionary from whatever is in the participants.tsv file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary representation of the metadata.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_tsv</span><span class="p">()</span>
+        <span class="n">participants_series</span> <span class="o">=</span> <span class="n">participants_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">participants_df</span><span class="p">[</span><span class="s1">&#39;participant_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">series_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;participant_id&#39;</span><span class="p">:</span> <span class="n">participants_series</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">participants_series</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">series_dict</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">series_dict</span>
+
+<div class="viewcode-block" id="BidsPatient.add_participants_field"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.add_participants_field">[docs]</a>    <span class="k">def</span> <span class="nf">add_participants_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_id</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="n">subject_val</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;n/a&#39;</span><span class="p">,</span>
+                               <span class="n">default_val</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;n/a&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a field to the participants files (tsv and json).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column_id : str</span>
+<span class="sd">            The new column to add to the participants.tsv file</span>
+<span class="sd">        description: Union[str, dict]</span>
+<span class="sd">            The new column&#39;s description to be added to</span>
+<span class="sd">        subject_val : str</span>
+<span class="sd">            The value of column_id for this BidsPatient</span>
+<span class="sd">        default_val :</span>
+<span class="sd">            The value of column_id to fill for the rest of subjects in participants.tsv</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_json</span><span class="p">()</span>
+        <span class="n">participants_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_tsv</span><span class="p">()</span>
+        <span class="n">participants_df</span> <span class="o">=</span> <span class="n">participants_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;participant_id&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">column_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">participants_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">participants_dict</span> <span class="o">=</span> <span class="n">BidsBuilder</span><span class="o">.</span><span class="n">add_field_to_dict</span><span class="p">(</span><span class="n">participants_dict</span><span class="p">,</span> <span class="n">column_id</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_participants_json</span><span class="p">(</span><span class="n">participants_dict</span><span class="p">)</span>
+
+        <span class="n">colnames</span> <span class="o">=</span> <span class="n">participants_df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="n">column_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">colnames</span><span class="p">:</span>
+            <span class="n">add_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">default_val</span><span class="p">]</span><span class="o">*</span><span class="n">participants_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">participants_df</span><span class="p">[</span><span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">add_list</span>
+            <span class="k">if</span> <span class="n">subject_val</span> <span class="o">!=</span> <span class="n">default_val</span><span class="p">:</span>
+                <span class="n">participants_df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">subject_val</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_participants_tsv</span><span class="p">(</span><span class="n">participants_df</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Field already exists for the participants file. Modifying instead&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modify_participants_file</span><span class="p">(</span><span class="n">column_id</span><span class="p">,</span> <span class="n">subject_val</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_metadata</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsPatient.remove_participants_field"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.remove_participants_field">[docs]</a>    <span class="k">def</span> <span class="nf">remove_participants_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a field from the participants files (tsv and json).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column_id : str</span>
+<span class="sd">            The name of the column to remove from the json and tsv files</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_json</span><span class="p">()</span>
+        <span class="n">participants_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_tsv</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">column_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">participants_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;The field </span><span class="si">{column_id}</span><span class="s1"> does not exist in the participants file&#39;</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">participants_dict</span><span class="p">[</span><span class="n">column_id</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_participants_json</span><span class="p">(</span><span class="n">participants_dict</span><span class="p">)</span>
+        <span class="n">colnames</span> <span class="o">=</span> <span class="n">participants_df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="n">column_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">colnames</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;The field </span><span class="si">{column_id}</span><span class="s1"> does not exist in the participants file&#39;</span><span class="p">)</span>
+        <span class="n">participants_df</span> <span class="o">=</span> <span class="n">participants_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">column_id</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_participants_tsv</span><span class="p">(</span><span class="n">participants_df</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_metadata</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsPatient.modify_participants_file"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.modify_participants_file">[docs]</a>    <span class="k">def</span> <span class="nf">modify_participants_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modify the BIDS dataset participants tsv file to include a new value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column_id : str</span>
+<span class="sd">            The name of the column to which data should be modified. Must exist in the tsv file</span>
+<span class="sd">        new_value : str</span>
+<span class="sd">            The new value of the column_id for this BidsPatient</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_participants_tsv</span><span class="p">()</span>
+        <span class="n">colnames</span> <span class="o">=</span> <span class="n">participants_df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="n">column_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">colnames</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{column_id}</span><span class="s1"> not in the existing participants file. Add it first.&#39;</span><span class="p">)</span>
+        <span class="n">participants_df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_participants_tsv</span><span class="p">(</span><span class="n">participants_df</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_metadata</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsPatient.add_resected_contacts"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.add_resected_contacts">[docs]</a>    <span class="k">def</span> <span class="nf">add_resected_contacts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resected_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add the resected contacts to the participants files (tsv and json) and loads in memory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        resected_list :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">resected_str</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resected_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_participants_field</span><span class="p">(</span><span class="s1">&#39;resected_contacts&#39;</span><span class="p">,</span> <span class="s1">&#39;The list of contacts corresponding to resected regions&#39;</span><span class="p">,</span>
+                                    <span class="n">resected_str</span><span class="p">,</span> <span class="s1">&#39;n/a&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resected_contacts</span> <span class="o">=</span> <span class="n">resected_list</span></div>
+
+<div class="viewcode-block" id="BidsPatient.add_original_subject_id"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_patient.BidsPatient.add_original_subject_id">[docs]</a>    <span class="k">def</span> <span class="nf">add_original_subject_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original_subject_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add the original subject id to the participants files (tsv and json) and loads into memory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        original_subject_id :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_participants_field</span><span class="p">(</span><span class="s1">&#39;original_subjectid&#39;</span><span class="p">,</span> <span class="s1">&#39;The subjectid in the clinical data source&#39;</span><span class="p">,</span>
+                                    <span class="n">original_subject_id</span><span class="p">,</span> <span class="s1">&#39;n/a&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_subject_id</span> <span class="o">=</span> <span class="n">original_subject_id</span></div></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Adam Li. Last updated on 2019-12-02.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

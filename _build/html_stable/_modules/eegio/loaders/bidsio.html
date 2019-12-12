@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>eegio.loaders.bidsio &#8212; eegio 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/gallery.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html">
+          EEGIO</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <h1>Source code for eegio.loaders.bidsio</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Authors: Adam Li and Patrick Myers.</span>
+
+<span class="sd">Version: 1.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">mne</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">mne_bids</span>
+<span class="kn">from</span> <span class="nn">mne_bids</span> <span class="k">import</span> <span class="n">make_bids_basename</span>
+<span class="kn">from</span> <span class="nn">eegio.base.objects.bids.basebids</span> <span class="k">import</span> <span class="n">BidsIO</span>
+<span class="kn">from</span> <span class="nn">eegio.base.utils.bids_helper</span> <span class="k">import</span> <span class="n">write_json</span>
+
+
+<div class="viewcode-block" id="BidsLoader"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader">[docs]</a><span class="k">class</span> <span class="nc">BidsLoader</span><span class="p">(</span><span class="n">BidsIO</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class containing loading methods for various required BIDS files.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bidsdir : Union[str, os.PathLike]</span>
+<span class="sd">        The base directory for bids data</span>
+<span class="sd">    subject_id : str</span>
+<span class="sd">        The unique identifier for the BidsPatient</span>
+<span class="sd">    session_id : str</span>
+<span class="sd">        The identifier for this BidsPatient session</span>
+<span class="sd">    run_id : str</span>
+<span class="sd">        The identifier for this snapshot recording</span>
+<span class="sd">    kind : str</span>
+<span class="sd">        The type of recording</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BidsLoader.__init__"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bidsdir</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">run_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;eeg&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a BidsLoader object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bidsdir :</span>
+<span class="sd">        subject_id :</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        run_id :</span>
+<span class="sd">        kind :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BidsLoader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bidsdir</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">run_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BidsLoader.load_sidecar_json"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader.load_sidecar_json">[docs]</a>    <span class="k">def</span> <span class="nf">load_sidecar_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in sidecar json associated with a recording file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A dict representation of the json</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sidecar_fpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sidecarjson_fpath</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sidecar_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="BidsLoader.load_scans_tsv"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader.load_scans_tsv">[docs]</a>    <span class="k">def</span> <span class="nf">load_scans_tsv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in the tsv file containing information about a patient&#39;s scans.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A pandas DataFrame object of the tsv</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanstsv_fpath</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.scanstsv_fpath}</span><span class="s2"> doesn&#39;t exist! Our parameters for loading are: &quot;</span>
+                          <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.bids_parameters}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">scans</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scanstsv_fpath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scans</span></div>
+
+<div class="viewcode-block" id="BidsLoader.load_channels_tsv"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader.load_channels_tsv">[docs]</a>    <span class="k">def</span> <span class="nf">load_channels_tsv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in the tsv file containing information about a patient&#39;s recording channels.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A pandas DataFrame object of the tsv</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chanstsv_fpath</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.chanstsv_fpath}</span><span class="s2"> doesn&#39;t exist! Our parameters for loading are: &quot;</span>
+                          <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.bids_parameters}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chanstsv_fpath</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">channels</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">channels</span></div>
+
+<div class="viewcode-block" id="BidsLoader.load_participants_tsv"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader.load_participants_tsv">[docs]</a>    <span class="k">def</span> <span class="nf">load_participants_tsv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in the tsv file containing information about all of the center&#39;s patients.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A pandas DataFrame object of the tsv</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_fpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">participantstsv_fpath</span>
+        <span class="n">participants</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="n">participants_fpath</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;participant_id&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">participants</span></div>
+
+<div class="viewcode-block" id="BidsLoader.load_participants_json"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader.load_participants_json">[docs]</a>    <span class="k">def</span> <span class="nf">load_participants_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in the json file containing fields for the center&#39;s patients.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A dict representation of the json</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_fpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">participantsjson_fpath</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">participants_fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="BidsLoader.load_dataset"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsLoader.load_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load in mne.io.Raw dataset based on the sessionid and runid of the dataset.</span>
+
+<span class="sd">        TODO:</span>
+<span class="sd">        1. Allow exotic return types in the form of easy to use data structures? or keep as MNE.io.Raw.</span>
+<span class="sd">        TBD.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The mne.io.Raw dataset</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">datafile_fpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datafile_fpath</span>
+        <span class="k">if</span> <span class="s1">&#39;fif&#39;</span> <span class="ow">in</span> <span class="n">datafile_fpath</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_fif</span><span class="p">(</span><span class="n">datafile_fpath</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;edf&#39;</span> <span class="ow">in</span> <span class="n">datafile_fpath</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_edf</span><span class="p">(</span><span class="n">datafile_fpath</span><span class="p">)</span>
+
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">mne_bids</span><span class="o">.</span><span class="n">read_raw_bids</span><span class="p">(</span><span class="n">bids_fname</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datafile_fpath</span><span class="p">),</span>
+                                     <span class="n">bids_root</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rootdir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">raw</span></div></div>
+
+
+<div class="viewcode-block" id="BidsWriter"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter">[docs]</a><span class="k">class</span> <span class="nc">BidsWriter</span><span class="p">(</span><span class="n">BidsIO</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class containing writing methods for various required BIDS files.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bidsdir : Union[str, os.PathLike]</span>
+<span class="sd">        The base directory for bids data</span>
+<span class="sd">    subject_id : str</span>
+<span class="sd">        The unique identifier for the BidsPatient</span>
+<span class="sd">    session_id : str</span>
+<span class="sd">        The identifier for this BidsPatient session</span>
+<span class="sd">    run_id : str</span>
+<span class="sd">        The identifier for this snapshot recording</span>
+<span class="sd">    kind : str</span>
+<span class="sd">        The type of recording</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BidsWriter.__init__"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bidsdir</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">run_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;eeg&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a BidsWriter Object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bidsdir :</span>
+<span class="sd">        subject_id :</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        run_id :</span>
+<span class="sd">        kind :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BidsWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">bidsdir</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">run_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsWriter.write_channels_tsv"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter.write_channels_tsv">[docs]</a>    <span class="k">def</span> <span class="nf">write_channels_tsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">fpath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the updated channel information to a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        metadata : pandas.DataFrame</span>
+<span class="sd">            The new channel information after modification</span>
+<span class="sd">        fpath : os.PathLike</span>
+<span class="sd">            The location to save this data</span>
+<span class="sd">        overwrite : bool</span>
+<span class="sd">            Whether to overwrite the existing channels tsv file</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">fpath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chanstsv_fpath</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsWriter.write_sidecar_json"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter.write_sidecar_json">[docs]</a>    <span class="k">def</span> <span class="nf">write_sidecar_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sidecar_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write a passed dict object to the sidecar json location.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sidecar_dict : dict</span>
+<span class="sd">            The data to write to the file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sidecarjson_fpath</span>
+        <span class="n">write_json</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">sidecar_dict</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsWriter.write_scans_tsv"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter.write_scans_tsv">[docs]</a>    <span class="k">def</span> <span class="nf">write_scans_tsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scans_df</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write a passed DataFrame object to the scans tsv location.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scans_df : pandas.DataFrame</span>
+<span class="sd">            The data to write to the file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanstsv_fpath</span>
+        <span class="n">scans_df</span> <span class="o">=</span> <span class="n">scans_df</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;n/a&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">scans_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsWriter.write_electrode_coords"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter.write_electrode_coords">[docs]</a>    <span class="k">def</span> <span class="nf">write_electrode_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords_dict</span><span class="p">,</span> <span class="n">channels_df</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the coordinates for the electrodes in the channels tsv file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coords_dict : Dict</span>
+<span class="sd">            A dictionary with key=name, value=coordinate</span>
+<span class="sd">        channels_df : pandas.DataFrame</span>
+<span class="sd">            The original channel data to write to the file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The modified channel dataframe.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">channels_df</span></div>
+
+<div class="viewcode-block" id="BidsWriter.write_participants_tsv"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter.write_participants_tsv">[docs]</a>    <span class="k">def</span> <span class="nf">write_participants_tsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participants_df</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write a passed DataFrame object to the participants tsv location.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        participants_df : pandas.DataFrame</span>
+<span class="sd">            The updated information for the participants.tsv file</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">participants_df</span> <span class="o">=</span> <span class="n">participants_df</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;n/a&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">participants_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">participantstsv_fpath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsWriter.write_participants_json"><a class="viewcode-back" href="../../../tutorials/funcref.html#eegio.loaders.bidsio.BidsWriter.write_participants_json">[docs]</a>    <span class="k">def</span> <span class="nf">write_participants_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participants_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write a passed dict object to the participants json location.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        participants_dict : dict</span>
+<span class="sd">            The updated dictionary for the participants.json file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">participantsjson_fpath</span>
+        <span class="n">write_json</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">participants_dict</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Adam Li. Last updated on 2019-12-02.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

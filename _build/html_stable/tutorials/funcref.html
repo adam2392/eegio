@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>bids_patient &#8212; eegio 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          EEGIO</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../_sources/tutorials/funcref.rst.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="contents topic" id="table-of-contents">
+<p class="topic-title first">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#module-eegio.base.objects.bids.bids_patient" id="id5">bids_patient</a></p></li>
+<li><p><a class="reference internal" href="#module-eegio.base.objects.bids.bids_run" id="id6">bids_run</a></p></li>
+<li><p><a class="reference internal" href="#module-eegio.base.objects.bids.basebids" id="id7">base_bids</a></p></li>
+<li><p><a class="reference internal" href="#module-eegio.base.utils.bids_helper" id="id8">bids_helper</a></p></li>
+<li><p><a class="reference internal" href="#module-eegio.loaders.bidsio" id="id9">bids_io</a></p></li>
+</ul>
+</div>
+<div class="section" id="module-eegio.base.objects.bids.bids_patient">
+<span id="bids-patient"></span><h1><a class="toc-backref" href="#id5">bids_patient</a><a class="headerlink" href="#module-eegio.base.objects.bids.bids_patient" title="Permalink to this headline">¶</a></h1>
+<p>Authors: Adam Li and Patrick Myers.</p>
+<p>Version: 1.0</p>
+<dl class="class">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient">
+<em class="property">class </em><code class="sig-prename descclassname">eegio.base.objects.bids.bids_patient.</code><code class="sig-name descname">BidsPatient</code><span class="sig-paren">(</span><em class="sig-param">subject_id: str</em>, <em class="sig-param">session_id: str = None</em>, <em class="sig-param">datadir: Union[str</em>, <em class="sig-param">os.PathLike] = None</em>, <em class="sig-param">managing_user: str = None</em>, <em class="sig-param">modality: str = 'ieeg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eegio.base.objects.bids.basebids.BaseBids" title="eegio.base.objects.bids.basebids.BaseBids"><code class="xref py py-class docutils literal notranslate"><span class="pre">eegio.base.objects.bids.basebids.BaseBids</span></code></a></p>
+<p>Class for patient data that inherits basic dataset functionality and follows Bids format.</p>
+<p>The additional components for this are related to the fact that each Patient can
+have multiple EEGTimeSeries, or Results related to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subject_id: str</strong></dt><dd><p>Identifier for this patient</p>
+</dd>
+<dt><strong>session_id: str</strong></dt><dd><p>Identifier for the session</p>
+</dd>
+<dt><strong>datadir: Union[str, os.PathLike]</strong></dt><dd><p>The base directory for the Bids dataset that this BidsPatient belongs</p>
+</dd>
+<dt><strong>managing_user: str</strong></dt><dd><p>Managing user that is tied to this Patient. E.g. a clinical center, or a specific researcher,
+or specific doctor.</p>
+</dd>
+<dt><strong>modality: str</strong></dt><dd><p>The type of recording the BidsPatient underwent during this session.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_original_subject_id" title="eegio.base.objects.bids.bids_patient.BidsPatient.add_original_subject_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_original_subject_id</span></code></a>(self, …)</p></td>
+<td><p>Add the original subject id to the participants files (tsv and json) and loads into memory.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_participants_field" title="eegio.base.objects.bids.bids_patient.BidsPatient.add_participants_field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_participants_field</span></code></a>(self, column_id, …)</p></td>
+<td><p>Add a field to the participants files (tsv and json).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_resected_contacts" title="eegio.base.objects.bids.bids_patient.BidsPatient.add_resected_contacts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_resected_contacts</span></code></a>(self, resected_list)</p></td>
+<td><p>Add the resected contacts to the participants files (tsv and json) and loads in memory.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_scans" title="eegio.base.objects.bids.bids_patient.BidsPatient.add_scans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_scans</span></code></a>(self, scans)</p></td>
+<td><p>Add scans (runs) to the patient.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_dataset_folder</span></code>(self, fpath, …)</p></td>
+<td><p>Create a new Bids format dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_filesizes" title="eegio.base.objects.bids.bids_patient.BidsPatient.get_filesizes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_filesizes</span></code></a>(self)</p></td>
+<td><p>Get the total file size of all the files attached for this patient.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_kinds" title="eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_kinds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_subject_kinds</span></code></a>(self)</p></td>
+<td><p>Find all the types of recordings that the BidsPatient has.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_runs" title="eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_runs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_subject_runs</span></code></a>(self)</p></td>
+<td><p>Find all the runs that the BidsPatient has.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_sessions" title="eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_sessions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_subject_sessions</span></code></a>(self)</p></td>
+<td><p>Find all of the sessions that the BidsPatient has.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_dataset" title="eegio.base.objects.bids.bids_patient.BidsPatient.load_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_dataset</span></code></a>(self, session_id, run_id, kind)</p></td>
+<td><p>Load in MNE.io.Raw dataset based on session id and run id passed in.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_run" title="eegio.base.objects.bids.bids_patient.BidsPatient.load_run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_run</span></code></a>(self, session_id, run_id[, kind])</p></td>
+<td><p>Load in the raw data for a specific run.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_session" title="eegio.base.objects.bids.bids_patient.BidsPatient.load_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_session</span></code></a>(self, session_id[, kind, extension])</p></td>
+<td><p>Load in the all runs for the session.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_subject_metadata" title="eegio.base.objects.bids.bids_patient.BidsPatient.load_subject_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_subject_metadata</span></code></a>(self)</p></td>
+<td><p>Find all the metadata corresponding to this subject.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.modify_participants_file" title="eegio.base.objects.bids.bids_patient.BidsPatient.modify_participants_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify_participants_file</span></code></a>(self, column_id, …)</p></td>
+<td><p>Modify the BIDS dataset participants tsv file to include a new value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.preprocess_edf_files" title="eegio.base.objects.bids.bids_patient.BidsPatient.preprocess_edf_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess_edf_files</span></code></a>(self, filelist[, …])</p></td>
+<td><p>Convert .edf files to .fif and .json file pair.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_dir_tree</span></code>(self)</p></td>
+<td><p>Print a directory tree for this Bids dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_summary</span></code>(self)</p></td>
+<td><p>Print a summary of the patient in the form of a directory tree showing all available data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_patient.BidsPatient.remove_participants_field" title="eegio.base.objects.bids.bids_patient.BidsPatient.remove_participants_field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_participants_field</span></code></a>(self, column_id)</p></td>
+<td><p>Remove a field from the participants files (tsv and json).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">subject_id: str</em>, <em class="sig-param">session_id: str = None</em>, <em class="sig-param">datadir: Union[str</em>, <em class="sig-param">os.PathLike] = None</em>, <em class="sig-param">managing_user: str = None</em>, <em class="sig-param">modality: str = 'ieeg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize BidsPatient object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subject_id :</strong></dt><dd></dd>
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>datadir :</strong></dt><dd></dd>
+<dt><strong>managing_user :</strong></dt><dd></dd>
+<dt><strong>modality :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the string representation of BidsPatient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>str</dt><dd><p>A description of the BidsPatient including the number of datasets.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.add_original_subject_id">
+<code class="sig-name descname">add_original_subject_id</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">original_subject_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.add_original_subject_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_original_subject_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the original subject id to the participants files (tsv and json) and loads into memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>original_subject_id :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.add_participants_field">
+<code class="sig-name descname">add_participants_field</code><span class="sig-paren">(</span><em class="sig-param">self, column_id, description: Union[str, dict], subject_val: str = 'n/a', default_val: str = 'n/a'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.add_participants_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_participants_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a field to the participants files (tsv and json).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>column_id</strong><span class="classifier">str</span></dt><dd><p>The new column to add to the participants.tsv file</p>
+</dd>
+<dt><strong>description: Union[str, dict]</strong></dt><dd><p>The new column’s description to be added to</p>
+</dd>
+<dt><strong>subject_val</strong><span class="classifier">str</span></dt><dd><p>The value of column_id for this BidsPatient</p>
+</dd>
+<dt><strong>default_val :</strong></dt><dd><p>The value of column_id to fill for the rest of subjects in participants.tsv</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.add_resected_contacts">
+<code class="sig-name descname">add_resected_contacts</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">resected_list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.add_resected_contacts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_resected_contacts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the resected contacts to the participants files (tsv and json) and loads in memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>resected_list :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.add_scans">
+<code class="sig-name descname">add_scans</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">scans: list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.add_scans"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.add_scans" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add scans (runs) to the patient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>scans</strong><span class="classifier">list[os.PathLike]</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.get_filesizes">
+<code class="sig-name descname">get_filesizes</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.get_filesizes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_filesizes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the total file size of all the files attached for this patient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>size of all files</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_kinds">
+<code class="sig-name descname">get_subject_kinds</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.get_subject_kinds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_kinds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all the types of recordings that the BidsPatient has.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list[str]</dt><dd><p>The list of recording types</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_runs">
+<code class="sig-name descname">get_subject_runs</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.get_subject_runs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_runs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all the runs that the BidsPatient has.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list[str]</dt><dd><p>The list of runs</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_sessions">
+<code class="sig-name descname">get_subject_sessions</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.get_subject_sessions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.get_subject_sessions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all of the sessions that the BidsPatient has.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The list of sessions</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.load_dataset">
+<code class="sig-name descname">load_dataset</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">session_id</em>, <em class="sig-param">run_id</em>, <em class="sig-param">kind</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.load_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in MNE.io.Raw dataset based on session id and run id passed in. Also returns a metadata structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>run_id :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.load_run">
+<code class="sig-name descname">load_run</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">session_id</em>, <em class="sig-param">run_id</em>, <em class="sig-param">kind='eeg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.load_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in the raw data for a specific run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>run_id :</strong></dt><dd></dd>
+<dt><strong>kind :</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>mne.IO.BaseRaw</dt><dd><p>An object containing the raw EEG data</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.load_session">
+<code class="sig-name descname">load_session</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">session_id</em>, <em class="sig-param">kind='eeg'</em>, <em class="sig-param">extension='edf'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.load_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in the all runs for the session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>kind :</strong></dt><dd></dd>
+<dt><strong>extension :</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>list[mne.io.BaseRaw]</dt><dd><p>A list of objects with raw EEG data for a single session</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.load_subject_metadata">
+<code class="sig-name descname">load_subject_metadata</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.load_subject_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.load_subject_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all the metadata corresponding to this subject.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>A dictionary containing metadata information</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.modify_participants_file">
+<code class="sig-name descname">modify_participants_file</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">column_id: str</em>, <em class="sig-param">new_value: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.modify_participants_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.modify_participants_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify the BIDS dataset participants tsv file to include a new value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>column_id</strong><span class="classifier">str</span></dt><dd><p>The name of the column to which data should be modified. Must exist in the tsv file</p>
+</dd>
+<dt><strong>new_value</strong><span class="classifier">str</span></dt><dd><p>The new value of the column_id for this BidsPatient</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.numdatasets">
+<em class="property">property </em><code class="sig-name descname">numdatasets</code><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.numdatasets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the number of datasets that the BidsPatient has.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>The number of datasets</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.preprocess_edf_files">
+<code class="sig-name descname">preprocess_edf_files</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">filelist: list = None</em>, <em class="sig-param">line_noise=60</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.preprocess_edf_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.preprocess_edf_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert .edf files to .fif and .json file pair.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filelist</strong><span class="classifier">list[os.PathLike]</span></dt><dd><p>The list of all files to be converted into .fif format. Default is all edf files available</p>
+</dd>
+<dt><strong>line_noise</strong><span class="classifier">int</span></dt><dd><p>The line noise to be eliminated. Typically 60 Hz in America</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_patient.BidsPatient.remove_participants_field">
+<code class="sig-name descname">remove_participants_field</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">column_id: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_patient.html#BidsPatient.remove_participants_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_patient.BidsPatient.remove_participants_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a field from the participants files (tsv and json).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>column_id</strong><span class="classifier">str</span></dt><dd><p>The name of the column to remove from the json and tsv files</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-eegio.base.objects.bids.bids_run">
+<span id="bids-run"></span><h1><a class="toc-backref" href="#id6">bids_run</a><a class="headerlink" href="#module-eegio.base.objects.bids.bids_run" title="Permalink to this headline">¶</a></h1>
+<p>Authors: Adam Li and Patrick Myers.</p>
+<p>Version: 1.0</p>
+<dl class="class">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun">
+<em class="property">class </em><code class="sig-prename descclassname">eegio.base.objects.bids.bids_run.</code><code class="sig-name descname">BidsRun</code><span class="sig-paren">(</span><em class="sig-param">subject_id: str</em>, <em class="sig-param">session_id: str</em>, <em class="sig-param">run_id: str</em>, <em class="sig-param">datadir: Union[str</em>, <em class="sig-param">os.PathLike] = None</em>, <em class="sig-param">modality: str = 'ieeg'</em>, <em class="sig-param">original_fileid: Union[str</em>, <em class="sig-param">os.PathLike] = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eegio.base.objects.bids.basebids.BaseBids" title="eegio.base.objects.bids.basebids.BaseBids"><code class="xref py py-class docutils literal notranslate"><span class="pre">eegio.base.objects.bids.basebids.BaseBids</span></code></a></p>
+<p>The class for a specific eeg snapshot recording that follows BIDS format.</p>
+<p>The additional functionality added by this class allow for addition, deletion, and modification
+of metadata corresponding the the recording channel annotation and the sidecar json.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subject_id: str</strong></dt><dd><p>The unique identifier for the recorded subject.</p>
+</dd>
+<dt><strong>session_id:</strong></dt><dd><p>The identifier for this run’s session.</p>
+</dd>
+<dt><strong>run_id:</strong></dt><dd><p>The identifier for the actual recording snapshot.</p>
+</dd>
+<dt><strong>datadir: Union[str, os.PathLike]</strong></dt><dd><p>Where this dataset is located (base directory)</p>
+</dd>
+<dt><strong>modality: str</strong></dt><dd><p>The method of data recording.</p>
+</dd>
+<dt><strong>original_fileid: str</strong></dt><dd><p>The source’s file path for backwards annotation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.append_channel_info" title="eegio.base.objects.bids.bids_run.BidsRun.append_channel_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_channel_info</span></code></a>(self, column_id, channel_id)</p></td>
+<td><p>Add a new column to the channels tsv file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_dataset_folder</span></code>(self, fpath, …)</p></td>
+<td><p>Create a new Bids format dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.delete_sidecar_field" title="eegio.base.objects.bids.bids_run.BidsRun.delete_sidecar_field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_sidecar_field</span></code></a>(self, key)</p></td>
+<td><p>Remove a field from the sidecar json file for this run.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.find_bad_channels" title="eegio.base.objects.bids.bids_run.BidsRun.find_bad_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_bad_channels</span></code></a>(self)</p></td>
+<td><p>Find bad electrodes based on hardcoded rules of the electrode name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.find_channel_types" title="eegio.base.objects.bids.bids_run.BidsRun.find_channel_types"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_channel_types</span></code></a>(self)</p></td>
+<td><p>Find the actual type of the electrode based on a regular expression of the electrode name.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.get_channel_types" title="eegio.base.objects.bids.bids_run.BidsRun.get_channel_types"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_channel_types</span></code></a>(self)</p></td>
+<td><p>Return the channel types of this BidsRun as a pandas DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.get_channels_metadata" title="eegio.base.objects.bids.bids_run.BidsRun.get_channels_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_channels_metadata</span></code></a>(self)</p></td>
+<td><p>Load the channel metadata from the tsv file as a dict object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.get_channels_status" title="eegio.base.objects.bids.bids_run.BidsRun.get_channels_status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_channels_status</span></code></a>(self)</p></td>
+<td><p>Return the channel status of this BidsRun as a pandas DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.get_run_metadata" title="eegio.base.objects.bids.bids_run.BidsRun.get_run_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_run_metadata</span></code></a>(self)</p></td>
+<td><p>Load the sidecar json file as a dict object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.load_data" title="eegio.base.objects.bids.bids_run.BidsRun.load_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_data</span></code></a>(self)</p></td>
+<td><p>Load the dataset using BidsLoader.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_channel_info" title="eegio.base.objects.bids.bids_run.BidsRun.modify_channel_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify_channel_info</span></code></a>(self, column_id, channel_id)</p></td>
+<td><p>Modify some information about a single recording channel.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_status" title="eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify_electrode_status</span></code></a>(channel_df, chlabel, …)</p></td>
+<td><p>Update the run’s channel information by looking at the generated clinical electrode sheet annotations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_type" title="eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify_electrode_type</span></code></a>(channel_df, chlabel, …)</p></td>
+<td><p>Modify a single recording channel’s type.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_original_scan_filename" title="eegio.base.objects.bids.bids_run.BidsRun.modify_original_scan_filename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify_original_scan_filename</span></code></a>(self, …)</p></td>
+<td><p>Add the passed original filename to the scans tsv file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_sidecar_json" title="eegio.base.objects.bids.bids_run.BidsRun.modify_sidecar_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modify_sidecar_json</span></code></a>(self, key, value[, …])</p></td>
+<td><p>Modify the sidecar json to have the new value in the passed field.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_dir_tree</span></code>(self)</p></td>
+<td><p>Print a directory tree for this Bids dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_summary</span></code>(self)</p></td>
+<td><p>Print a summary of the patient in the form of a directory tree showing all available data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">subject_id: str</em>, <em class="sig-param">session_id: str</em>, <em class="sig-param">run_id: str</em>, <em class="sig-param">datadir: Union[str</em>, <em class="sig-param">os.PathLike] = None</em>, <em class="sig-param">modality: str = 'ieeg'</em>, <em class="sig-param">original_fileid: Union[str</em>, <em class="sig-param">os.PathLike] = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a BidsRun object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subject_id :</strong></dt><dd></dd>
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>run_id :</strong></dt><dd></dd>
+<dt><strong>datadir :</strong></dt><dd></dd>
+<dt><strong>modality :</strong></dt><dd></dd>
+<dt><strong>original_fileid :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.append_channel_info">
+<code class="sig-name descname">append_channel_info</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">column_id: str</em>, <em class="sig-param">channel_id: str = None</em>, <em class="sig-param">value=None</em>, <em class="sig-param">channel_dict: Dict = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.append_channel_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.append_channel_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new column to the channels tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>column_id</strong><span class="classifier">str</span></dt><dd><p>The name of the column to add</p>
+</dd>
+<dt><strong>channel_id</strong><span class="classifier">str</span></dt><dd><p>The name of the singular channel to modify.</p>
+</dd>
+<dt><strong>value :</strong></dt><dd><p>The new value for the channel_id.</p>
+</dd>
+<dt><strong>channel_dict</strong><span class="classifier">Dict</span></dt><dd><p>A dictionary of names and values for the new column</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.chs">
+<em class="property">property </em><code class="sig-name descname">chs</code><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.chs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the channel labels as a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A list of channel names in the recording.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.delete_sidecar_field">
+<code class="sig-name descname">delete_sidecar_field</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.delete_sidecar_field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.delete_sidecar_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a field from the sidecar json file for this run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key</strong><span class="classifier">str</span></dt><dd><p>Which field to remove.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The modified dictionary</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.find_bad_channels">
+<code class="sig-name descname">find_bad_channels</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.find_bad_channels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.find_bad_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find bad electrodes based on hardcoded rules of the electrode name.</p>
+<p>Uses markers encoded in BAD_MARKERS (see config file)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A dictionary where the key is the electrode name and the value is a string description</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.find_channel_types">
+<code class="sig-name descname">find_channel_types</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.find_channel_types"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.find_channel_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the actual type of the electrode based on a regular expression of the electrode name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A dictionary where the key is the electrode name and the value is the type</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.fpath">
+<em class="property">property </em><code class="sig-name descname">fpath</code><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the location of the run’s data file in this directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The path to the data file</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.get_channel_types">
+<code class="sig-name descname">get_channel_types</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.get_channel_types"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.get_channel_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the channel types of this BidsRun as a pandas DataFrame.</p>
+<p>The name is the index and the type is the column value. Can easily convert to
+key, value pair of a dict if desired.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A pandas DataFrame containing the name and type of each channel.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.get_channels_metadata">
+<code class="sig-name descname">get_channels_metadata</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.get_channels_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.get_channels_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the channel metadata from the tsv file as a dict object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The dictionary of channel annotations.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.get_channels_status">
+<code class="sig-name descname">get_channels_status</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.get_channels_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.get_channels_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the channel status of this BidsRun as a pandas DataFrame.</p>
+<p>The name is the index and the status is the column value. Can easily convert to
+key, value pair of a dict if desired.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A pandas DataFrame containing the name and status of each channel.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.get_run_metadata">
+<code class="sig-name descname">get_run_metadata</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.get_run_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.get_run_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the sidecar json file as a dict object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The dictionary of metadata</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.linefreq">
+<em class="property">property </em><code class="sig-name descname">linefreq</code><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.linefreq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the power line frequency used in this recording (i.e. either 50 Hz or 60 Hz).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The power line frequency.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.load_data">
+<code class="sig-name descname">load_data</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the dataset using BidsLoader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The mne.io.Raw dataset</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.modify_channel_info">
+<code class="sig-name descname">modify_channel_info</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">column_id: str</em>, <em class="sig-param">channel_id: str</em>, <em class="sig-param">value=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.modify_channel_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_channel_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify some information about a single recording channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>column_id</strong><span class="classifier">str</span></dt><dd><p>The column to modify. Must already exist in the tsv file</p>
+</dd>
+<dt><strong>channel_id</strong><span class="classifier">str</span></dt><dd><p>The channel to modify. Must exist for the recording</p>
+</dd>
+<dt><strong>value :</strong></dt><dd><p>The value to add for the channel and column</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_status">
+<em class="property">static </em><code class="sig-name descname">modify_electrode_status</code><span class="sig-paren">(</span><em class="sig-param">channel_df: pandas.core.frame.DataFrame</em>, <em class="sig-param">chlabel: str</em>, <em class="sig-param">chdescription: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.modify_electrode_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the run’s channel information by looking at the generated clinical electrode sheet annotations.</p>
+<p>Electrode status can either be “good”, or “bad”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>channel_df: pandas.DataFrame</strong></dt><dd><p>The current DataFrame containing electrode contact information</p>
+</dd>
+<dt><strong>chlabel: str</strong></dt><dd><p>The label of the electrode to modify</p>
+</dd>
+<dt><strong>chdescription: str</strong></dt><dd><p>The description to fill in the ‘notes’ column of the DataFrame</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The modified DataFrame</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_type">
+<em class="property">static </em><code class="sig-name descname">modify_electrode_type</code><span class="sig-paren">(</span><em class="sig-param">channel_df: pandas.core.frame.DataFrame</em>, <em class="sig-param">chlabel: str</em>, <em class="sig-param">chtype: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.modify_electrode_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify a single recording channel’s type.</p>
+<p>Updates the run’s channel information to be one of the ones in the following:
+<a class="reference external" href="https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md">https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md</a></p>
+<p>Right now, we support EEG, ECOG, SEEG, ECG (i.e. EKG), EMG, EOG, MISC.</p>
+<p>All others are categorized as OTHER for now.</p>
+<p>TODO:
+1. add support for other types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>channel_df: pandas.DataFrame</strong></dt><dd><p>The current DataFrame containing electrode contact information</p>
+</dd>
+<dt><strong>chlabel: str</strong></dt><dd><p>The label of the electrode to modify</p>
+</dd>
+<dt><strong>chtype: str</strong></dt><dd><p>The type to change the electrode to</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The modified DataFrame</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.modify_original_scan_filename">
+<code class="sig-name descname">modify_original_scan_filename</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">original_filename: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.modify_original_scan_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_original_scan_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the passed original filename to the scans tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>original_filename :</strong></dt><dd><p>The path to the file from the source.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.modify_sidecar_json">
+<code class="sig-name descname">modify_sidecar_json</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">key</em>, <em class="sig-param">value</em>, <em class="sig-param">overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/bids_run.html#BidsRun.modify_sidecar_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.modify_sidecar_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify the sidecar json to have the new value in the passed field.</p>
+<p>It will overwrite existing sidecar elements if already present. However, if overwrite is False,
+then it should raise a RunTimeError.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>key</strong><span class="classifier">str</span></dt><dd><p>Which field to modify</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">str</span></dt><dd><p>The new value for the passed key</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The modified dictionary</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.results_fpath">
+<em class="property">property </em><code class="sig-name descname">results_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.results_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path to the results directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The path of the results directory</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.bids_run.BidsRun.sfreq">
+<em class="property">property </em><code class="sig-name descname">sfreq</code><a class="headerlink" href="#eegio.base.objects.bids.bids_run.BidsRun.sfreq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the sampling frequency used in this recording.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The sampling frequency</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-eegio.base.objects.bids.basebids">
+<span id="base-bids"></span><h1><a class="toc-backref" href="#id7">base_bids</a><a class="headerlink" href="#module-eegio.base.objects.bids.basebids" title="Permalink to this headline">¶</a></h1>
+<p>Authors: Adam Li and Patrick Myers.</p>
+<p>Version: 1.0</p>
+<dl class="class">
+<dt id="eegio.base.objects.bids.basebids.BaseBids">
+<em class="property">class </em><code class="sig-prename descclassname">eegio.base.objects.bids.basebids.</code><code class="sig-name descname">BaseBids</code><span class="sig-paren">(</span><em class="sig-param">datadir: Union[os.PathLike, str], modality: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/basebids.html#BaseBids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>An instantiator class of the bids format that any BIDS derivative would use.</p>
+<dl class="simple">
+<dt>It handles:</dt><dd><ul class="simple">
+<li><p>the logistics of creating a bids format file structure</p></li>
+<li><p>extracting metadata from files stored in iEEG-BIDS format</p></li>
+<li><p>easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Only supports iEEG/scalp EEG data. We assume you store data as a BIDS with sub_&lt;###&gt; as the
+identifiers. Allows easy querying of its own data structure via:</p>
+<p>self.query.</p>
+<p>TODO:
+1. Add support for runs and acquisitions (<a class="reference external" href="https://mne.tools/mne-bids/generated/mne_bids.utils.get_entity_vals.html#mne_bids.utils.get_entity_vals">https://mne.tools/mne-bids/generated/mne_bids.utils.get_entity_vals.html#mne_bids.utils.get_entity_vals</a>)
+2.</p>
+<p class="rubric">Notes</p>
+<p>datadir should be named and formatted according to BIDS format. For example:</p>
+<p>datadir = &lt;study_name&gt;/raw/</p>
+<p>maybe it will be:</p>
+<p>datadir = &lt;study_name&gt;/derivatives/&lt;derivative_category_name&gt;</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>datadir: os.PathLike</strong></dt><dd><p>The base directory for storing data</p>
+</dd>
+<dt><strong>modality: str</strong></dt><dd><p>The kind of data we are reading. For example, EEG, MRI, CT, etc.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.basebids.BaseBids.create_dataset_folder" title="eegio.base.objects.bids.basebids.BaseBids.create_dataset_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_dataset_folder</span></code></a>(self, fpath, …)</p></td>
+<td><p>Create a new Bids format dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.objects.bids.basebids.BaseBids.print_dir_tree" title="eegio.base.objects.bids.basebids.BaseBids.print_dir_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_dir_tree</span></code></a>(self)</p></td>
+<td><p>Print a directory tree for this Bids dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.objects.bids.basebids.BaseBids.print_summary" title="eegio.base.objects.bids.basebids.BaseBids.print_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_summary</span></code></a>(self)</p></td>
+<td><p>Print a summary of the patient in the form of a directory tree showing all available data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self, datadir: Union[os.PathLike, str], modality: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/basebids.html#BaseBids.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a BaseBids Object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>datadir :</strong></dt><dd></dd>
+<dt><strong>modality :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.create_dataset_folder">
+<code class="sig-name descname">create_dataset_folder</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">fpath</em>, <em class="sig-param">**dataset_description_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/basebids.html#BaseBids.create_dataset_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.create_dataset_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new Bids format dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fpath</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The path of this new directory</p>
+</dd>
+<dt><strong>dataset_description_kwargs</strong><span class="classifier">dict</span></dt><dd><p>Other arguments used by make_dataset_description</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.data_types">
+<em class="property">property </em><code class="sig-name descname">data_types</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.data_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of all recording types in this Bids dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A list of recording types</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.description_fpath">
+<em class="property">property </em><code class="sig-name descname">description_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.description_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the dataset description file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Dataset description file path.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.num_subjects">
+<em class="property">property </em><code class="sig-name descname">num_subjects</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.num_subjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of subjects in this Bids dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The number of subjects</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.parameters">
+<em class="property">property </em><code class="sig-name descname">parameters</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary of parameters for this Bids object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The parameter dict.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.participants_json_fpath">
+<em class="property">property </em><code class="sig-name descname">participants_json_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.participants_json_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the participants json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Participants json file path.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.participants_tsv_fpath">
+<em class="property">property </em><code class="sig-name descname">participants_tsv_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.participants_tsv_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the participants tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Participants tsv file path.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.print_dir_tree">
+<code class="sig-name descname">print_dir_tree</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/basebids.html#BaseBids.print_dir_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.print_dir_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a directory tree for this Bids dataset.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.print_summary">
+<code class="sig-name descname">print_summary</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/basebids.html#BaseBids.print_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.print_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a summary of the patient in the form of a directory tree showing all available data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.query">
+<em class="property">property </em><code class="sig-name descname">query</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a queryable object representing the entire Bids dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A BidsLayout object</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BaseBids.subject_nums">
+<em class="property">property </em><code class="sig-name descname">subject_nums</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BaseBids.subject_nums" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of subject_ids in this Bids dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A list of subject_id values.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="eegio.base.objects.bids.basebids.BidsIO">
+<em class="property">class </em><code class="sig-prename descclassname">eegio.base.objects.bids.basebids.</code><code class="sig-name descname">BidsIO</code><span class="sig-paren">(</span><em class="sig-param">bidsdir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session_id</em>, <em class="sig-param">kind</em>, <em class="sig-param">run_id=None</em>, <em class="sig-param">datatype='edf'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/basebids.html#BidsIO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>BIDS IO for EEG data base class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsdir</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The base directory for Bids data</p>
+</dd>
+<dt><strong>subject_id</strong><span class="classifier">str</span></dt><dd><p>The unique identifier for the corresponding BidsPatient</p>
+</dd>
+<dt><strong>session_id</strong><span class="classifier">str</span></dt><dd><p>The identifier for the BidsPatient session</p>
+</dd>
+<dt><strong>run_id</strong><span class="classifier">str</span></dt><dd><p>The identifier for the snapshot recording</p>
+</dd>
+<dt><strong>kind</strong><span class="classifier">str</span></dt><dd><p>The type of data in the snapshot recording</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">bidsdir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session_id</em>, <em class="sig-param">kind</em>, <em class="sig-param">run_id=None</em>, <em class="sig-param">datatype='edf'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/objects/bids/basebids.html#BidsIO.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a BidsIO Object.</p>
+<p>Should raise a ValueError if datatype is not supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsdir :</strong></dt><dd></dd>
+<dt><strong>subject_id :</strong></dt><dd></dd>
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>kind :</strong></dt><dd></dd>
+<dt><strong>run_id :</strong></dt><dd></dd>
+<dt><strong>datatype :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.bids_parameters">
+<em class="property">property </em><code class="sig-name descname">bids_parameters</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.bids_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of basic Bids parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>List of parameters</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.chanstsv_fpath">
+<em class="property">property </em><code class="sig-name descname">chanstsv_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.chanstsv_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the channel tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Channel tsv path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.datafile_fpath">
+<em class="property">property </em><code class="sig-name descname">datafile_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.datafile_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Data file path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.eventstsv_fpath">
+<em class="property">property </em><code class="sig-name descname">eventstsv_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.eventstsv_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the events tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Events tsv path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.participantsjson_fpath">
+<em class="property">property </em><code class="sig-name descname">participantsjson_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.participantsjson_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the participants json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Participants json path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.participantstsv_fpath">
+<em class="property">property </em><code class="sig-name descname">participantstsv_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.participantstsv_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the participants tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Participants tsv path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.result_fpath">
+<em class="property">property </em><code class="sig-name descname">result_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.result_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the results zipped numpy file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Results path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.scanstsv_fpath">
+<em class="property">property </em><code class="sig-name descname">scanstsv_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.scanstsv_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the scans tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Scans tsv path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.objects.bids.basebids.BidsIO.sidecarjson_fpath">
+<em class="property">property </em><code class="sig-name descname">sidecarjson_fpath</code><a class="headerlink" href="#eegio.base.objects.bids.basebids.BidsIO.sidecarjson_fpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the path of the sidecar json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Sidecar json path</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-eegio.base.utils.bids_helper">
+<span id="bids-helper"></span><h1><a class="toc-backref" href="#id8">bids_helper</a><a class="headerlink" href="#module-eegio.base.utils.bids_helper" title="Permalink to this headline">¶</a></h1>
+<p>Authors: Adam Li and Patrick Myers.</p>
+<p>Version: 1.0</p>
+<dl class="class">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder">
+<em class="property">class </em><code class="sig-prename descclassname">eegio.base.utils.bids_helper.</code><code class="sig-name descname">BidsBuilder</code><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Suite of helper functions to build out a bids data directory.</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.add_field_to_dict" title="eegio.base.utils.bids_helper.BidsBuilder.add_field_to_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_field_to_dict</span></code></a>(current_dict, new_field, …)</p></td>
+<td><p>Add a new field to the participants.json file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.add_notes_to_channels" title="eegio.base.utils.bids_helper.BidsBuilder.add_notes_to_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_notes_to_channels</span></code></a>(bidsrun)</p></td>
+<td><p>Add a column to the <a href="#id1"><span class="problematic" id="id2">*</span></a>channels.tsv file to allow for more detailed description of status beyond good/bad.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.add_subject_to_participants" title="eegio.base.utils.bids_helper.BidsBuilder.add_subject_to_participants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_subject_to_participants</span></code></a>(subject_id, …)</p></td>
+<td><p>Add a subject into the participants.tsv file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.convert_to_bids" title="eegio.base.utils.bids_helper.BidsBuilder.convert_to_bids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_to_bids</span></code></a>(edf_fpath, bids_dir, …[, …])</p></td>
+<td><p>Convert the passed edf file into the Bids format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.create_channel_info" title="eegio.base.utils.bids_helper.BidsBuilder.create_channel_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_channel_info</span></code></a>(self, bidsrun)</p></td>
+<td><p>Find and add necessary data to modify the channels file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.make_bids_folder_struct" title="eegio.base.utils.bids_helper.BidsBuilder.make_bids_folder_struct"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_bids_folder_struct</span></code></a>(datadir, subject, kind)</p></td>
+<td><p>Create the empty folder structure for a new subject according to the BIDS format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.make_preprocessed_folder" title="eegio.base.utils.bids_helper.BidsBuilder.make_preprocessed_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_preprocessed_folder</span></code></a>(datadir, subject_id)</p></td>
+<td><p>Create the preproceesed data folder in the correct location if it does not already exist.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.make_results_folder" title="eegio.base.utils.bids_helper.BidsBuilder.make_results_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_results_folder</span></code></a>(datadir, subject_id[, …])</p></td>
+<td><p>Create the results folder in the correct location if it does not already exist.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.base.utils.bids_helper.BidsBuilder.preprocess_into_fif" title="eegio.base.utils.bids_helper.BidsBuilder.preprocess_into_fif"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess_into_fif</span></code></a>(bids_fname, bids_dir[, …])</p></td>
+<td><p>Preprocess the edf file into fif format for easier manipulation.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.__weakref__">
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.add_field_to_dict">
+<em class="property">static </em><code class="sig-name descname">add_field_to_dict</code><span class="sig-paren">(</span><em class="sig-param">current_dict: dict, new_field: str, description: Union[str, dict]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.add_field_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.add_field_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new field to the participants.json file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>current_dict</strong><span class="classifier">dict</span></dt><dd><p>The dictionary to add to</p>
+</dd>
+<dt><strong>new_field</strong><span class="classifier">str</span></dt><dd><p>The name of the new field</p>
+</dd>
+<dt><strong>description: Union[str, dict]</strong></dt><dd><p>The description of the new field</p>
+</dd>
+<dt><strong>Returns</strong></dt><dd></dd>
+<dt><strong>——-</strong></dt><dd></dd>
+<dt><strong>The modified dict object</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.add_notes_to_channels">
+<em class="property">static </em><code class="sig-name descname">add_notes_to_channels</code><span class="sig-paren">(</span><em class="sig-param">bidsrun</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.add_notes_to_channels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.add_notes_to_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a column to the <a href="#id3"><span class="problematic" id="id4">*</span></a>channels.tsv file to allow for more detailed description of status beyond good/bad.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsrun: eegio.BidsRun</strong></dt><dd><p>The object containing information about this snapshot recording.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.add_subject_to_participants">
+<em class="property">static </em><code class="sig-name descname">add_subject_to_participants</code><span class="sig-paren">(</span><em class="sig-param">subject_id: str</em>, <em class="sig-param">loader</em>, <em class="sig-param">writer</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.add_subject_to_participants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.add_subject_to_participants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a subject into the participants.tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>subject_id</strong><span class="classifier">str</span></dt><dd><p>The name of the subject to add to the participants file</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The modified pandas DataFrame</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.convert_to_bids">
+<em class="property">static </em><code class="sig-name descname">convert_to_bids</code><span class="sig-paren">(</span><em class="sig-param">edf_fpath</em>, <em class="sig-param">bids_dir</em>, <em class="sig-param">bids_basename</em>, <em class="sig-param">excluded_contacts=None</em>, <em class="sig-param">eog_contacts=None</em>, <em class="sig-param">misc_contacts=None</em>, <em class="sig-param">overwrite=False</em>, <em class="sig-param">use_preprocess_pipeline=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.convert_to_bids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.convert_to_bids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the passed edf file into the Bids format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>edf_fpath</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The location the edf file.</p>
+</dd>
+<dt><strong>bids_dir</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The base directory for newly created bids files.</p>
+</dd>
+<dt><strong>bids_basename</strong><span class="classifier">str</span></dt><dd><p>The base name of the new data files</p>
+</dd>
+<dt><strong>excluded_contacts</strong><span class="classifier">list</span></dt><dd><p>Contacts to be excluded from conversion</p>
+</dd>
+<dt><strong>eog_contacts</strong><span class="classifier">list</span></dt><dd><p>Contacts to be annotated as EOG.</p>
+</dd>
+<dt><strong>misc_contacts</strong><span class="classifier">list</span></dt><dd><p>Contacts to be annotated  as Misc.</p>
+</dd>
+<dt><strong>overwrite</strong><span class="classifier">bool</span></dt><dd><p>Whether to overwrite an existing converted file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The path to the new data file.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.create_channel_info">
+<code class="sig-name descname">create_channel_info</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">bidsrun</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.create_channel_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.create_channel_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find and add necessary data to modify the channels file.</p>
+<p>This method searches for automatic patterns in the electrode names to modify the channels.tsv file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsrun: eegio.BidsRun</strong></dt><dd><p>The object containing information about this snapshot recording.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.make_bids_folder_struct">
+<em class="property">static </em><code class="sig-name descname">make_bids_folder_struct</code><span class="sig-paren">(</span><em class="sig-param">datadir</em>, <em class="sig-param">subject</em>, <em class="sig-param">kind</em>, <em class="sig-param">session_id='one'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.make_bids_folder_struct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.make_bids_folder_struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the empty folder structure for a new subject according to the BIDS format.</p>
+<p>Session is assumed to be ‘one’ for now.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>datadir :</strong></dt><dd></dd>
+<dt><strong>subject :</strong></dt><dd></dd>
+<dt><strong>kind :</strong></dt><dd></dd>
+<dt><strong>session_id :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.make_preprocessed_folder">
+<em class="property">static </em><code class="sig-name descname">make_preprocessed_folder</code><span class="sig-paren">(</span><em class="sig-param">datadir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session='one'</em>, <em class="sig-param">preprocess_name='preprocessed'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.make_preprocessed_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.make_preprocessed_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the preproceesed data folder in the correct location if it does not already exist.</p>
+<p>Assumes session is ‘one’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>datadir</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The base directory for bids data</p>
+</dd>
+<dt><strong>subject_id</strong><span class="classifier">str</span></dt><dd><p>The unique identifier for the BidsPatient</p>
+</dd>
+<dt><strong>session</strong><span class="classifier">str</span></dt><dd><p>The identifier for this BidsPatient session</p>
+</dd>
+<dt><strong>preprocess_name</strong><span class="classifier">str</span></dt><dd><p>The name of the preprocessed folder</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.make_results_folder">
+<em class="property">static </em><code class="sig-name descname">make_results_folder</code><span class="sig-paren">(</span><em class="sig-param">datadir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session='one'</em>, <em class="sig-param">result_name='results'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.make_results_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.make_results_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the results folder in the correct location if it does not already exist.</p>
+<p>Assumes session is ‘one’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>datadir :</strong></dt><dd></dd>
+<dt><strong>subject_id :</strong></dt><dd></dd>
+<dt><strong>session :</strong></dt><dd></dd>
+<dt><strong>result_name :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.base.utils.bids_helper.BidsBuilder.preprocess_into_fif">
+<em class="property">static </em><code class="sig-name descname">preprocess_into_fif</code><span class="sig-paren">(</span><em class="sig-param">bids_fname</em>, <em class="sig-param">bids_dir</em>, <em class="sig-param">kind='eeg'</em>, <em class="sig-param">overwrite=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#BidsBuilder.preprocess_into_fif"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.BidsBuilder.preprocess_into_fif" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preprocess the edf file into fif format for easier manipulation.</p>
+<p>TODO:
+1. Determine if this is necessary. EDF files on one hand are hard to modify,
+but fif files have a lot of constraints.
+2. We should try to discuss w/ some folks that do this, or ask on gitter for mne_bids
+3. See: <a class="reference external" href="https://gist.github.com/skjerns/bc660ef59dca0dbd53f00ed38c42f6be/812cd1d4be24c0730db449ecc6eb0065da68ca51">https://gist.github.com/skjerns/bc660ef59dca0dbd53f00ed38c42f6be/812cd1d4be24c0730db449ecc6eb0065da68ca51</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bids_fname</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The path to the bids format edf file</p>
+</dd>
+<dt><strong>bids_dir</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The base directory for bids data</p>
+</dd>
+<dt><strong>kind</strong><span class="classifier">str</span></dt><dd><p>The type of data contained in the edf file.</p>
+</dd>
+<dt><strong>overwrite</strong><span class="classifier">bool</span></dt><dd><p>Whether to overwrite an existing converted file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The path of the converted fif file</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="eegio.base.utils.bids_helper.write_json">
+<code class="sig-prename descclassname">eegio.base.utils.bids_helper.</code><code class="sig-name descname">write_json</code><span class="sig-paren">(</span><em class="sig-param">fname</em>, <em class="sig-param">dictionary</em>, <em class="sig-param">overwrite=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#write_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.write_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write JSON to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fname: Union[str, os.PathLike]</strong></dt><dd><p>The path fo the new json file</p>
+</dd>
+<dt><strong>dictionary: Dict</strong></dt><dd><p>The data to write to the json file</p>
+</dd>
+<dt><strong>overwrite: bool</strong></dt><dd><p>Whether to overwrite an existing json file with name fname.</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt><dd><p>Whether to print the data to stdout</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="eegio.base.utils.bids_helper.write_tsv">
+<code class="sig-prename descclassname">eegio.base.utils.bids_helper.</code><code class="sig-name descname">write_tsv</code><span class="sig-paren">(</span><em class="sig-param">fname</em>, <em class="sig-param">dictionary</em>, <em class="sig-param">overwrite=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/base/utils/bids_helper.html#write_tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.base.utils.bids_helper.write_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write an ordered dictionary to a .tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fname: Union[str, os.PathLike]</strong></dt><dd><p>The path fo the new json file</p>
+</dd>
+<dt><strong>dictionary: Dict</strong></dt><dd><p>The data to write to the json file</p>
+</dd>
+<dt><strong>overwrite: bool</strong></dt><dd><p>Whether to overwrite an existing json file with name fname.</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt><dd><p>Whether to print the data to stdout</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-eegio.loaders.bidsio">
+<span id="bids-io"></span><h1><a class="toc-backref" href="#id9">bids_io</a><a class="headerlink" href="#module-eegio.loaders.bidsio" title="Permalink to this headline">¶</a></h1>
+<p>Authors: Adam Li and Patrick Myers.</p>
+<p>Version: 1.0</p>
+<dl class="class">
+<dt id="eegio.loaders.bidsio.BidsLoader">
+<em class="property">class </em><code class="sig-prename descclassname">eegio.loaders.bidsio.</code><code class="sig-name descname">BidsLoader</code><span class="sig-paren">(</span><em class="sig-param">bidsdir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session_id</em>, <em class="sig-param">run_id=None</em>, <em class="sig-param">kind='eeg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eegio.base.objects.bids.basebids.BidsIO" title="eegio.base.objects.bids.basebids.BidsIO"><code class="xref py py-class docutils literal notranslate"><span class="pre">eegio.base.objects.bids.basebids.BidsIO</span></code></a></p>
+<p>A class containing loading methods for various required BIDS files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsdir</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The base directory for bids data</p>
+</dd>
+<dt><strong>subject_id</strong><span class="classifier">str</span></dt><dd><p>The unique identifier for the BidsPatient</p>
+</dd>
+<dt><strong>session_id</strong><span class="classifier">str</span></dt><dd><p>The identifier for this BidsPatient session</p>
+</dd>
+<dt><strong>run_id</strong><span class="classifier">str</span></dt><dd><p>The identifier for this snapshot recording</p>
+</dd>
+<dt><strong>kind</strong><span class="classifier">str</span></dt><dd><p>The type of recording</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsLoader.load_channels_tsv" title="eegio.loaders.bidsio.BidsLoader.load_channels_tsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_channels_tsv</span></code></a>(self)</p></td>
+<td><p>Load in the tsv file containing information about a patient’s recording channels.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsLoader.load_dataset" title="eegio.loaders.bidsio.BidsLoader.load_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_dataset</span></code></a>(self)</p></td>
+<td><p>Load in mne.io.Raw dataset based on the sessionid and runid of the dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsLoader.load_participants_json" title="eegio.loaders.bidsio.BidsLoader.load_participants_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_participants_json</span></code></a>(self)</p></td>
+<td><p>Load in the json file containing fields for the center’s patients.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsLoader.load_participants_tsv" title="eegio.loaders.bidsio.BidsLoader.load_participants_tsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_participants_tsv</span></code></a>(self)</p></td>
+<td><p>Load in the tsv file containing information about all of the center’s patients.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsLoader.load_scans_tsv" title="eegio.loaders.bidsio.BidsLoader.load_scans_tsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_scans_tsv</span></code></a>(self)</p></td>
+<td><p>Load in the tsv file containing information about a patient’s scans.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsLoader.load_sidecar_json" title="eegio.loaders.bidsio.BidsLoader.load_sidecar_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_sidecar_json</span></code></a>(self)</p></td>
+<td><p>Load in sidecar json associated with a recording file.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsLoader.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">bidsdir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session_id</em>, <em class="sig-param">run_id=None</em>, <em class="sig-param">kind='eeg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a BidsLoader object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsdir :</strong></dt><dd></dd>
+<dt><strong>subject_id :</strong></dt><dd></dd>
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>run_id :</strong></dt><dd></dd>
+<dt><strong>kind :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsLoader.load_channels_tsv">
+<code class="sig-name descname">load_channels_tsv</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader.load_channels_tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader.load_channels_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in the tsv file containing information about a patient’s recording channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A pandas DataFrame object of the tsv</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsLoader.load_dataset">
+<code class="sig-name descname">load_dataset</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader.load_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader.load_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in mne.io.Raw dataset based on the sessionid and runid of the dataset.</p>
+<p>TODO:
+1. Allow exotic return types in the form of easy to use data structures? or keep as MNE.io.Raw.
+TBD.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The mne.io.Raw dataset</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsLoader.load_participants_json">
+<code class="sig-name descname">load_participants_json</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader.load_participants_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader.load_participants_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in the json file containing fields for the center’s patients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A dict representation of the json</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsLoader.load_participants_tsv">
+<code class="sig-name descname">load_participants_tsv</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader.load_participants_tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader.load_participants_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in the tsv file containing information about all of the center’s patients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A pandas DataFrame object of the tsv</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsLoader.load_scans_tsv">
+<code class="sig-name descname">load_scans_tsv</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader.load_scans_tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader.load_scans_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in the tsv file containing information about a patient’s scans.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A pandas DataFrame object of the tsv</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsLoader.load_sidecar_json">
+<code class="sig-name descname">load_sidecar_json</code><span class="sig-paren">(</span><em class="sig-param">self</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsLoader.load_sidecar_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsLoader.load_sidecar_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in sidecar json associated with a recording file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>A dict representation of the json</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="eegio.loaders.bidsio.BidsWriter">
+<em class="property">class </em><code class="sig-prename descclassname">eegio.loaders.bidsio.</code><code class="sig-name descname">BidsWriter</code><span class="sig-paren">(</span><em class="sig-param">bidsdir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session_id</em>, <em class="sig-param">run_id=None</em>, <em class="sig-param">kind='eeg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eegio.base.objects.bids.basebids.BidsIO" title="eegio.base.objects.bids.basebids.BidsIO"><code class="xref py py-class docutils literal notranslate"><span class="pre">eegio.base.objects.bids.basebids.BidsIO</span></code></a></p>
+<p>A class containing writing methods for various required BIDS files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsdir</strong><span class="classifier">Union[str, os.PathLike]</span></dt><dd><p>The base directory for bids data</p>
+</dd>
+<dt><strong>subject_id</strong><span class="classifier">str</span></dt><dd><p>The unique identifier for the BidsPatient</p>
+</dd>
+<dt><strong>session_id</strong><span class="classifier">str</span></dt><dd><p>The identifier for this BidsPatient session</p>
+</dd>
+<dt><strong>run_id</strong><span class="classifier">str</span></dt><dd><p>The identifier for this snapshot recording</p>
+</dd>
+<dt><strong>kind</strong><span class="classifier">str</span></dt><dd><p>The type of recording</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsWriter.write_channels_tsv" title="eegio.loaders.bidsio.BidsWriter.write_channels_tsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_channels_tsv</span></code></a>(self, metadata[, fpath, …])</p></td>
+<td><p>Write the updated channel information to a file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsWriter.write_electrode_coords" title="eegio.loaders.bidsio.BidsWriter.write_electrode_coords"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_electrode_coords</span></code></a>(self, coords_dict, …)</p></td>
+<td><p>Write the coordinates for the electrodes in the channels tsv file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsWriter.write_participants_json" title="eegio.loaders.bidsio.BidsWriter.write_participants_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_participants_json</span></code></a>(self, participants_dict)</p></td>
+<td><p>Write a passed dict object to the participants json location.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsWriter.write_participants_tsv" title="eegio.loaders.bidsio.BidsWriter.write_participants_tsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_participants_tsv</span></code></a>(self, participants_df)</p></td>
+<td><p>Write a passed DataFrame object to the participants tsv location.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsWriter.write_scans_tsv" title="eegio.loaders.bidsio.BidsWriter.write_scans_tsv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_scans_tsv</span></code></a>(self, scans_df)</p></td>
+<td><p>Write a passed DataFrame object to the scans tsv location.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#eegio.loaders.bidsio.BidsWriter.write_sidecar_json" title="eegio.loaders.bidsio.BidsWriter.write_sidecar_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_sidecar_json</span></code></a>(self, sidecar_dict)</p></td>
+<td><p>Write a passed dict object to the sidecar json location.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsWriter.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">bidsdir</em>, <em class="sig-param">subject_id</em>, <em class="sig-param">session_id</em>, <em class="sig-param">run_id=None</em>, <em class="sig-param">kind='eeg'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a BidsWriter Object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bidsdir :</strong></dt><dd></dd>
+<dt><strong>subject_id :</strong></dt><dd></dd>
+<dt><strong>session_id :</strong></dt><dd></dd>
+<dt><strong>run_id :</strong></dt><dd></dd>
+<dt><strong>kind :</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsWriter.write_channels_tsv">
+<code class="sig-name descname">write_channels_tsv</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">metadata</em>, <em class="sig-param">fpath=None</em>, <em class="sig-param">overwrite=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter.write_channels_tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter.write_channels_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the updated channel information to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>metadata</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>The new channel information after modification</p>
+</dd>
+<dt><strong>fpath</strong><span class="classifier">os.PathLike</span></dt><dd><p>The location to save this data</p>
+</dd>
+<dt><strong>overwrite</strong><span class="classifier">bool</span></dt><dd><p>Whether to overwrite the existing channels tsv file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsWriter.write_electrode_coords">
+<code class="sig-name descname">write_electrode_coords</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">coords_dict</em>, <em class="sig-param">channels_df</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter.write_electrode_coords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter.write_electrode_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the coordinates for the electrodes in the channels tsv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>coords_dict</strong><span class="classifier">Dict</span></dt><dd><p>A dictionary with key=name, value=coordinate</p>
+</dd>
+<dt><strong>channels_df</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>The original channel data to write to the file</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>The modified channel dataframe.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsWriter.write_participants_json">
+<code class="sig-name descname">write_participants_json</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">participants_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter.write_participants_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter.write_participants_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a passed dict object to the participants json location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>participants_dict</strong><span class="classifier">dict</span></dt><dd><p>The updated dictionary for the participants.json file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsWriter.write_participants_tsv">
+<code class="sig-name descname">write_participants_tsv</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">participants_df</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter.write_participants_tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter.write_participants_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a passed DataFrame object to the participants tsv location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>participants_df</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>The updated information for the participants.tsv file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsWriter.write_scans_tsv">
+<code class="sig-name descname">write_scans_tsv</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">scans_df</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter.write_scans_tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter.write_scans_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a passed DataFrame object to the scans tsv location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>scans_df</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>The data to write to the file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="eegio.loaders.bidsio.BidsWriter.write_sidecar_json">
+<code class="sig-name descname">write_sidecar_json</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">sidecar_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/eegio/loaders/bidsio.html#BidsWriter.write_sidecar_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eegio.loaders.bidsio.BidsWriter.write_sidecar_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a passed dict object to the sidecar json location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sidecar_dict</strong><span class="classifier">dict</span></dt><dd><p>The data to write to the file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Adam Li. Last updated on 2019-12-02.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>eegio.base.objects.bids.basebids &#8212; eegio 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/gallery.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../../../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../../../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../../../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../../index.html">
+          EEGIO</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <h1>Source code for eegio.base.objects.bids.basebids</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Authors: Adam Li and Patrick Myers.</span>
+
+<span class="sd">Version: 1.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractclassmethod</span><span class="p">,</span> <span class="n">abstractproperty</span><span class="p">,</span> <span class="n">abstractstaticmethod</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">bids</span>
+<span class="kn">import</span> <span class="nn">bids.reports</span>
+<span class="kn">import</span> <span class="nn">mne_bids</span>
+
+<span class="kn">from</span> <span class="nn">eegio.base.utils.bids_helper</span> <span class="k">import</span> <span class="n">write_json</span><span class="p">,</span> <span class="n">write_tsv</span>
+<span class="kn">from</span> <span class="nn">mne_bids.utils</span> <span class="k">import</span> <span class="n">print_dir_tree</span>
+<span class="kn">from</span> <span class="nn">mne_bids</span> <span class="k">import</span> <span class="n">make_bids_basename</span>
+
+
+<div class="viewcode-block" id="BaseBids"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.basebids.BaseBids">[docs]</a><span class="k">class</span> <span class="nc">BaseBids</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An instantiator class of the bids format that any BIDS derivative would use.</span>
+
+<span class="sd">    It handles:</span>
+<span class="sd">     - the logistics of creating a bids format file structure</span>
+<span class="sd">     - extracting metadata from files stored in iEEG-BIDS format</span>
+<span class="sd">     - easy loading of data files (per dataset, per patient, per derivative (i.e. result), etc.)</span>
+
+<span class="sd">    Only supports iEEG/scalp EEG data. We assume you store data as a BIDS with sub_&lt;###&gt; as the</span>
+<span class="sd">    identifiers. Allows easy querying of its own data structure via:</span>
+
+<span class="sd">    self.query.</span>
+
+<span class="sd">    TODO:</span>
+<span class="sd">    1. Add support for runs and acquisitions (https://mne.tools/mne-bids/generated/mne_bids.utils.get_entity_vals.html#mne_bids.utils.get_entity_vals)</span>
+<span class="sd">    2.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    datadir: os.PathLike</span>
+<span class="sd">        The base directory for storing data</span>
+<span class="sd">    modality: str</span>
+<span class="sd">        The kind of data we are reading. For example, EEG, MRI, CT, etc.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    datadir should be named and formatted according to BIDS format. For example:</span>
+
+<span class="sd">    datadir = &lt;study_name&gt;/raw/</span>
+
+<span class="sd">    maybe it will be:</span>
+
+<span class="sd">    datadir = &lt;study_name&gt;/derivatives/&lt;derivative_category_name&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BaseBids.__init__"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.basebids.BaseBids.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">datadir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+            <span class="n">modality</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a BaseBids Object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        datadir :</span>
+<span class="sd">        modality :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rootdir</span> <span class="o">=</span> <span class="n">datadir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datadir</span> <span class="o">=</span> <span class="n">datadir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modality</span> <span class="o">=</span> <span class="n">modality</span>
+
+        <span class="c1"># initialize a dictionary to store all of our paramters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># store parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_store_params</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">description_fpath</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_dataset_folder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="s2">&quot;BIDS_DATASET&quot;</span><span class="p">)</span></div>
+
+        <span class="c1"># if not os.path.exists(self.participants_tsv_fpath):</span>
+        <span class="c1">#     self.create_participants_files(self.participants_tsv_fpath, self.participants_json_fpath)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">description_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the dataset description file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dataset description file path.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="s2">&quot;dataset_description.json&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">participants_tsv_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the participants tsv file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Participants tsv file path.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="s2">&quot;participants.tsv&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">participants_json_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the participants json file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Participants json file path.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="s2">&quot;participants.json&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a queryable object representing the entire Bids dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A BidsLayout object</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">bids</span><span class="o">.</span><span class="n">BIDSLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a dictionary of parameters for this Bids object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The parameter dict.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of all recording types in this Bids dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A list of recording types</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mne_bids</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_kinds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">subject_nums</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of subject_ids in this Bids dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A list of subject_id values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mne_bids</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_entity_vals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="s1">&#39;sub&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_subjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of subjects in this Bids dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The number of subjects</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_nums</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseBids.print_dir_tree"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.basebids.BaseBids.print_dir_tree">[docs]</a>    <span class="k">def</span> <span class="nf">print_dir_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print a directory tree for this Bids dataset.&quot;&quot;&quot;</span>
+        <span class="n">basepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">)</span>
+        <span class="n">print_dir_tree</span><span class="p">(</span><span class="n">basepath</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_store_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store parameters into a dict object.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">datadir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span>
+            <span class="n">modality</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="BaseBids.create_dataset_folder"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.basebids.BaseBids.create_dataset_folder">[docs]</a>    <span class="k">def</span> <span class="nf">create_dataset_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="o">**</span><span class="n">dataset_description_kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new Bids format dataset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath : Union[str, os.PathLike]</span>
+<span class="sd">            The path of this new directory</span>
+<span class="sd">        dataset_description_kwargs : dict</span>
+<span class="sd">            Other arguments used by make_dataset_description</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># create dataset description</span>
+        <span class="n">mne_bids</span><span class="o">.</span><span class="n">make_dataset_description</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="o">**</span><span class="n">dataset_description_kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseBids.print_summary"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.basebids.BaseBids.print_summary">[docs]</a>    <span class="k">def</span> <span class="nf">print_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print a summary of the patient in the form of a directory tree showing all available data.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">modality</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s2">&quot;MRI&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Print summary only works for neuroimaging type datasets.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">bids</span><span class="o">.</span><span class="n">reports</span><span class="o">.</span><span class="n">BIDSReport</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+        <span class="n">main_report</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">most_common</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">main_report</span><span class="p">)</span></div>
+
+    <span class="c1"># def create_participants_files(self, tsv_fpath, json_fpath):</span>
+    <span class="c1">#</span>
+    <span class="c1">#     empty_df = pd.DataFrame(columns=[&#39;participant_id&#39;, &#39;age&#39;, &#39;sex&#39;])</span>
+    <span class="c1">#     empty_df.to_csv(tsv_fpath, sep=&#39;\t&#39;, index=False)</span>
+    <span class="c1">#     with open(json_fpath, &#39;w&#39;) as fp:</span>
+    <span class="c1">#         json.dump(participants_json, fp, indent=4)</span>
+    <span class="c1">#         fp.close()</span>
+
+    <span class="k">def</span> <span class="nf">_create_participants_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the participants json file for Bids compliance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fname : Union[str, os.PathLike]</span>
+<span class="sd">            The path of the participants json file</span>
+<span class="sd">        overwrite : bool</span>
+<span class="sd">            Whether to overwrite an existing participants json file</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Whether to print the data from the participants json file to stdout</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">cols</span><span class="p">[</span><span class="s1">&#39;participant_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;Unique participant identifier&#39;</span><span class="p">}</span>
+        <span class="n">cols</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;Age of the participant at time of testing&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;Units&#39;</span><span class="p">:</span> <span class="s1">&#39;years&#39;</span><span class="p">}</span>
+        <span class="n">cols</span><span class="p">[</span><span class="s1">&#39;sex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;Biological sex of the participant&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;Levels&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="s1">&#39;female&#39;</span><span class="p">,</span> <span class="s1">&#39;M&#39;</span><span class="p">:</span> <span class="s1">&#39;male&#39;</span><span class="p">}}</span>
+
+        <span class="n">write_json</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span></div>
+
+    <span class="c1"># def _participants_tsv(self, raw, subject_id, fname, overwrite=False,</span>
+    <span class="c1">#                       verbose=True):</span>
+    <span class="c1">#     &quot;&quot;&quot;Create a participants.tsv file and save it.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     This will append any new participant data to the current list if it</span>
+    <span class="c1">#     exists. Otherwise a new file will be created with the provided information.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     Parameters</span>
+    <span class="c1">#     ----------</span>
+    <span class="c1">#     raw : instance of Raw</span>
+    <span class="c1">#         The data as MNE-Python Raw object.</span>
+    <span class="c1">#     subject_id : str</span>
+    <span class="c1">#         The subject name in BIDS compatible format (&#39;01&#39;, &#39;02&#39;, etc.)</span>
+    <span class="c1">#     fname : str</span>
+    <span class="c1">#         Filename to save the participants.tsv to.</span>
+    <span class="c1">#     overwrite : bool</span>
+    <span class="c1">#         Whether to overwrite the existing file.</span>
+    <span class="c1">#         Defaults to False.</span>
+    <span class="c1">#         If there is already data for the given `subject_id` and overwrite is</span>
+    <span class="c1">#         False, an error will be raised.</span>
+    <span class="c1">#     verbose : bool</span>
+    <span class="c1">#         Set verbose output to true or false.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     subject_id = &#39;sub-&#39; + subject_id</span>
+    <span class="c1">#     data = OrderedDict(participant_id=[subject_id])</span>
+    <span class="c1">#</span>
+    <span class="c1">#     subject_age = &quot;n/a&quot;</span>
+    <span class="c1">#     sex = &quot;n/a&quot;</span>
+    <span class="c1">#     subject_info = raw.info[&#39;subject_info&#39;]</span>
+    <span class="c1">#     if subject_info is not None:</span>
+    <span class="c1">#         sexes = {0: &#39;n/a&#39;, 1: &#39;M&#39;, 2: &#39;F&#39;}</span>
+    <span class="c1">#         sex = sexes[subject_info.get(&#39;sex&#39;, 0)]</span>
+    <span class="c1">#</span>
+    <span class="c1">#         # determine the age of the participant</span>
+    <span class="c1">#         age = subject_info.get(&#39;birthday&#39;, None)</span>
+    <span class="c1">#         meas_date = raw.info.get(&#39;meas_date&#39;, None)</span>
+    <span class="c1">#         if isinstance(meas_date, (tuple, list, np.ndarray)):</span>
+    <span class="c1">#             meas_date = meas_date[0]</span>
+    <span class="c1">#</span>
+    <span class="c1">#         if meas_date is not None and age is not None:</span>
+    <span class="c1">#             bday = datetime(age[0], age[1], age[2])</span>
+    <span class="c1">#             meas_datetime = datetime.fromtimestamp(meas_date)</span>
+    <span class="c1">#             subject_age = _age_on_date(bday, meas_datetime)</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             subject_age = &quot;n/a&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1">#     data.update({&#39;age&#39;: [subject_age], &#39;sex&#39;: [sex]})</span>
+    <span class="c1">#</span>
+    <span class="c1">#     if os.path.exists(fname):</span>
+    <span class="c1">#         orig_data = _from_tsv(fname)</span>
+    <span class="c1">#         # whether the new data exists identically in the previous data</span>
+    <span class="c1">#         exact_included = _contains_row(orig_data,</span>
+    <span class="c1">#                                        {&#39;participant_id&#39;: subject_id,</span>
+    <span class="c1">#                                         &#39;age&#39;: subject_age,</span>
+    <span class="c1">#                                         &#39;sex&#39;: sex})</span>
+    <span class="c1">#         # whether the subject id is in the previous data</span>
+    <span class="c1">#         sid_included = subject_id in orig_data[&#39;participant_id&#39;]</span>
+    <span class="c1">#         # if the subject data provided is different to the currently existing</span>
+    <span class="c1">#         # data and overwrite is not True raise an error</span>
+    <span class="c1">#         if (sid_included and not exact_included) and not overwrite:</span>
+    <span class="c1">#             raise FileExistsError(&#39;&quot;%s&quot; already exists in the participant &#39;  # noqa: E501 F821</span>
+    <span class="c1">#                                   &#39;list. Please set overwrite to &#39;</span>
+    <span class="c1">#                                   &#39;True.&#39; % subject_id)</span>
+    <span class="c1">#         # otherwise add the new data</span>
+    <span class="c1">#         data = _combine(orig_data, data, &#39;participant_id&#39;)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     # overwrite is forced to True as all issues with overwrite == False have</span>
+    <span class="c1">#     # been handled by this point</span>
+    <span class="c1">#     _write_tsv(fname, data, True, verbose)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     return fname</span>
+    <span class="c1">#</span>
+    <span class="c1"># def _participants_json(self, fname, overwrite=False, verbose=True):</span>
+    <span class="c1">#     &quot;&quot;&quot;Create participants.json for non-default columns in accompanying TSV.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     Parameters</span>
+    <span class="c1">#     ----------</span>
+    <span class="c1">#     fname : str</span>
+    <span class="c1">#         Filename to save the scans.tsv to.</span>
+    <span class="c1">#     overwrite : bool</span>
+    <span class="c1">#         Defaults to False.</span>
+    <span class="c1">#         Whether to overwrite the existing data in the file.</span>
+    <span class="c1">#         If there is already data for the given `fname` and overwrite is False,</span>
+    <span class="c1">#         an error will be raised.</span>
+    <span class="c1">#     verbose : bool</span>
+    <span class="c1">#         Set verbose output to true or false.</span>
+    <span class="c1">#</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     cols = OrderedDict()</span>
+    <span class="c1">#     cols[&#39;participant_id&#39;] = {&#39;Description&#39;: &#39;Unique participant identifier&#39;}</span>
+    <span class="c1">#     cols[&#39;age&#39;] = {&#39;Description&#39;: &#39;Age of the participant at time of testing&#39;,</span>
+    <span class="c1">#                    &#39;Units&#39;: &#39;years&#39;}</span>
+    <span class="c1">#     cols[&#39;sex&#39;] = {&#39;Description&#39;: &#39;Biological sex of the participant&#39;,</span>
+    <span class="c1">#                    &#39;Levels&#39;: {&#39;F&#39;: &#39;female&#39;, &#39;M&#39;: &#39;male&#39;}}</span>
+    <span class="c1">#</span>
+    <span class="c1">#     write_json(fname, cols, overwrite, verbose)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     return fname</span>
+
+
+<div class="viewcode-block" id="BidsIO"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.basebids.BidsIO">[docs]</a><span class="k">class</span> <span class="nc">BidsIO</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    BIDS IO for EEG data base class.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bidsdir : Union[str, os.PathLike]</span>
+<span class="sd">        The base directory for Bids data</span>
+<span class="sd">    subject_id : str</span>
+<span class="sd">        The unique identifier for the corresponding BidsPatient</span>
+<span class="sd">    session_id : str</span>
+<span class="sd">        The identifier for the BidsPatient session</span>
+<span class="sd">    run_id : str</span>
+<span class="sd">        The identifier for the snapshot recording</span>
+<span class="sd">    kind : str</span>
+<span class="sd">        The type of data in the snapshot recording</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BidsIO.__init__"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.basebids.BidsIO.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bidsdir</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">run_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="s2">&quot;edf&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a BidsIO Object.</span>
+
+<span class="sd">        Should raise a ValueError if datatype is not supported</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bidsdir :</span>
+<span class="sd">        subject_id :</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        kind :</span>
+<span class="sd">        run_id :</span>
+<span class="sd">        datatype :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rootdir</span> <span class="o">=</span> <span class="n">bidsdir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span> <span class="o">=</span> <span class="n">subject_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_id</span> <span class="o">=</span> <span class="n">run_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subjdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bidsdir</span><span class="p">,</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">))</span>  <span class="c1"># &#39;sub-&#39; + self.subject_id)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessiondir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subjdir</span><span class="p">,</span>
+                                       <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">))</span>  <span class="c1"># &#39;ses-&#39; + self.session_id)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datadir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sessiondir</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="n">kind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datatype</span> <span class="o">=</span> <span class="n">datatype</span>
+
+        <span class="n">SUPPORTED_DATATYPES</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;edf&quot;</span><span class="p">,</span> <span class="s2">&quot;fif&quot;</span><span class="p">,</span> <span class="s2">&quot;nii&quot;</span><span class="p">,</span> <span class="s2">&quot;nii.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;mgz&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">datatype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_DATATYPES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Supported data file types are: </span><span class="si">{SUPPORTED_DATATYPES}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bids_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a list of basic Bids parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List of parameters</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rootdir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">participantsjson_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the participants json file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Participants json path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rootdir</span><span class="p">,</span> <span class="s2">&quot;participants.json&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">participantstsv_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the participants tsv file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Participants tsv path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rootdir</span><span class="p">,</span> <span class="s2">&quot;participants.tsv&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eventstsv_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the events tsv file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Events tsv path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                                             <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                                             <span class="n">run</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
+                                                             <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;events.tsv&quot;</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">datafile_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the data file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Data file path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                                             <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                                             <span class="n">run</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
+                                                             <span class="n">suffix</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.kind}</span><span class="s2">.</span><span class="si">{self.datatype}</span><span class="s2">&quot;</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">result_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the results zipped numpy file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Results path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="s1">&#39;results&#39;</span><span class="p">,</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                                                        <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                                                        <span class="n">run</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
+                                                                        <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;results.npz&quot;</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sidecarjson_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the sidecar json file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Sidecar json path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                                             <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                                             <span class="n">run</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
+                                                             <span class="n">suffix</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.kind}</span><span class="s2">.json&quot;</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">chanstsv_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the channel tsv file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Channel tsv path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datadir</span><span class="p">,</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                                             <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                                             <span class="n">run</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
+                                                             <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;channels.tsv&quot;</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scanstsv_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path of the scans tsv file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Scans tsv path</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sessiondir</span><span class="p">,</span> <span class="n">make_bids_basename</span><span class="p">(</span><span class="n">subject</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span><span class="p">,</span>
+                                                                <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                                                                <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;scans.tsv&quot;</span><span class="p">))</span></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Adam Li. Last updated on 2019-12-02.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

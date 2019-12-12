@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>eegio.base.objects.bids.bids_run &#8212; eegio 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/gallery.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../../../../../_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="../../../../../_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="../../../../../_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="../../../../../_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../../../index.html">
+          EEGIO</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.1</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"></ul>
+</li>
+              
+            
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <h1>Source code for eegio.base.objects.bids.bids_run</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Authors: Adam Li and Patrick Myers.</span>
+
+<span class="sd">Version: 1.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">mne</span>
+<span class="kn">import</span> <span class="nn">mne_bids</span>
+<span class="kn">from</span> <span class="nn">eegio.base.config</span> <span class="k">import</span> <span class="n">BAD_MARKERS</span>
+<span class="kn">from</span> <span class="nn">eegio.base.objects.bids.basebids</span> <span class="k">import</span> <span class="n">BaseBids</span>
+<span class="kn">from</span> <span class="nn">eegio.base.utils.scrubber</span> <span class="k">import</span> <span class="n">ChannelScrub</span>
+<span class="kn">from</span> <span class="nn">eegio.loaders.bidsio</span> <span class="k">import</span> <span class="n">BidsWriter</span><span class="p">,</span> <span class="n">BidsLoader</span>
+
+
+<div class="viewcode-block" id="BidsRun"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun">[docs]</a><span class="k">class</span> <span class="nc">BidsRun</span><span class="p">(</span><span class="n">BaseBids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The class for a specific eeg snapshot recording that follows BIDS format.</span>
+
+<span class="sd">    The additional functionality added by this class allow for addition, deletion, and modification</span>
+<span class="sd">    of metadata corresponding the the recording channel annotation and the sidecar json.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject_id: str</span>
+<span class="sd">        The unique identifier for the recorded subject.</span>
+<span class="sd">    session_id:</span>
+<span class="sd">        The identifier for this run&#39;s session.</span>
+<span class="sd">    run_id:</span>
+<span class="sd">        The identifier for the actual recording snapshot.</span>
+<span class="sd">    datadir: Union[str, os.PathLike]</span>
+<span class="sd">        Where this dataset is located (base directory)</span>
+<span class="sd">    modality: str</span>
+<span class="sd">        The method of data recording.</span>
+<span class="sd">    original_fileid: str</span>
+<span class="sd">        The source&#39;s file path for backwards annotation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BidsRun.__init__"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">subject_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">datadir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">modality</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ieeg&quot;</span><span class="p">,</span>
+            <span class="n">original_fileid</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a BidsRun object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        subject_id :</span>
+<span class="sd">        session_id :</span>
+<span class="sd">        run_id :</span>
+<span class="sd">        datadir :</span>
+<span class="sd">        modality :</span>
+<span class="sd">        original_fileid :</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BidsRun</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">,</span> <span class="n">modality</span><span class="o">=</span><span class="n">modality</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subject_id</span> <span class="o">=</span> <span class="n">subject_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_id</span> <span class="o">=</span> <span class="n">run_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">result_fpath</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_fileid</span> <span class="o">=</span> <span class="n">original_fileid</span>
+
+        <span class="c1"># instantiate a loader/writer</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loader</span> <span class="o">=</span> <span class="n">BidsLoader</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">modality</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span> <span class="o">=</span> <span class="n">BidsWriter</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">modality</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">datafile_fpath</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Bids dataset run does not exist at </span><span class="si">{self.loader.datafile_fpath}</span><span class="s2">. &quot;</span>
+                               <span class="n">f</span><span class="s2">&quot;Please first create the dataset in BIDS format.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># upon loading a BidsRun, update the sidecar json&#39;s channel counts. This makes</span>
+        <span class="c1"># it BIDS-compatible since these fields are required.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_sidecar_json_channelcounts</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_bidsrun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_fpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a BIDS Run if it does not exist.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_fpath : str</span>
+<span class="sd">            A filepath to the dataset, and it will create a BIDS-like run using MNE_Bids.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">data_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.fif&quot;</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_fif</span><span class="p">(</span><span class="n">data_fpath</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">data_fpath</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.edf&quot;</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">mne</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_raw_edf</span><span class="p">(</span><span class="n">data_fpath</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t automatically create bids run using this extension. &quot;</span><span class="p">)</span>
+        <span class="n">bids_basename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">datafile_fpath</span>
+        <span class="n">bids_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datadir</span>
+
+        <span class="c1"># copy over bids run to where it should be within the bids directory</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">mne_bids</span><span class="o">.</span><span class="n">write_raw_bids</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">bids_basename</span><span class="p">,</span>
+                                              <span class="n">output_path</span><span class="o">=</span><span class="n">bids_dir</span><span class="p">,</span>
+                                              <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                              <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># return output_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the location of the run&#39;s data file in this directory.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The path to the data file</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">datafile_fpath</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sfreq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the sampling frequency used in this recording.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The sampling frequency</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sidecar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">sidecar</span><span class="p">[</span><span class="s2">&quot;SamplingFrequency&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">linefreq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the power line frequency used in this recording (i.e. either 50 Hz or 60 Hz).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The power line frequency.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sidecar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">sidecar</span><span class="p">[</span><span class="s2">&quot;PowerLineFrequency&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">chs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the channel labels as a numpy array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A list of channel names in the recording.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">chdf</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">results_fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path to the results directory.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The path of the results directory</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">result_fpath</span>
+
+<div class="viewcode-block" id="BidsRun.load_data"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.load_data">[docs]</a>    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the dataset using BidsLoader.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The mne.io.Raw dataset</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BidsRun.get_run_metadata"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.get_run_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_run_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the sidecar json file as a dict object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The dictionary of metadata</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BidsRun.get_channels_metadata"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.get_channels_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_channels_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the channel metadata from the tsv file as a dict object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The dictionary of channel annotations.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">chdf</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BidsRun.get_channel_types"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.get_channel_types">[docs]</a>    <span class="k">def</span> <span class="nf">get_channel_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the channel types of this BidsRun as a pandas DataFrame.</span>
+
+<span class="sd">        The name is the index and the type is the column value. Can easily convert to</span>
+<span class="sd">        key, value pair of a dict if desired.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A pandas DataFrame containing the name and type of each channel.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">chdf</span><span class="p">[[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsRun.get_channels_status"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.get_channels_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_channels_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the channel status of this BidsRun as a pandas DataFrame.</span>
+
+<span class="sd">        The name is the index and the status is the column value. Can easily convert to</span>
+<span class="sd">        key, value pair of a dict if desired.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A pandas DataFrame containing the name and status of each channel.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">chdf</span><span class="p">[[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsRun.delete_sidecar_field"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.delete_sidecar_field">[docs]</a>    <span class="k">def</span> <span class="nf">delete_sidecar_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a field from the sidecar json file for this run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Which field to remove.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The modified dictionary</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sidecar_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span>
+        <span class="n">sidecar_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_sidecar_json</span><span class="p">(</span><span class="n">sidecar_dict</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sidecar_dict</span></div>
+
+<div class="viewcode-block" id="BidsRun.modify_sidecar_json"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.modify_sidecar_json">[docs]</a>    <span class="k">def</span> <span class="nf">modify_sidecar_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modify the sidecar json to have the new value in the passed field.</span>
+
+<span class="sd">        It will overwrite existing sidecar elements if already present. However, if overwrite is False,</span>
+<span class="sd">        then it should raise a RunTimeError.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Which field to modify</span>
+<span class="sd">        value : str</span>
+<span class="sd">            The new value for the passed key</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The modified dictionary</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># always make keys capitalized in sidecar json</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">sidecar_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span>
+        <span class="n">current_keys</span> <span class="o">=</span> <span class="n">sidecar_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">current_keys</span> <span class="ow">and</span> <span class="n">overwrite</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;The passed key </span><span class="si">{key}</span><span class="s1"> already exists in the sidecar json file. Please pass overwrite&#39;</span>
+                               <span class="n">f</span><span class="s1">&#39;as true if you wish to make the change&#39;</span><span class="p">)</span>
+        <span class="n">sidecar_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_sidecar_json</span><span class="p">(</span><span class="n">sidecar_dict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsRun.modify_original_scan_filename"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.modify_original_scan_filename">[docs]</a>    <span class="k">def</span> <span class="nf">modify_original_scan_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add the passed original filename to the scans tsv file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        original_filename :</span>
+<span class="sd">            The path to the file from the source.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scans_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_scans_tsv</span><span class="p">()</span>
+        <span class="n">colnames</span> <span class="o">=</span> <span class="n">scans_data</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="s1">&#39;original_filename&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">colnames</span><span class="p">:</span>
+            <span class="n">fnames</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">scans_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="n">fnames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">scans_data</span><span class="p">[</span><span class="s1">&#39;original_filename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fnames</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">scans_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">fpath</span><span class="p">:</span>
+                <span class="n">scans_data</span><span class="p">[</span><span class="s1">&#39;original_filename&#39;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_scans_tsv</span><span class="p">(</span><span class="n">scans_data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsRun.append_channel_info"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.append_channel_info">[docs]</a>    <span class="k">def</span> <span class="nf">append_channel_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">channel_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">channel_dict</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new column to the channels tsv file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column_id : str</span>
+<span class="sd">            The name of the column to add</span>
+<span class="sd">        channel_id : str</span>
+<span class="sd">            The name of the singular channel to modify.</span>
+<span class="sd">        value :</span>
+<span class="sd">            The new value for the channel_id.</span>
+<span class="sd">        channel_dict : Dict</span>
+<span class="sd">            A dictionary of names and values for the new column</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">channel_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Passed in both value and channel dictionary. Only pass in one!&quot;</span><span class="p">)</span>
+        <span class="n">channel_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="n">colnames</span> <span class="o">=</span> <span class="n">channel_df</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">if</span> <span class="n">column_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">colnames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">channel_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_data</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">channel_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">new_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_data</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">channel_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">channel_df</span><span class="p">[</span><span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_data</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">channel_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">channel_df</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">channel_id</span><span class="p">,</span> <span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_channels_tsv</span><span class="p">(</span><span class="n">channel_df</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsRun.modify_channel_info"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.modify_channel_info">[docs]</a>    <span class="k">def</span> <span class="nf">modify_channel_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">channel_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modify some information about a single recording channel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column_id : str</span>
+<span class="sd">            The column to modify. Must already exist in the tsv file</span>
+<span class="sd">        channel_id : str</span>
+<span class="sd">            The channel to modify. Must exist for the recording</span>
+<span class="sd">        value :</span>
+<span class="sd">            The value to add for the channel and column</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">channel_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">column_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">channel_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Column id </span><span class="si">{column_id}</span><span class="s1"> not in the channels tsv file. Please pass a correct column or &#39;</span>
+                             <span class="n">f</span><span class="s1">&#39;add to the tsv file&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">channel_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">channel_df</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Passed channel </span><span class="si">{channel_id}</span><span class="s1"> not a valid channel for this recording.&#39;</span><span class="p">)</span>
+        <span class="n">channel_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">channel_df</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">channel_id</span><span class="p">,</span> <span class="n">column_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_channels_tsv</span><span class="p">(</span><span class="n">channel_df</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BidsRun.find_bad_channels"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.find_bad_channels">[docs]</a>    <span class="k">def</span> <span class="nf">find_bad_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find bad electrodes based on hardcoded rules of the electrode name.</span>
+
+<span class="sd">        Uses markers encoded in BAD_MARKERS (see config file)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A dictionary where the key is the electrode name and the value is a string description</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">channel_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="n">channel_scrub</span> <span class="o">=</span> <span class="n">ChannelScrub</span>
+        <span class="n">channel_names</span> <span class="o">=</span> <span class="n">channel_df</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+        <span class="n">bad_channels</span> <span class="o">=</span> <span class="n">channel_scrub</span><span class="o">.</span><span class="n">look_for_bad_channels</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)</span>
+        <span class="n">bad_channels_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">bad</span> <span class="ow">in</span> <span class="n">bad_channels</span><span class="p">:</span>
+            <span class="n">bad_channels_dict</span><span class="p">[</span><span class="n">bad</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Scrubbed channels containing markers {&#39;, &#39;.join(BAD_MARKERS)}&quot;</span>
+        <span class="k">return</span> <span class="n">bad_channels_dict</span></div>
+
+<div class="viewcode-block" id="BidsRun.find_channel_types"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.find_channel_types">[docs]</a>    <span class="k">def</span> <span class="nf">find_channel_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the actual type of the electrode based on a regular expression of the electrode name.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A dictionary where the key is the electrode name and the value is the type</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">channel_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="n">channel_scrub</span> <span class="o">=</span> <span class="n">ChannelScrub</span>
+        <span class="n">channel_names</span> <span class="o">=</span> <span class="n">channel_df</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+        <span class="n">channel_dict</span> <span class="o">=</span> <span class="n">channel_scrub</span><span class="o">.</span><span class="n">label_channel_types</span><span class="p">(</span><span class="n">channel_names</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">channel_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">channel_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">channel_dict</span></div>
+
+<div class="viewcode-block" id="BidsRun.modify_electrode_type"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_type">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">modify_electrode_type</span><span class="p">(</span><span class="n">channel_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">chlabel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modify a single recording channel&#39;s type.</span>
+
+<span class="sd">        Updates the run&#39;s channel information to be one of the ones in the following:</span>
+<span class="sd">        https://github.com/bids-standard/bids-specification/blob/master/src/04-modality-specific-files/04-intracranial-electroencephalography.md</span>
+
+<span class="sd">        Right now, we support EEG, ECOG, SEEG, ECG (i.e. EKG), EMG, EOG, MISC.</span>
+
+<span class="sd">        All others are categorized as OTHER for now.</span>
+
+<span class="sd">        TODO:</span>
+<span class="sd">        1. add support for other types.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        channel_df: pandas.DataFrame</span>
+<span class="sd">            The current DataFrame containing electrode contact information</span>
+<span class="sd">        chlabel: str</span>
+<span class="sd">            The label of the electrode to modify</span>
+<span class="sd">        chtype: str</span>
+<span class="sd">            The type to change the electrode to</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The modified DataFrame</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">channel_df</span><span class="o">.</span><span class="n">loc</span><span class="p">([</span><span class="n">channel_df</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">chlabel</span><span class="p">])[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">chtype</span>
+        <span class="c1"># for ind, row in channel_df.iterrows():</span>
+        <span class="c1">#     if row[&#39;name&#39;] == chlabel:</span>
+        <span class="c1">#         channel_df[&#39;type&#39;][ind] = chtype</span>
+        <span class="k">return</span> <span class="n">channel_df</span></div>
+
+<div class="viewcode-block" id="BidsRun.modify_electrode_status"><a class="viewcode-back" href="../../../../../tutorials/funcref.html#eegio.base.objects.bids.bids_run.BidsRun.modify_electrode_status">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">modify_electrode_status</span><span class="p">(</span><span class="n">channel_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">chlabel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">chdescription</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the run&#39;s channel information by looking at the generated clinical electrode sheet annotations.</span>
+
+<span class="sd">        Electrode status can either be &quot;good&quot;, or &quot;bad&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        channel_df: pandas.DataFrame</span>
+<span class="sd">            The current DataFrame containing electrode contact information</span>
+<span class="sd">        chlabel: str</span>
+<span class="sd">            The label of the electrode to modify</span>
+<span class="sd">        chdescription: str</span>
+<span class="sd">            The description to fill in the &#39;notes&#39; column of the DataFrame</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The modified DataFrame</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># channel_df[channel_df[&quot;name&quot;] == chlabel][&quot;status&quot;] = &quot;bad&quot;</span>
+        <span class="c1"># channel_df[channel_df[&quot;name&quot;] == chlabel][&quot;notes&quot;] = chdescription</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">channel_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">chlabel</span><span class="p">:</span>
+                <span class="n">channel_df</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;bad&#39;</span>
+                <span class="n">channel_df</span><span class="p">[</span><span class="s1">&#39;notes&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">chdescription</span>
+        <span class="k">return</span> <span class="n">channel_df</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_sidecar_json_channelcounts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update sidecar json for channel counts.</span>
+
+<span class="sd">        Reads the current tsv file for the run&#39;s channels and updates the sidecar json with the channel type.</span>
+
+<span class="sd">        Should be called every time we modify anything in the sidecar json file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># load in channel tsv file as a dataframe</span>
+        <span class="n">channels_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_channels_tsv</span><span class="p">()</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="n">channels_data</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+
+        <span class="c1"># load in sidecar json as a dictionary</span>
+        <span class="n">sidecar_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_sidecar_json</span><span class="p">()</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+
+        <span class="c1"># go through each possible electrode type and update the count in sidecar json</span>
+        <span class="k">for</span> <span class="n">chtype</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="n">numbers</span><span class="p">):</span>
+            <span class="n">sidecar_dict</span><span class="p">[</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{chtype}</span><span class="s2">ChannelCount&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">write_sidecar_json</span><span class="p">(</span><span class="n">sidecar_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_original_fileid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the original fileid for this run.</span>
+
+<span class="sd">        Returns false if there is none and raises a Value Error if not enough information is contained within the</span>
+<span class="sd">        BidsRun object to locate the original fileid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Boolean representing if the file is found.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scans_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_scans_tsv</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_fileid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must pass at least the run_id or original_fileid for an existing subject&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_fileid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">scans_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_id</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">original_fileid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;original_fileid&#39;</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_fileid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2019, Adam Li. Last updated on 2019-12-02.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
