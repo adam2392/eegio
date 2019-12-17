@@ -161,6 +161,12 @@ class BidsConverter:
         if line_freq is not None:
             raw.info["line_freq"] = line_freq
 
+        annonymize_dict = None
+        # {
+        #         "daysback": 10000,
+        #         "keep_his": True,
+        #     }
+
         # extract parameters from bids_basenmae
         params = _parse_bids_filename(bids_basename, True)
         subject, session = params["sub"], params["ses"]
@@ -238,6 +244,7 @@ class BidsConverter:
             events_data=events_data,
             event_id=events_id,
             overwrite=overwrite,
+            anonymize=annonymize_dict,
             verbose=False,
         )
 
@@ -266,6 +273,7 @@ class BidsConverter:
                 events_data=events_data,
                 event_id=events_id,
                 overwrite=overwrite,
+                anonymize=annonymize_dict,
                 verbose=False,
             )
         return bids_root
