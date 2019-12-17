@@ -112,7 +112,7 @@ class BidsConverter:
         edf_fpath,
         bids_root,
         bids_basename,
-        authors=None,
+        coords_fpath=None,
         excluded_contacts=None,
         eog_contacts=None,
         misc_contacts=None,
@@ -169,6 +169,7 @@ class BidsConverter:
 
         # read in the events from the EDF file
         events_data, events_id = mne.events_from_annotations(raw)
+        print(events_data, events_id)
         channel_scrub = ChannelScrub
 
         # convert the channel types based on acquisition if necessary
@@ -191,11 +192,47 @@ class BidsConverter:
             ] = f"Scrubbed channels containing markers {', '.join(BAD_MARKERS)}"
         raw.info["bads"] = bad_channels
 
+        if coords_fpath:
+            ch_pos = dict()
+            with open(coords_fpath, 'r') as fp:
+                # strip of newline character
+                lines = [line.rstrip('\n') for line in fp]
+
+                for line in lines:
+                    ch_name = line.split(" ")[0]
+                    coord = line.split(" ")[1:]
+                    ch_pos[ch_name] = [float(x) for x in coord]
+            unit = "mm"
+            if unit != "m":
+                ch_pos = {ch_name: np.divide(coord, 1000) for ch_name, coord in ch_pos.items()}
+            montage = mne.channels.make_dig_montage(ch_pos=ch_pos,
+                                                    coord_frame='head')
+
+            # TODO: remove. purely for testing scenario
+            # ch_names = raw.ch_names
+            # elec = np.random.random_sample((len(ch_names), 3))  # assume in mm
+            # elec = elec / 1000  # convert to meters
+            # montage = mne.channels.make_dig_montage(ch_pos=dict(zip(ch_names, elec)),
+            #                                         coord_frame='head')
+        else:
+            montage = None
+
+        if montage is not None:
+            if not isinstance(montage, mne.channels.DigMontage):
+                raise TypeError("Montage passed in should be of type: "
+                                "`mne.channels.DigMontage`.")
+            raw.set_montage(montage)
+            print("Set montage: ")
+            print(len(raw.info['ch_names']))
+            print(raw.info['dig'])
+
+        print(raw)
+
         # actually perform write_raw bids
         bids_root = write_raw_bids(
             raw,
             bids_basename,
-            output_path=bids_root,
+            bids_root=bids_root,
             events_data=events_data,
             event_id=events_id,
             overwrite=overwrite,
@@ -208,7 +245,7 @@ class BidsConverter:
             subject=subject,
             session=session,
             kind=kind,
-            output_path=bids_root,
+            bids_root=bids_root,
             overwrite=False,
             verbose=True,
         )
@@ -223,7 +260,7 @@ class BidsConverter:
             bids_root = write_raw_bids(
                 raw,
                 bids_basename,
-                output_path=deriv_bids_root,
+                bids_root=deriv_bids_root,
                 events_data=events_data,
                 event_id=events_id,
                 overwrite=overwrite,
@@ -305,15 +342,15 @@ class BidsConverter:
         )
 
         # convert into fif
-        output_path = write_raw_bids(
+        bids_root = write_raw_bids(
             raw,
             bids_basename,
-            output_path=bids_root,
+            bids_root=bids_root,
             overwrite=overwrite,
             # events_data=events,
             verbose=False,
         )
-        return output_path
+        return bids_root
 
 
 class BidsUtils:
