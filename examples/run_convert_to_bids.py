@@ -12,9 +12,13 @@ from mne_bids.utils import print_dir_tree
 
 from eegio.base.utils.bids_helper import BidsConverter
 
+
 def get_all_subjectids(datadir):
-    allpats = [p for p in os.listdir(datadir) if os.path.isdir(os.path.join(datadir,p))]
+    allpats = [
+        p for p in os.listdir(datadir) if os.path.isdir(os.path.join(datadir, p))
+    ]
     return allpats
+
 
 ###############################################################################
 # Step 1: Prepare the data
@@ -44,9 +48,13 @@ for i, center in enumerate(centers):
     allpats = get_all_subjectids(centerdir)
 
     for pat in allpats:
-        edf_fpaths.append([os.path.join(centerdir, pat, "seeg", "edf", f)
-                      for f in os.listdir(os.path.join(centerdir, pat, "seeg", "edf"))
-                      if f.endswith(".edf")])
+        edf_fpaths.append(
+            [
+                os.path.join(centerdir, pat, "seeg", "edf", f)
+                for f in os.listdir(os.path.join(centerdir, pat, "seeg", "edf"))
+                if f.endswith(".edf")
+            ]
+        )
         subject_ids.append(pat)
 
     run_id = i
@@ -89,9 +97,7 @@ for subject_id, edf_fpaths in zip(subject_ids, edf_fpaths):
 
 # currently write_raw_bids overwrites make_dataset_description
 # TODO: put this on the top when PR gets merged.
-make_dataset_description(
-    os.path.join(bids_root), name="epilepsy_ieeg", authors=authors
-)
+make_dataset_description(os.path.join(bids_root), name="epilepsy_ieeg", authors=authors)
 
 ###############################################################################
 # What does our fresh BIDS directory look like?

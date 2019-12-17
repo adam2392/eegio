@@ -194,9 +194,9 @@ class BidsConverter:
 
         if coords_fpath:
             ch_pos = dict()
-            with open(coords_fpath, 'r') as fp:
+            with open(coords_fpath, "r") as fp:
                 # strip of newline character
-                lines = [line.rstrip('\n') for line in fp]
+                lines = [line.rstrip("\n") for line in fp]
 
                 for line in lines:
                     ch_name = line.split(" ")[0]
@@ -204,9 +204,10 @@ class BidsConverter:
                     ch_pos[ch_name] = [float(x) for x in coord]
             unit = "mm"
             if unit != "m":
-                ch_pos = {ch_name: np.divide(coord, 1000) for ch_name, coord in ch_pos.items()}
-            montage = mne.channels.make_dig_montage(ch_pos=ch_pos,
-                                                    coord_frame='head')
+                ch_pos = {
+                    ch_name: np.divide(coord, 1000) for ch_name, coord in ch_pos.items()
+                }
+            montage = mne.channels.make_dig_montage(ch_pos=ch_pos, coord_frame="head")
 
             # TODO: remove. purely for testing scenario
             # ch_names = raw.ch_names
@@ -219,12 +220,13 @@ class BidsConverter:
 
         if montage is not None:
             if not isinstance(montage, mne.channels.DigMontage):
-                raise TypeError("Montage passed in should be of type: "
-                                "`mne.channels.DigMontage`.")
+                raise TypeError(
+                    "Montage passed in should be of type: " "`mne.channels.DigMontage`."
+                )
             raw.set_montage(montage)
             print("Set montage: ")
-            print(len(raw.info['ch_names']))
-            print(raw.info['dig'])
+            print(len(raw.info["ch_names"]))
+            print(raw.info["dig"])
 
         print(raw)
 
