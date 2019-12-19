@@ -60,6 +60,7 @@ class BidsRun(BaseBids):
     def __init__(self, bids_root, bids_fname: str, verbose: bool = True):
         super(BidsRun, self).__init__(bids_root=bids_root)
 
+
         # ensures just base path
         self.bids_fname = os.path.basename(bids_fname)
 
@@ -80,6 +81,7 @@ class BidsRun(BaseBids):
 
         self.result_fpath = None
 
+        print(self.bids_basename, 'BIDS_BASENAME')
         # instantiate a loader/writer
         self.loader = BidsLoader(
             bids_root=self.bids_root,
@@ -87,12 +89,14 @@ class BidsRun(BaseBids):
             kind=self.kind,
             datatype=self.ext,
         )
+        print('LOADER PASSED')
         self.writer = BidsWriter(
             bids_root=self.bids_root,
             bids_basename=self.bids_basename,
             kind=self.kind,
             datatype=self.ext,
         )
+        print('WRITER PASSED')
 
         if not os.path.exists(self.loader.datafile_fpath):
             raise RuntimeError(
@@ -178,7 +182,7 @@ class BidsRun(BaseBids):
         chdf = self.loader.load_channels_tsv()
         return chdf["name"].to_numpy()
 
-    def load_data(self):
+    def load_data(self, preload=False):
         """
         Load the dataset using BidsLoader.
 
@@ -187,7 +191,7 @@ class BidsRun(BaseBids):
         The mne.io.Raw dataset
 
         """
-        return self.loader.load_dataset()
+        return self.loader.load_dataset(preload=preload)
 
     def get_run_metadata(self):
         """
@@ -424,6 +428,7 @@ class BidsRun(BaseBids):
             sidecar_dict[f"{chtype}ChannelCount"] = int(count)
 
         self.writer.write_sidecar_json(sidecar_dict)
+
 
     # def modify_original_scan_filename(self, original_filename: str):
     #     """

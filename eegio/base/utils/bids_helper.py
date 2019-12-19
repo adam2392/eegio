@@ -117,6 +117,7 @@ class BidsConverter:
         eog_contacts=None,
         misc_contacts=None,
         overwrite=False,
+        preprocess=True,
         line_freq=60.0,
     ):
         """
@@ -142,6 +143,10 @@ class BidsConverter:
             Contacts to be annotated  as Misc.
         overwrite : bool
             Whether to overwrite an existing converted file.
+        preprocess: bool
+            Whether to make a fif copy in the derivates root folder
+        line_freq: float (60.0 or 50.0)
+            The line frequency in Hz of the signal. 60.0 Hz is standard in the US.
 
         Returns
         -------
@@ -161,7 +166,7 @@ class BidsConverter:
         if line_freq is not None:
             raw.info["line_freq"] = line_freq
 
-        # extract parameters from bids_basenmae
+        # extract parameters from bids_basename
         params = _parse_bids_filename(bids_basename, True)
         subject, session = params["sub"], params["ses"]
         acquisition, kind = params["acq"], params["kind"]
@@ -213,22 +218,23 @@ class BidsConverter:
             verbose=True,
         )
 
-        bids_fname = bids_basename + f"_{kind}.fif"
-        deriv_bids_root = os.path.join(bids_root, "derivatives")
-        with tempfile.TemporaryDirectory() as tmp_bids_root:
-            raw.save(os.path.join(tmp_bids_root, bids_fname), overwrite=overwrite)
-            raw = mne.io.read_raw_fif(os.path.join(tmp_bids_root, bids_fname))
+        if preprocess:
+            bids_fname = bids_basename + f"_{kind}.fif"
+            deriv_bids_root = os.path.join(bids_root, "derivatives")
+            with tempfile.TemporaryDirectory() as tmp_bids_root:
+                raw.save(os.path.join(tmp_bids_root, bids_fname), overwrite=overwrite)
+                raw = mne.io.read_raw_fif(os.path.join(tmp_bids_root, bids_fname))
 
-            # actually perform write_raw bids
-            bids_root = write_raw_bids(
-                raw,
-                bids_basename,
-                output_path=deriv_bids_root,
-                events_data=events_data,
-                event_id=events_id,
-                overwrite=overwrite,
-                verbose=False,
-            )
+                # actually perform write_raw bids
+                bids_root = write_raw_bids(
+                    raw,
+                    bids_basename,
+                    output_path=deriv_bids_root,
+                    events_data=events_data,
+                    event_id=events_id,
+                    overwrite=overwrite,
+                    verbose=False,
+                )
         return bids_root
 
     @staticmethod

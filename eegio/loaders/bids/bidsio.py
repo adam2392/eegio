@@ -55,12 +55,13 @@ class BidsIO(object):
             self.kind = kind
         else:
             self.kind = self.acquisition
-        if "meg" in self.kind:
-            self.kind = "meg"
-        elif "ieeg" in self.kind or "ecog" in self.kind or "seeg" in self.kind:
-            self.kind = "ieeg"
-        elif "eeg" in self.kind:
-            self.kind = "eeg"
+        if self.kind is not None:
+            if "meg" in self.kind:
+                self.kind = "meg"
+            elif "ieeg" in self.kind or "ecog" in self.kind or "seeg" in self.kind:
+                self.kind = "ieeg"
+            elif "eeg" in self.kind:
+                self.kind = "eeg"
 
         self.subjdir = os.path.join(
             bids_root, make_bids_basename(subject=self.subject_id)
@@ -390,7 +391,7 @@ class BidsLoader(BidsIO):
             data = json.load(file)
         return data
 
-    def load_dataset(self):
+    def load_dataset(self, preload=False):
         """
         Load in mne.io.Raw dataset based on the sessionid and run of the dataset.
 
@@ -405,9 +406,11 @@ class BidsLoader(BidsIO):
         """
         datafile_fpath = self.datafile_fpath
         if "fif" in datafile_fpath:
-            raw = mne.io.read_raw_fif(datafile_fpath)
+            raw = mne.io.read_raw_fif(datafile_fpath, preload=preload)
+            return raw
         elif "edf" in datafile_fpath:
-            raw = mne.io.read_raw_edf(datafile_fpath)
+            raw = mne.io.read_raw_edf(datafile_fpath, preload=preload)
+            return raw
 
         raw = mne_bids.read_raw_bids(
             bids_fname=os.path.basename(self.datafile_fpath), bids_root=self.bids_root
