@@ -15,7 +15,7 @@ import pandas as pd
 from mne_bids import make_bids_basename
 from mne_bids import write_raw_bids, make_bids_folders
 from mne_bids.utils import _handle_kind
-from mne_bids.utils import _parse_bids_filename
+from mne_bids.utils import _parse_bids_filename, _parse_ext
 
 from eegio.base.config import BAD_MARKERS
 from eegio.base.utils.scrubber import ChannelScrub
@@ -233,8 +233,7 @@ class BidsConverter:
             print("Set montage: ")
             print(len(raw.info["ch_names"]))
             print(raw.info["dig"])
-
-        print(raw)
+            print(raw)
 
         # actually perform write_raw bids
         bids_root = write_raw_bids(
@@ -261,10 +260,16 @@ class BidsConverter:
 
         bids_fname = bids_basename + f"_{kind}.fif"
         deriv_bids_root = os.path.join(bids_root, "derivatives")
+
+        print("Should be saving for: ", bids_fname)
         with tempfile.TemporaryDirectory() as tmp_bids_root:
             raw.save(os.path.join(tmp_bids_root, bids_fname), overwrite=overwrite)
             raw = mne.io.read_raw_fif(os.path.join(tmp_bids_root, bids_fname))
 
+            print(raw, bids_basename)
+            print(raw.filenames)
+            _, ext = _parse_ext(raw.filenames[0])
+            print(ext)
             # actually perform write_raw bids
             bids_root = write_raw_bids(
                 raw,

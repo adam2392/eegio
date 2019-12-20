@@ -98,7 +98,7 @@ print_dir_tree(data_dir)
 if not os.path.exists(bids_root):
     print("Making bids root directory.")
     make_bids_folders(
-        output_path=bids_root,
+        bids_root=bids_root,
         session=test_sessionid,
         subject=test_subjectid,
         kind=modality,
@@ -175,7 +175,7 @@ fif_data_path = make_bids_folders(
     subject=params["sub"],
     session=params["ses"],
     kind=kind,
-    output_path=bids_root,
+    bids_root=bids_root,
     overwrite=False,
     verbose=True,
 )

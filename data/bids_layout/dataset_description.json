@@ -1,8 +1,7 @@
 {
-    "Name": "test_bids_dataset",
+    "Name": " ",
     "BIDSVersion": "1.2.0",
     "Authors": [
-        "Adam Li",
-        "Patrick Myers"
+        "MNE-BIDS"
     ]
 }
