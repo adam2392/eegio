@@ -244,7 +244,7 @@ class BidsConverter:
             events_data=events_data,
             event_id=events_id,
             overwrite=overwrite,
-            anonymize=annonymize_dict,
+            # anonymize=annonymize_dict,
             verbose=False,
         )
 
@@ -273,7 +273,7 @@ class BidsConverter:
                 events_data=events_data,
                 event_id=events_id,
                 overwrite=overwrite,
-                anonymize=annonymize_dict,
+                # anonymize=annonymize_dict,
                 verbose=False,
             )
         return bids_root
