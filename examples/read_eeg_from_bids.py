@@ -124,7 +124,6 @@ for i, edf_fpath in enumerate(edf_fpaths):
         edf_fpath=edf_fpath,
         bids_root=bids_root,
         bids_basename=bids_basename,
-        authors=authors,
         line_freq=line_freq,
         overwrite=True,
     )
