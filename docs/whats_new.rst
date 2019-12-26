@@ -32,6 +32,8 @@ Changelog
 Bug
 ~~~
 
+- Recreated datasets in `data/`, so that it would make tests pass that depend on it. By `Adam Li`_ `#10 <https://github.com/adam2392/eztrack/pull/10>`_)
+
 API
 ~~~
 
