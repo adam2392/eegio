@@ -76,7 +76,7 @@ def bidsrun_scalp(edf_fpath):
     """
     main_eeg()
     main_ieeg()
-    
+
     test_subjectid = "0001"
     session_id = "seizure"
     kind = "eeg"
