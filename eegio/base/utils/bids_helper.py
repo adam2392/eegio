@@ -239,7 +239,7 @@ class BidsConverter:
         bids_root = write_raw_bids(
             raw,
             bids_basename,
-            bids_root=bids_root,
+            bids_root,
             events_data=events_data,
             event_id=events_id,
             overwrite=overwrite,
@@ -253,7 +253,7 @@ class BidsConverter:
             subject=subject,
             session=session,
             kind=kind,
-            bids_root=bids_root,
+            output_path=bids_root,
             overwrite=False,
             verbose=True,
         )
@@ -274,7 +274,7 @@ class BidsConverter:
             bids_root = write_raw_bids(
                 raw,
                 bids_basename,
-                bids_root=deriv_bids_root,
+                deriv_bids_root,
                 events_data=events_data,
                 event_id=events_id,
                 overwrite=overwrite,
