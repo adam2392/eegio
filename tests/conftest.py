@@ -1,6 +1,5 @@
 """Define fixtures available for eegio tests."""
 import os
-import os.path
 
 import numpy as np
 import pytest
@@ -8,8 +7,9 @@ from mne_bids import make_bids_basename
 
 from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.base.utils.data_structures_utils import compute_samplepoints
-from eegio.loaders import BidsPatient
 from eegio.loaders import BidsRun
+
+np.random.seed(987654321)
 
 
 @pytest.fixture(scope="session")
@@ -191,6 +191,7 @@ def result_fpath():
     result_npzfpath = os.path.join(testdatadir, "test_fragmodel.npz")
     return result_fpath, result_npzfpath
 
+
 def main_ieeg():
     """
     ===================================
@@ -253,7 +254,7 @@ def main_ieeg():
     # MNE-Python:
 
     DATADIR = os.getcwd()
-    bids_root = os.path.join(DATADIR, "../data/bids_layout/")
+    bids_root = os.path.join(DATADIR, "./data/bids_layout/")
     RUN_IEEG = True  # either run scalp, or iEEG
     line_freq = 60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
     test_subjectid = "0001"
@@ -292,7 +293,7 @@ def main_ieeg():
     if not os.path.exists(bids_root):
         print("Making bids root directory.")
         make_bids_folders(
-            bids_root=bids_root,
+            output_path=bids_root,
             session=test_sessionid,
             subject=test_subjectid,
             kind=modality,
@@ -369,7 +370,7 @@ def main_ieeg():
         subject=params["sub"],
         session=params["ses"],
         kind=kind,
-        bids_root=bids_root,
+        output_path=bids_root,
         overwrite=False,
         verbose=True,
     )
@@ -386,6 +387,7 @@ def main_ieeg():
 
     print("checked filepath: ", os.path.join(rel_bids_root, bids_fname))
     print(is_valid)
+
 
 def main_eeg():
     """
@@ -449,7 +451,7 @@ def main_eeg():
     # MNE-Python:
 
     DATADIR = os.getcwd()
-    bids_root = os.path.join(DATADIR, "../data/bids_layout/")
+    bids_root = os.path.join(DATADIR, "./data/bids_layout/")
     RUN_IEEG = False  # either run scalp, or iEEG
     line_freq = 60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
     test_subjectid = "0001"
@@ -488,7 +490,7 @@ def main_eeg():
     if not os.path.exists(bids_root):
         print("Making bids root directory.")
         make_bids_folders(
-            bids_root=bids_root,
+            output_path=bids_root,
             session=test_sessionid,
             subject=test_subjectid,
             kind=modality,
@@ -565,7 +567,7 @@ def main_eeg():
         subject=params["sub"],
         session=params["ses"],
         kind=kind,
-        bids_root=bids_root,
+        output_path=bids_root,
         overwrite=False,
         verbose=True,
     )
