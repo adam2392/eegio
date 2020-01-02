@@ -1,4 +1,6 @@
 include *.rst
+include *.md
+include coverage.svg
 include LICENSE
 include eegio/__init__.py
 
@@ -12,7 +14,9 @@ exclude .zenodo
 exclude .github
 exclude .github/PULL_REQUEST_TEMPLATE.md
 exclude Makefile
-exclude CONTRIBUTING.md
+exclude ./docs/CONTRIBUTING.md
+exclude ./docs/INSTALLATION.md
+exclude ./docs/TESTING_SETUP.md
 exclude .coveragerc
 exclude *.yml
 exclude .mailmap
