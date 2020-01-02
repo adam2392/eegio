@@ -17,6 +17,7 @@ clean-build:
 	rm -rf _build
 	rm -rf dist
 	rm -rf build
+	rm -rf eegio.egg-info
 
 clean-ctags:
 	rm -f tags
