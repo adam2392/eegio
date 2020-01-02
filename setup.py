@@ -83,29 +83,30 @@ def check_python_version():
 
 check_python_version()
 
-setup(
-    name=PACKAGE_NAME,
-    version=version,
-    description=DESCRIPTION,
-    maintainer=MAINTAINER,
-    maintainer_email=MAINTAINER_EMAIL,
-    author="Adam Li",
-    long_description=open("README.md").read(),
-    long_description_content_type='text/markdown',
-    url=URL,
-    download_url=DOWNLOAD_URL,
-    license="GNU General Public License (GPL)",
-    keywords="EEG, epilepsy, research tools, IO tools",
-    packages=find_packages(include=[], exclude=[]),
-    project_urls={
-        "Documentation": "https://github.com/adam2392/eegio/docs/",
-        "Source": URL,
-        "Tracker": "https://github.com/adam2392/eegio/issues",
-    },
-    include_dirs=[numpy.get_include()],
-    dependency_links=["git+https://github.com/adam2392/eegio#egg=eegio"],
-    # install_requires=REQUIRED_PACKAGES,
-    include_package_data=True,
-    classifiers=CLASSIFICATION_OF_PACKAGE,
-    zip_ok=True,
-)
+if __name__ == "__main__":
+    setup(
+        name=PACKAGE_NAME,
+        version=version,
+        description=DESCRIPTION,
+        maintainer=MAINTAINER,
+        maintainer_email=MAINTAINER_EMAIL,
+        author="Adam Li",
+        long_description=open("README.md").read(),
+        long_description_content_type='text/markdown',
+        url=URL,
+        download_url=DOWNLOAD_URL,
+        license="GNU General Public License (GPL)",
+        keywords="EEG, epilepsy, research tools, IO tools",
+        packages=find_packages(include=[], exclude=[]),
+        project_urls={
+            "Documentation": "https://github.com/adam2392/eegio/docs/",
+            "Source": URL,
+            "Tracker": "https://github.com/adam2392/eegio/issues",
+        },
+        include_dirs=[numpy.get_include()],
+        # dependency_links=["git+https://github.com/adam2392/eegio#egg=eegio"],
+        # install_requires=REQUIRED_PACKAGES,
+        # include_package_data=True,
+        classifiers=CLASSIFICATION_OF_PACKAGE,
+        # zip_ok=True,
+    )
