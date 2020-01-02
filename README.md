@@ -11,7 +11,7 @@
 For an easy-to-use API interfacing with EEG data in EDF, or FIF format in the BIDS-EEG layout.
 This module stores the code for IO of EEG data for human patients, and pipelining code to convert clinical center data (i.e. time series eeg, clinical metadata) into a developer-friendly dataset that is also invertible and debug-friendly.
 
-## Dev Process - TODO
+## TODO
 
 - [ ] Add support for adding structural context via neuroimaging processed data (e.g. FreeSurfer)
 
@@ -49,7 +49,7 @@ See [example](./examples/read_eeg_from_bids.py).
 For more info, see tutorials and documentation.
 
 # Contributing
-We welcome contributions from anyone. Our [issues](https://github.com/adam2392/eegio/issues) page is a great place for suggestions!
+We welcome contributions from anyone. Please view our [contribution guidelines](./docs/CONTRIBUTING.md). Our [issues](https://github.com/adam2392/eegio/issues) page is a great place for suggestions!
 If you have an idea for an improvement not listed there, please [make an issue](https://github.com/adam2392/eegio/issues/new) first so you can discuss with the developers. 
 For information on setting up testing, see [testing guide](./docs/TESTING_SETUP.md).
     

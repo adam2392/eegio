@@ -15,6 +15,6 @@ Maintainer, please confirm the following before merging:
 - [ ] This is not your own PR
 - [ ] All CIs are happy
 - [ ] PR title starts with [MRG]
-- [ ] [whats_new.rst](https://github.com/adam2392/master/doc/whats_new.rst) is updated
+- [ ] [whats_new.rst](https://github.com/adam2392/master/docs/whats_new.rst) is updated
 - [ ] PR description includes phrase "closes <#issue-number>"
 - [ ] Commit history does not contain any merge commits

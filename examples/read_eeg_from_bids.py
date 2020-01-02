@@ -98,10 +98,10 @@ print_dir_tree(data_dir)
 if not os.path.exists(bids_root):
     print("Making bids root directory.")
     make_bids_folders(
-        output_path=bids_root,
         session=test_sessionid,
         subject=test_subjectid,
         kind=modality,
+        output_path=bids_root,
     )
 
 for i, edf_fpath in enumerate(edf_fpaths):
@@ -124,7 +124,6 @@ for i, edf_fpath in enumerate(edf_fpaths):
         edf_fpath=edf_fpath,
         bids_root=bids_root,
         bids_basename=bids_basename,
-        authors=authors,
         line_freq=line_freq,
         overwrite=True,
     )
@@ -176,7 +175,7 @@ fif_data_path = make_bids_folders(
     subject=params["sub"],
     session=params["ses"],
     kind=kind,
-    output_path=bids_root,
+    bids_root=bids_root,
     overwrite=False,
     verbose=True,
 )
