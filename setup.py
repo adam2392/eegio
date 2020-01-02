@@ -37,6 +37,7 @@ print("found version: ", version)
 PACKAGE_NAME = "eegio"
 DESCRIPTION = "EEGIO: An io package for eeg data that is MNE-Python and MNE-BIDS compatible ."
 URL = "https://github.com/adam2392/eegio"
+DOWNLOAD_URL = "https://github.com/adam2392/eegio.git"
 MAINTAINER = 'Adam Li'
 MAINTAINER_EMAIL = 'adam2392@gmail.com'
 MINIMUM_PYTHON_VERSION = 3, 6  # Minimum of Python 3.6
@@ -92,6 +93,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     url=URL,
+    download_url=DOWNLOAD_URL,
     license="GNU General Public License (GPL)",
     keywords="EEG, epilepsy, research tools, IO tools",
     packages=find_packages(include=[], exclude=[]),
@@ -102,7 +104,7 @@ setup(
     },
     include_dirs=[numpy.get_include()],
     dependency_links=["git+https://github.com/adam2392/eegio#egg=eegio"],
-    install_requires=REQUIRED_PACKAGES,
+    # install_requires=REQUIRED_PACKAGES,
     include_package_data=True,
     classifiers=CLASSIFICATION_OF_PACKAGE,
     zip_ok=True,
