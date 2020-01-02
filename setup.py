@@ -7,16 +7,20 @@ import numpy
 from setuptools import find_packages
 
 """
-To re-setup: python setup.py bdist_wheel
+To re-setup: 
 
-pip install -r requirements.txt --process-dependency-links
+    python setup.py sdist bdist_wheel
+
+    pip install -r requirements.txt --process-dependency-links
 
 To test on test pypi:
     
     twine upload --repository testpypi dist/*
     
-    twine upload dist/*
-    
+    # test upload
+    pip install -i https://test.pypi.org/simple/ --no-deps eegio
+
+    twine upload dist/* 
 """
 
 # get the version
