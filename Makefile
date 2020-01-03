@@ -60,7 +60,9 @@ check-manifest:
 	check-manifest --ignore .circleci*,docs,annonymize,data,tests
 
 upload-pipy:
-	python setup.py sdist bdist_egg register upload
+	python setup.py sdist bdist_egg
+	python setup.py register
+	python setup.py upload
 
 black:
 	@if command -v black > /dev/null; then \

@@ -31,11 +31,11 @@ version = None
 with open(os.path.join('eegio', '__init__.py'), 'r') as fid:
     for line in (line.strip() for line in fid):
         if line.startswith('__version__'):
-            version = line.split('=')[1].strip().strip('\'')
+            version = line.split('=')[1].strip().strip('\'').strip('"')
             break
 if version is None:
     raise RuntimeError('Could not determine version')
-print("found version: ", version)
+# print("found version: ", version)
 
 PACKAGE_NAME = "eegio"
 DESCRIPTION = "EEGIO: An io package for eeg data that is MNE-Python and MNE-BIDS compatible ."
