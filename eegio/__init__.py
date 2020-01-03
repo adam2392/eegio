@@ -14,4 +14,4 @@ import eegio.base.utils as utils
 #     basename(f)[:-3] for f in modules if isfile(f) and not f.endswith("__init__.py")
 # ]
 name = "eegio"
-__version__ = "0.1.2"
+__version__ = "0.1.3"

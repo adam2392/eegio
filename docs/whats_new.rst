@@ -19,6 +19,14 @@ Here we list a changelog of EEGIO.
 Current
 -------
 
+Changelog
+~~~~~~~~~
+
+Bug
+~~~
+
+- Fixed `MANIFEST.in` file, `Makefile` and docstrings to adhere to pydocstyle. By `Adam Li`_ (`#11 <https://github.com/adam2392/eegio/pull/11>`_)
+
 .. _changes_0_1:
 
 Version 0.1
@@ -32,7 +40,7 @@ Changelog
 Bug
 ~~~
 
-- Recreated datasets in `data/`, so that it would make tests pass that depend on it. By `Adam Li`_ `#10 <https://github.com/adam2392/eztrack/pull/10>`_)
+- Recreated datasets in `data/`, so that it would make tests pass that depend on it. By `Adam Li`_ (`#10 <https://github.com/adam2392/eztrack/pull/10>`_)
 
 API
 ~~~
