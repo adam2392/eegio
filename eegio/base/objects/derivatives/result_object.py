@@ -18,7 +18,7 @@ def _findtimewins(time, timepoints):
 
 class Result(BaseDataset):
     """
-    The class object for our EEG time series data that is transformed from our raw EEG
+    The class object for our EEG time series data that is transformed from our raw EEG.
 
     All time series are assumed to be in [C x T] shape and use the Contacts
     data structure to handle all contact level functionality.
@@ -30,9 +30,6 @@ class Result(BaseDataset):
 
     metadata : (dict)
         The dictionary metadata object.
-
-    Notes
-    -----
 
     Examples
     --------
@@ -76,37 +73,46 @@ class Result(BaseDataset):
         )
 
     def summary(self):
+        """Summary string."""
         pass
 
     def create_fake_example(self):
+        """Fake example dataset."""
         pass
 
     @property
     def samplepoints(self):
+        """Samplepoints of each window of data."""
         return np.array(self.times)
 
     @property
     def record_filename(self):
+        """Original filename of the dataset."""
         return self.metadata["filename"]
 
     @property
     def winsize(self):
+        """Window size used in the model."""
         return self.model_attributes["winsize"]
 
     @property
     def stepsize(self):
+        """Step size used in the model."""
         return self.model_attributes["stepsize"]
 
     @property
     def samplerate(self):
+        """Sample rate of the original time series."""
         return self.model_attributes["samplerate"]
 
     @property
     def timepoints(self):
+        """Time points corresponding each column of data."""
         return np.divide(self.times, self.samplerate)
 
     def compute_onsetwin(self, onsetind: int) -> int:
         """
+        Compute onset window corresponding to the onset index.
 
         Parameters
         ----------
@@ -124,7 +130,7 @@ class Result(BaseDataset):
 
     def compute_offsetwin(self, offsetind: int) -> int:
         """
-        Computes offset window from the corresponding index.
+        Compute offset window from the corresponding index.
 
         Parameters
         ----------

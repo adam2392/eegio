@@ -9,11 +9,25 @@ from eegio.base.objects.electrodes.elecs import Contacts
 from eegio.base.utils.data_structures_utils import compute_samplepoints
 from eegio.loaders import BidsRun
 
+import os
+
+from bids_validator import BIDSValidator
+from mne_bids import (
+    read_raw_bids,
+    make_bids_folders,
+    make_bids_basename,
+    make_dataset_description,
+)
+from mne_bids.utils import _parse_bids_filename
+from mne_bids.utils import print_dir_tree
+
+from eegio.base.utils.bids_helper import BidsConverter
+
 np.random.seed(987654321)
 
 
 @pytest.fixture(scope="session")
-def bids_root(tmp_path_factory):
+def tmp_bids_root(tmp_path_factory):
     """
     Fixture of a temporary path that can be used as a bids_directory.
 
@@ -28,31 +42,10 @@ def bids_root(tmp_path_factory):
 
     Returns
     -------
-    bids_root : (str) the temporary path to a bids_root
+    tmp_bids_root : (str) the temporary path to a tmp_bids_root
     """
     bids_root = tmp_path_factory.mktemp("bids_data")
     return str(bids_root)
-
-
-# @pytest.fixture(scope="class")
-# def bidspatient(tmp_path_factory):
-#     """
-#     Creating a pytest fixture for a fake bidsPatient data object.
-#
-#     :return:
-#     """
-#     test_subjectid = "0001"
-#     test_fpath = os.path.join(os.getcwd(), "data/bids_layout/")
-#     # test_fpath_path = tmp_path_factory.mktemp('bids_data')
-#     # test_fpath = str(test_fpath_path)
-#     bidspat = BidsPatient(
-#         subject_id=test_subjectid,
-#         session_id="seizure",
-#         datadir=test_fpath,
-#         managing_user="test",
-#         modality="eeg",
-#     )
-#     return bidspat
 
 
 @pytest.fixture(scope="class")
@@ -74,8 +67,8 @@ def bidsrun_scalp(edf_fpath):
     -------
     run : (BidsRun object)
     """
-    main_eeg()
-    main_ieeg()
+    _setup_main_eeg()
+    _setup_main_ieeg()
 
     test_subjectid = "0001"
     session_id = "seizure"
@@ -142,8 +135,8 @@ def fif_fpath():
     -------
     filepath : (str)
     """
-    main_eeg()
-    main_ieeg()
+    _setup_main_eeg()
+    _setup_main_ieeg()
 
     # load in edf data
     testdatadir = os.path.join(os.getcwd(), "./data/bids_layout/sourcedata/")
@@ -192,14 +185,9 @@ def result_fpath():
     return result_fpath, result_npzfpath
 
 
-def main_ieeg():
+def _setup_main_ieeg():
     """
-    ===================================
-    01. Convert EEG data to BIDS format
-    ===================================
-
-    In this example, we use MNE-BIDS to create a BIDS-compatible directory of EEG
-    data. We copy some explicit example from MNE-BIDS and modify small details.
+    We copy some explicit example from MNE-BIDS and modify small details.
 
     Specifically, we will follow these steps:
 
@@ -218,23 +206,6 @@ def main_ieeg():
     3. Check the result and compare it with the standard
 
     """
-
-    # Authors: Adam Li <adam2392@gmail.com>
-
-    import os
-
-    from bids_validator import BIDSValidator
-    from mne_bids import (
-        read_raw_bids,
-        make_bids_folders,
-        make_bids_basename,
-        make_dataset_description,
-    )
-    from mne_bids.utils import _parse_bids_filename
-    from mne_bids.utils import print_dir_tree
-
-    from eegio.base.utils.bids_helper import BidsConverter
-
     ###############################################################################
     # Step 1: Prepare the data
     # -------------------------
@@ -256,7 +227,9 @@ def main_ieeg():
     DATADIR = os.getcwd()
     bids_root = os.path.join(DATADIR, "./data/bids_layout/")
     RUN_IEEG = True  # either run scalp, or iEEG
-    line_freq = 60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
+    line_freq = (
+        60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
+    )
     test_subjectid = "0001"
     test_sessionid = "seizure"
     test_task = "monitor"
@@ -352,7 +325,7 @@ def main_ieeg():
     print("Read successfully using MNE-BIDS")
 
     # use BidsRun object, which just simply adds additional functionality
-    # bidsrun = BidsRun(bids_root, bids_fname)
+    # bidsrun = BidsRun(tmp_bids_root, bids_fname)
     # raw = bidsrun.load_data()
 
     print(raw)
@@ -389,14 +362,9 @@ def main_ieeg():
     print(is_valid)
 
 
-def main_eeg():
+def _setup_main_eeg():
     """
-    ===================================
-    01. Convert EEG data to BIDS format
-    ===================================
-
-    In this example, we use MNE-BIDS to create a BIDS-compatible directory of EEG
-    data. We copy some explicit example from MNE-BIDS and modify small details.
+    We copy some explicit example from MNE-BIDS and modify small details.
 
     Specifically, we will follow these steps:
 
@@ -413,25 +381,7 @@ def main_eeg():
     and save in a new BIDS directory
 
     3. Check the result and compare it with the standard
-
     """
-
-    # Authors: Adam Li <adam2392@gmail.com>
-
-    import os
-
-    from bids_validator import BIDSValidator
-    from mne_bids import (
-        read_raw_bids,
-        make_bids_folders,
-        make_bids_basename,
-        make_dataset_description,
-    )
-    from mne_bids.utils import _parse_bids_filename
-    from mne_bids.utils import print_dir_tree
-
-    from eegio.base.utils.bids_helper import BidsConverter
-
     ###############################################################################
     # Step 1: Prepare the data
     # -------------------------
@@ -453,7 +403,9 @@ def main_eeg():
     DATADIR = os.getcwd()
     bids_root = os.path.join(DATADIR, "./data/bids_layout/")
     RUN_IEEG = False  # either run scalp, or iEEG
-    line_freq = 60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
+    line_freq = (
+        60  # user should set the line frequency, since MNE-BIDS defaults to 50 Hz
+    )
     test_subjectid = "0001"
     test_sessionid = "seizure"
     test_task = "monitor"
@@ -549,7 +501,7 @@ def main_eeg():
     print("Read successfully using MNE-BIDS")
 
     # use BidsRun object, which just simply adds additional functionality
-    # bidsrun = BidsRun(bids_root, bids_fname)
+    # bidsrun = BidsRun(tmp_bids_root, bids_fname)
     # raw = bidsrun.load_data()
 
     print(raw)

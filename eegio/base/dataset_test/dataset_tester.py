@@ -13,7 +13,7 @@ class DatasetTester(object):
     --------
     >>> from eegio.dataset_test.dataset_tester import DatasetTester
     # test loading in the actual data from the fif saved place
-    >>> loader = iEEGRecording(root_dir=bids_root,
+    >>> loader = iEEGRecording(root_dir=tmp_bids_root,
     ...                         jsonfilepath=jsonpath,
     ...                          preload=False)
     >>> ieegts = loader.loadpipeline()

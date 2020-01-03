@@ -22,6 +22,8 @@ exclude *.yml
 exclude .mailmap
 
 recursive-exclude eegio *.pyc
-recursive-exclude doc *
+recursive-exclude docs *
 recursive-exclude paper *
-recursive-exclude annonymize
+recursive-exclude annonymize *
+recursive-exclude data *
+recursive-exclude tests *

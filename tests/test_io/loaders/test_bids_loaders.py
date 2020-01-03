@@ -13,7 +13,7 @@ import pytest
 
 @pytest.mark.usefixture("edf_fpath")
 @pytest.mark.usefixture("fif_fpath")
-@pytest.mark.usefixture("bids_root")
+@pytest.mark.usefixture("tmp_bids_root")
 class Test_BidsLoader:
     """
     Testing class for loading in raw EEG data in the MNE framework.
@@ -21,9 +21,9 @@ class Test_BidsLoader:
     Ensures class type, and also correct functionality in annotations framework.
     """
 
-    def test_bids_setup(self, bids_root):
+    def test_bids_setup(self, tmp_bids_root):
         # BIDS layout test data is in /data/bids_layout/
-        layout = BaseBids(bids_root=bids_root)
+        layout = BaseBids(bids_root=tmp_bids_root)
         layout.print_summary()
         layout.print_dir_tree()
 
@@ -36,7 +36,7 @@ class Test_BidsLoader:
             # there should be no data here when creating inside temporary directory
             assert layout.subject_nums == []
 
-    def test_bids_run_setup(self, edf_fpath, bids_root):
+    def test_bids_run_setup(self, edf_fpath, tmp_bids_root):
         """ TODO: make work with temporary directory. """
         pass
         # test_subjectid = "0001"
@@ -55,10 +55,10 @@ class Test_BidsLoader:
         #         bids_fname
         #     )
         # ):
-        #     run = BidsRun(bids_root=bids_root, bids_fname=bids_fname)
+        #     run = BidsRun(tmp_bids_root=tmp_bids_root, bids_fname=bids_fname)
         #     run._create_bidsrun(edf_fpath)
         # else:
-        #     run = BidsRun(bids_root=bids_root, bids_fname=bids_fname)
+        #     run = BidsRun(tmp_bids_root=tmp_bids_root, bids_fname=bids_fname)
         #     run._create_bidsrun(edf_fpath)
 
     @pytest.mark.skip(reason="TODO: dev")
