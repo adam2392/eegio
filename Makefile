@@ -57,7 +57,7 @@ pycodestyle:
 	@pycodestyle
 
 check-manifest:
-	check-manifest --ignore .circleci*,docs,.DS_Store,annonymize
+	check-manifest --ignore .circleci*,docs,annonymize,data,tests
 
 upload-pipy:
 	python setup.py sdist bdist_egg register upload

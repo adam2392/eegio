@@ -9,6 +9,8 @@ from eegio.loaders.derivatives.baseloader import BaseLoader
 
 
 class ResultLoader(BaseLoader):
+    """Loading class for resulting derivatives."""
+
     def __init__(self, fname: Union[str, os.PathLike] = None, metadata: Dict = None):
         super(ResultLoader, self).__init__(fname=fname)
 
@@ -17,19 +19,7 @@ class ResultLoader(BaseLoader):
         self.update_metadata(**metadata)
 
     def _wrap_result_in_obj(self, datastruct, metadata):
-        """
-        Helps wrap a dictionary returned result data in the form of np.ndarrays, along with
-        corresponding metadata into a Result object.
-
-        Parameters
-        ----------
-        datastruct :
-        metadata :
-
-        Returns
-        -------
-
-        """
+        """Help wrap a dictionary returned result data in the form of np.ndarrays."""
         # ensure data quality
         pertmats = datastruct["pertmats"]
         delvecs = datastruct["delvecs"]
@@ -60,6 +50,7 @@ class ResultLoader(BaseLoader):
     def load_file(
         self, filepath: Union[str, os.PathLike], jsonfpath: Union[str, os.PathLike]
     ):
+        """Load file of numpy-based file."""
         if filepath.endswith(".npz"):
             res = self.read_npzjson(jsonfpath, filepath)
         elif filepath.endswith(".npy"):
@@ -69,27 +60,6 @@ class ResultLoader(BaseLoader):
 
         return res
 
-    def read_NK(self, fname: Union[os.PathLike, str]):
-        """
-        Function to read from a Nihon-Kohden based EEG system file.
-
-        :param fname:
-        :type fname:
-        :return:
-        :rtype:
-        """
-        pass
-
-    def read_Natus(self, fname: Union[os.PathLike, str]):
-        """
-        Function to read from a Natus based EEG system file.
-        :param fname:
-        :type fname:
-        :return:
-        :rtype:
-        """
-        pass
-
     def read_npzjson(
         self,
         jsonfpath: Union[str, os.PathLike],
@@ -97,7 +67,7 @@ class ResultLoader(BaseLoader):
         return_struct: bool = False,
     ) -> object:
         """
-        Reads a numpy stored as npz+json file combination.
+        Read a numpy stored as npz+json file combination.
 
         Parameters
         ----------
@@ -107,7 +77,11 @@ class ResultLoader(BaseLoader):
 
         Returns
         -------
+        resultobj
 
+        or
+
+        datastruct, metadata
         """
         filedir = os.path.dirname(jsonfpath)
         # load in json file
@@ -132,7 +106,7 @@ class ResultLoader(BaseLoader):
         return_struct: bool = False,
     ):
         """
-        Reads a numpy stored as npy+json file combination.
+        Read a numpy stored as npy+json file combination.
 
         Parameters
         ----------
@@ -142,7 +116,11 @@ class ResultLoader(BaseLoader):
 
         Returns
         -------
+        resultobj
 
+        or
+
+        arr, metadata
         """
         filedir = os.path.dirname(jsonfpath)
         # load in json file

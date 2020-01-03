@@ -14,7 +14,9 @@ from eegio.base.utils.scalp_eeg_helper import ScalpMontageHelper
 
 class BaseDataset(ABC):
     """
-    The abstract base class for any multi-variate time series EEG dataset. Or resulting time series done on the EEG dataset.
+    The abstract base class for any multi-variate time series EEG dataset.
+
+    Or resulting time series done on the EEG dataset.
     All time series are assumed to be in [C x T] shape and use the Contacts
     data structure to handle all contact level functionality.
 
@@ -54,9 +56,6 @@ class BaseDataset(ABC):
 
     montage: (List)
         list of xyz coordinates for every contact.
-
-    Notes
-    -----
 
     """
 
@@ -102,6 +101,7 @@ class BaseDataset(ABC):
             self.bufftimes, self.buffmat, self.buffcontacts = None, None, None
 
     def __len__(self):
+        """Length of time that is the dataset."""
         if self.mat.shape[1] != len(self.times):
             warnings.warn(
                 f"Times and matrix have different lengths. Their "
@@ -111,10 +111,12 @@ class BaseDataset(ABC):
 
     @abstractmethod
     def create_fake_example(self):
+        """Return for testing a fake example of dataset object."""
         pass
 
     @abstractmethod
     def summary(self):
+        """Return a summary of the dataset object."""
         pass
 
     def get_metadata(self) -> Dict:
@@ -129,16 +131,18 @@ class BaseDataset(ABC):
 
     def get_montage(self) -> str:
         """
-        Get's the EEG dataset montage (i.e. xyz coordinates) based on a specific coordinate system. For scalp EEG
-        these can be obtained from the a list of set montages in MNE-Python.
+        Get the EEG dataset montage (i.e. xyz coordinates) based on a specific coordinate system.
+
+        For scalp EEG these can be obtained from the a list of set montages in MNE-Python.
 
         Returns
         -------
-
+        montage : (str)
         """
         return self.montage
 
     def set_scalp_montage(self, montage: Union[str, mne.channels.DigMontage]):
+        """Set Dig.Montage for scalp."""
         if isinstance(montage, str):
             best_montage = ScalpMontageHelper.get_best_matching_montage(self.chanlabels)
             montage_inst = mne.channels.make_standard_montage(best_montage)
@@ -157,7 +161,9 @@ class BaseDataset(ABC):
 
     def update_metadata(self, **kwargs):
         """
-        Function to update metadata dictionary with keyword arguments. This method allows the user to flexibly add
+        Update metadata dictionary with keyword arguments.
+
+        This method allows the user to flexibly add
         additional metadata attached to the raw EEG dataset. This is then easily exported when the user gets the metadata
         with get_metadata().
 
@@ -165,32 +171,28 @@ class BaseDataset(ABC):
         ----------
         kwargs : dict
             keyword arguments to update the metadata dictionary with
-
-        Returns
-        -------
-
         """
         self.metadata.update(**kwargs)
 
     def remove_element_from_metadata(self, key):
+        """Remove a key from the metadata dictionary."""
         self.metadata.pop(key)
 
     def get_model_attributes(self) -> Dict:
         """
-        Getter method for returning the model attributes applied to get this resulting data.
+        Return the model attributes applied to get this resulting data.
 
-        :return:
+        Returns
+        -------
+        model_attributes : (Dict)
         """
         return self.model_attributes
 
     def reset(self):
         """
-        Function to cache restore the matrix data, times, and contacts. Requires that user initially cached the data
-        with cache_data=True.
+        Cache restore the matrix data, times, and contacts.
 
-        Returns
-        -------
-
+        Requires that user initially cached the data with cache_data=True.
         """
         if self.cache_data:
             self.mat = self.buffmat.copy()
@@ -204,39 +206,42 @@ class BaseDataset(ABC):
 
     @property
     def shape(self) -> Tuple:
+        """Shape of the underlying data matrix."""
         return self.mat.shape
 
     @property
     def contact_tuple_list(self) -> List:
+        """Contacts as a tuple."""
         return [str(a) + str(b) for a, b in self.contacts.chanlabels]
 
     @property
     def electrodes(self) -> Dict:
+        """Contacts per electrode."""
         # use a dictionary to store all electrodes
         return self.contacts.electrodes
 
     @property
     def chanlabels(self) -> np.ndarray:
+        """Numpy array of contact labels."""
         return np.array(self.contacts.chanlabels)
 
     @property
     def xyz_coords(self) -> List:
+        """Xyz coordinates of each contact."""
         return self.contacts.xyz
 
     @property
     def ncontacts(self) -> int:
+        """Length of contacts in data object."""
         return len(self.chanlabels)
 
     def natsort_contacts(self):
         """
-        Sort out the time series by its channel labels, so they go in
-        a natural ordering.
+        Natural sort out the time series by its channel labels.
 
-        A1,A2, ..., B1, B2, ..., Z1, Z2, ..., A'1, A'2, ...
+        For example:
 
-        Returns
-        -------
-
+            A1,A2, ..., B1, B2, ..., Z1, Z2, ..., A'1, A'2, ...
         """
         self.buffchanlabels = self.chanlabels.copy()
         natinds = self.contacts.natsort_contacts()
@@ -245,24 +250,24 @@ class BaseDataset(ABC):
 
     def get_data(self) -> np.ndarray:
         """
-        Getter function to get the data matrix stored in Dataset.
+        Get the data matrix stored in Dataset.
 
         Returns
         -------
         mat : np.ndarray
             The data matrix
-
         """
         return self.mat
 
     def get_channel_data(self, name, interval=(None, None)) -> np.ndarray:
+        """Get the matrix of specific channel."""
         idx = list(self.chanlabels).index(name)
         tid1, tid2 = self._interval_to_index(interval)
         return self.mat[idx, tid1:tid2]
 
     def remove_channels(self, toremovechans) -> List:
         """
-        Removes channels from matrix and contacts array.
+        Remove channels from matrix and contacts array.
 
         Parameters
         ----------
@@ -270,7 +275,7 @@ class BaseDataset(ABC):
 
         Returns
         -------
-
+        removeinds : (List)
         """
         removeinds = [
             ind for ind, ch in enumerate(self.chanlabels) if ch in toremovechans
@@ -326,9 +331,6 @@ class BaseDataset(ABC):
         mask_inds : np.ndarray
             The indices which we will delete rows from the data matrix and the list of contacts.
 
-        Returns
-        -------
-        None
         """
         self.mat = np.delete(self.mat, mask_inds, axis=0)
         self.contacts.mask_indices(mask_inds)
@@ -344,9 +346,6 @@ class BaseDataset(ABC):
         chs : (list, np.ndarray)
             The set of contact labels to delete from data matrix and list of contacts.
 
-        Returns
-        -------
-        None
         """
         chs = np.sort(chs)
         chs_to_remove = set(self.chanlabels).intersection(ensure_list(chs))

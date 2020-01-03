@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 """Setup EEGIO."""
 import sys
 import os
@@ -10,7 +11,9 @@ from setuptools import find_packages
 To re-setup: 
 
     python setup.py sdist bdist_wheel
-
+    
+    twine check dist/*
+    
     pip install -r requirements.txt --process-dependency-links
 
 To test on test pypi:
@@ -27,8 +30,8 @@ To test on test pypi:
 version = None
 with open(os.path.join('eegio', '__init__.py'), 'r') as fid:
     for line in (line.strip() for line in fid):
-        if line.startswith("__version__"):
-            version = line.split("=")[1].strip().strip('\'')
+        if line.startswith('__version__'):
+            version = line.split('=')[1].strip().strip('\'')
             break
 if version is None:
     raise RuntimeError('Could not determine version')
@@ -91,22 +94,22 @@ if __name__ == "__main__":
         maintainer=MAINTAINER,
         maintainer_email=MAINTAINER_EMAIL,
         author="Adam Li",
+        author_email=MAINTAINER_EMAIL,
         long_description=open("README.md").read(),
         long_description_content_type='text/markdown',
         url=URL,
         download_url=DOWNLOAD_URL,
         license="GNU General Public License (GPL)",
         keywords="EEG, epilepsy, research tools, IO tools",
-        packages=find_packages(include=[], exclude=[]),
+        packages=find_packages(exclude=["tests"]),
         project_urls={
             "Documentation": "https://github.com/adam2392/eegio/docs/",
             "Source": URL,
             "Tracker": "https://github.com/adam2392/eegio/issues",
         },
+        platforms="any",
         include_dirs=[numpy.get_include()],
-        # dependency_links=["git+https://github.com/adam2392/eegio#egg=eegio"],
-        # install_requires=REQUIRED_PACKAGES,
-        # include_package_data=True,
+        install_requires=REQUIRED_PACKAGES,
+        include_package_data=True,
         classifiers=CLASSIFICATION_OF_PACKAGE,
-        # zip_ok=True,
     )

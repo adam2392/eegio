@@ -140,7 +140,7 @@ raw = read_raw_bids(bids_fname, bids_root)
 print("Read successfully using MNE-BIDS")
 
 # use BidsRun object, which just simply adds additional functionality
-# bidsrun = BidsRun(bids_root, bids_fname)
+# bidsrun = BidsRun(tmp_bids_root, bids_fname)
 # raw = bidsrun.load_data()
 
 print(raw)
@@ -158,7 +158,7 @@ print(raw)
 #     subject=params["sub"],
 #     session=params["ses"],
 #     kind=kind,
-#     output_path=bids_root,
+#     output_path=tmp_bids_root,
 #     overwrite=False,
 #     verbose=True,
 # )

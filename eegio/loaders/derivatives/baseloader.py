@@ -4,7 +4,9 @@ from abc import ABC, abstractmethod
 
 class BaseLoader(ABC):
     """
-    Class for a base data converter. It mainly handles universal text parsing and
+    Class for a base data converter.
+
+    It mainly handles universal text parsing and
     preprocessing of files done to get to our final desired file format (i.e. fif+json file pair)
     per timeseries.
     """
@@ -17,9 +19,11 @@ class BaseLoader(ABC):
         self.metadata_dict.update(fname=self.fname)
 
     def get_metadata(self):
+        """Get metadata dictionary."""
         return self.metadata_dict
 
     def get_size(self):
+        """Get size of the dataset to be loaded."""
         MB = 1.0e6
         GB = 1e9
         if self.fname is not None:
@@ -27,27 +31,27 @@ class BaseLoader(ABC):
             return fsize / MB
         return None
 
-    @abstractmethod
+    # @abstractmethod
     def read_NK(self, fname: os.PathLike):
+        """Convert from Nihon Kohden systems."""
         pass
 
-    @abstractmethod
+    # @abstractmethod
     def read_Natus(self, fname: os.PathLike):
+        """Convert from Natus systems."""
         pass
 
     @abstractmethod
     def load_file(self, filepath: os.PathLike):
         """
-        Abstract method for loading a file. Needs to be implemented by any data converters that will
-        load a file to convert.
+        Abstract method for loading a file.
+
+        Needs to be implemented by any data converters that will load a file to convert.
 
         Parameters
         ----------
         filepath : os.PathLike
             filepath for the dataset to load.
-
-        Returns
-        -------
 
         """
         raise NotImplementedError(
@@ -62,9 +66,6 @@ class BaseLoader(ABC):
         ----------
         update_kws : Dict
             keyword arguments to update metadata_dict with.
-
-        Returns
-        -------
 
         """
         self.metadata_dict.update(**update_kws)

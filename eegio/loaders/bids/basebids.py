@@ -36,13 +36,13 @@ class BaseBids(object):
 
     Notes
     -----
-    bids_root should be named and formatted according to BIDS format. For example:
+    tmp_bids_root should be named and formatted according to BIDS format. For example:
 
-    bids_root = <study_name>/raw/
+    tmp_bids_root = <study_name>/raw/
 
     maybe it will be:
 
-    bids_root = <study_name>/derivatives/<derivative_category_name>
+    tmp_bids_root = <study_name>/derivatives/<derivative_category_name>
 
     """
 
